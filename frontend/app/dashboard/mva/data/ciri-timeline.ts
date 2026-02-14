@@ -1,0 +1,92 @@
+import {
+  CalculatorIcon,
+  FileTextIcon,
+  CheckCircle2Icon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  ShieldCheckIcon,
+  FileCheckIcon,
+  SendIcon,
+  MailIcon,
+} from "lucide-react";
+import type { CiriTimelineEvent } from "../types";
+
+export const ciriTimeline: CiriTimelineEvent[] = [
+  {
+    id: "1",
+    timestamp: "2026-01-02 08:00",
+    action: "Startet MVA-beregning for 6. termin",
+    icon: CalculatorIcon,
+    type: "completed",
+  },
+  {
+    id: "2",
+    timestamp: "2026-01-02 08:02",
+    action: "Samlet inn 47 bilag fra november",
+    icon: FileTextIcon,
+    type: "completed",
+  },
+  {
+    id: "3",
+    timestamp: "2026-01-02 08:03",
+    action: "Samlet inn 39 bilag fra desember",
+    icon: FileTextIcon,
+    type: "completed",
+  },
+  {
+    id: "4",
+    timestamp: "2026-01-02 08:05",
+    action: "Kategoriserte alle bilag etter MVA-kode",
+    icon: CheckCircle2Icon,
+    type: "completed",
+  },
+  {
+    id: "5",
+    timestamp: "2026-01-02 08:07",
+    action: "Beregnet utgående MVA: kr 45 230",
+    icon: TrendingUpIcon,
+    type: "completed",
+  },
+  {
+    id: "6",
+    timestamp: "2026-01-02 08:08",
+    action: "Beregnet inngående MVA: kr 21 780",
+    icon: TrendingDownIcon,
+    type: "completed",
+  },
+  {
+    id: "7",
+    timestamp: "2026-01-02 08:10",
+    action: "Validerte mot SAF-T krav",
+    icon: ShieldCheckIcon,
+    type: "completed",
+  },
+  {
+    id: "8",
+    timestamp: "2026-01-02 08:11",
+    action: "Genererte MVA-melding RF-0002",
+    icon: FileCheckIcon,
+    type: "completed",
+  },
+  {
+    id: "9",
+    timestamp: "2026-01-02 08:12",
+    action: "MVA-oppgave ferdig og planlagt for innsending",
+    icon: CheckCircle2Icon,
+    type: "completed",
+  },
+  {
+    id: "10",
+    timestamp: "2026-02-08 09:00",
+    action: "Sender MVA-melding til Altinn",
+    icon: SendIcon,
+    type: "scheduled",
+  },
+  {
+    id: "11",
+    timestamp: "2026-02-08 09:01",
+    action: "Bekrefter mottak fra Skatteetaten",
+    icon: MailIcon,
+    type: "scheduled",
+  },
+];

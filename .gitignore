@@ -1,20 +1,31 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+# Frontend dependencies
+frontend/node_modules
+frontend/.pnp
+frontend/.pnp.js
+frontend/.yarn/install-state.gz
 
-# testing
-/coverage
+# Frontend testing
+frontend/coverage
 
-# next.js
-/.next/
-/out/
+# Next.js
+frontend/.next/
+frontend/out/
 
-# production
-/build
+# Frontend production
+frontend/build
+
+# Backend Python
+backend/__pycache__
+backend/*.py[cod]
+backend/*$py.class
+backend/.venv
+backend/venv
+backend/env
+backend/.pytest_cache
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # misc
 .DS_Store
@@ -24,10 +35,14 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # local env files
 .env
 .env*.local
+frontend/.env
+frontend/.env*.local
+backend/.env
 
 # vercel
 .vercel
@@ -38,9 +53,12 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+frontend/next-env.d.ts
 
-.vercel
-
+# cursor
 .cursorrules
 .cursor
+
+# Docker volumes
+postgres_data/
+redis_data/
