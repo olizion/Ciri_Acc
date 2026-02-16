@@ -726,8 +726,8 @@ body {
     --popover-foreground: var(--base-800);
     --primary: var(--primary-600);
     --primary-foreground: var(--color-white);
-    --secondary: var(--secondary-400);
-    --secondary-foreground: var(--base-900);
+    --secondary: var(--primary-100);
+    --secondary-foreground: var(--primary-900);
     --muted: var(--base-100);
     --muted-foreground: var(--base-600);
     --accent: var(--accent-200);
@@ -764,8 +764,8 @@ body {
         --popover-foreground: var(--base-200);
         --primary: var(--primary-500);
         --primary-foreground: var(--color-white);
-        --secondary: var(--secondary-500);
-        --secondary-foreground: var(--base-900);
+        --secondary: var(--primary-800);
+        --secondary-foreground: var(--primary-100);
         --muted: var(--base-800);
         --muted-foreground: var(--base-400);
         --accent: var(--accent-400);

@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from config.settings import settings
 from config.database import init_db
+from config.redis import init_redis, close_redis
 from api import auth, company, ciri, bilag, reports, ocr, employees, email_webhook, email_oauth, bank, invoices, notifications
 from middleware.audit import AuditMiddleware
 from tasks.email_monitor_task import start_email_monitor, stop_email_monitor
@@ -30,39 +31,46 @@ async def lifespan(app: FastAPI):
     await init_db()
     print("✅ Database tables initialized")
 
+    # Initialize Redis cache
+    try:
+        await init_redis()
+        print("✅ Redis cache connected")
+    except Exception as e:
+        print(f"⚠️ Redis unavailable, caching disabled: {e}")
+
     # Seed test data (idempotent)
     from seed_data import seed_test_data
     await seed_test_data()
 
-    # Start email monitor background task
-    if settings.google_client_id or settings.microsoft_client_id:
-        print("📧 Starting email monitor...")
-        start_email_monitor()
-    else:
-        print("📧 Email OAuth not configured, skipping email monitor")
+    # Background tasks disabled — enable individually as needed
+    # Email monitor: polls inboxes every 5 min, calls Claude to parse attachments
+    # if settings.google_client_id or settings.microsoft_client_id:
+    #     print("📧 Starting email monitor...")
+    #     start_email_monitor()
+    print("📧 Email monitor disabled (enable in main.py when ready)")
 
-    # Start bank sync background task
-    if settings.neonomics_client_id:
-        print("🏦 Starting bank sync monitor...")
-        start_bank_sync_task()
-    else:
-        print("🏦 Neonomics not configured, skipping bank sync")
+    # Bank sync: polls bank APIs for new transactions
+    # if settings.neonomics_client_id:
+    #     print("🏦 Starting bank sync monitor...")
+    #     start_bank_sync_task()
+    print("🏦 Bank sync disabled (enable in main.py when ready)")
 
-    # Start batch reconciliation (Claude AI matching)
-    if settings.anthropic_api_key:
-        print("🤖 Starting batch reconciliation task...")
-        start_batch_reconciliation_task()
-    else:
-        print("🤖 Anthropic API key not configured, skipping batch reconciliation")
+    # Batch reconciliation: calls Claude every 30 min to match transactions to bilags
+    # if settings.anthropic_api_key:
+    #     print("🤖 Starting batch reconciliation task...")
+    #     start_batch_reconciliation_task()
+    print("🤖 Batch reconciliation disabled (enable in main.py when ready)")
 
-    # Start weekly summary email task
-    print("📊 Starting weekly summary task...")
-    start_weekly_summary_task()
+    # Weekly summary email task
+    # print("📊 Starting weekly summary task...")
+    # start_weekly_summary_task()
+    print("📊 Weekly summary disabled (enable in main.py when ready)")
 
     yield
 
     # Shutdown
     print("👋 Shutting down Ciri API...")
+    await close_redis()
     stop_email_monitor()
     stop_bank_sync_task()
     stop_batch_reconciliation_task()

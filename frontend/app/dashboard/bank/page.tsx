@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, Fragment } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -51,11 +51,15 @@ import {
   CalendarIcon,
   ArrowRightLeftIcon,
   XIcon,
+  SparklesIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CiriLogo from "@/components/layout/ciri-logo";
 import { API_BASE_URL } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { useCiriActionListener } from "@/lib/ciri-actions";
+import { useCrystallize } from "@/lib/use-crystallize";
+import { RecurringOnboardingOverlay } from "./onboarding/recurring-onboarding-overlay";
 
 // ============================================================================
 // TYPES
@@ -300,9 +304,9 @@ function DetailField({ label, value, mono }: { label: string; value: string | nu
 }
 
 function TransactionRow({
-  tx, isExpanded, onToggle,
+  tx, isExpanded, onToggle, isHighlighted,
 }: {
-  tx: Transaction; isExpanded: boolean; onToggle: () => void;
+  tx: Transaction; isExpanded: boolean; onToggle: () => void; isHighlighted?: boolean;
 }) {
   const isExpense = tx.amount < 0;
   const cat = categoryConfig[tx.category] ?? categoryConfig.ukategorisert;
@@ -312,10 +316,12 @@ function TransactionRow({
   return (
     <Fragment>
       <TableRow
+        id={`tx-${tx.id}`}
         onClick={onToggle}
         className={cn(
           "group cursor-pointer transition-colors",
           isExpanded ? "bg-muted/40" : "hover:bg-muted/20",
+          isHighlighted && "ring-2 ring-[var(--primary)]/40 bg-[var(--primary)]/5 animate-[highlightFade_2s_ease-out_forwards]",
         )}
       >
         {/* Expand indicator */}
@@ -504,8 +510,11 @@ function MissingBilagRow({ tx, index }: { tx: Transaction; index: number }) {
 
 export default function BankPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [highlightedTxId, setHighlightedTxId] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -520,7 +529,7 @@ export default function BankPage() {
 
   // Fetch accounts
   const { data: accountsData } = useQuery({
-    queryKey: ["bank", "accounts"],
+    queryKey: queryKeys.bank.accounts,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/accounts`);
       if (!res.ok) return { accounts: [] as BankAccount[], lastSyncAt: null as string | null };
@@ -543,7 +552,7 @@ export default function BankPage() {
 
   // Fetch transactions
   const { data: allTransactions = [], isLoading } = useQuery({
-    queryKey: ["bank", "transactions"],
+    queryKey: queryKeys.bank.transactions,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/transactions?limit=200`);
       if (!res.ok) return [] as Transaction[];
@@ -551,6 +560,37 @@ export default function BankPage() {
       return raw.map(mapApiTransaction) as Transaction[];
     },
   });
+
+  const crystallize = useCrystallize(isLoading);
+
+  // Deep link: auto-expand and scroll to transaction from ?tx= param
+  const txIdParam = searchParams.get("tx");
+  useEffect(() => {
+    if (!txIdParam || allTransactions.length === 0) return;
+    const exists = allTransactions.some((t) => t.id === txIdParam);
+    if (!exists) return;
+
+    setExpandedId(txIdParam);
+    setHighlightedTxId(txIdParam);
+
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`tx-${txIdParam}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+
+    router.replace("/dashboard/bank", { scroll: false });
+
+    const highlightTimer = setTimeout(() => {
+      setHighlightedTxId(null);
+    }, 2000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(highlightTimer);
+    };
+  }, [txIdParam, allTransactions, router]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -629,13 +669,22 @@ export default function BankPage() {
   return (
     <div className="space-y-5 pb-12">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className={`space-y-4 ${crystallize(1)}`}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">Transaksjoner</h1>
             <p className="text-sm text-muted-foreground mt-0.5">Bank og avstemming</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={() => setShowOnboarding(true)}
+            >
+              <SparklesIcon className="size-3.5" />
+              Gjentakende
+            </Button>
             <div className="size-6 rounded-full overflow-hidden ring-1 ring-border">
               <CiriLogo size="sm" />
             </div>
@@ -645,7 +694,7 @@ export default function BankPage() {
       </motion.div>
 
       {/* Tabs */}
-      <Tabs defaultValue="transactions" className="space-y-4">
+      <Tabs defaultValue="transactions" className={`space-y-4 ${crystallize(2)}`}>
         <div className="flex items-center justify-between gap-4">
           <TabsList className="h-9">
             <TabsTrigger value="transactions" className="gap-1.5 px-3 text-xs">
@@ -757,6 +806,7 @@ export default function BankPage() {
                       tx={tx}
                       isExpanded={expandedId === tx.id}
                       onToggle={() => setExpandedId(expandedId === tx.id ? null : tx.id)}
+                      isHighlighted={highlightedTxId === tx.id}
                     />
                   ))
                 ) : (
@@ -806,6 +856,13 @@ export default function BankPage() {
       </Tabs>
 
       <LearnMoreDocs sections={["bank", "bokforing"]} />
+
+      {/* Recurring transactions onboarding overlay */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <RecurringOnboardingOverlay onClose={() => setShowOnboarding(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -32,12 +33,16 @@ import { emptyPeriod } from "./constants";
 import { krFormat, mapApiSuggestion, mapApiTransaction, mapApiPeriod } from "./helpers";
 import { MatchCard, TransactionRow } from "./components";
 import { API_BASE_URL } from "@/lib/api";
+import { useCrystallize } from "@/lib/use-crystallize";
+import { queryKeys } from "@/lib/query-keys";
+import { invalidateOnEvent } from "@/lib/query-invalidation";
 
 // ============================================================================
 // MAIN PAGE
 // ============================================================================
 
 export default function AvstemmingPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const now0 = new Date();
   const currentMonth = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, "0")}`;
@@ -52,7 +57,7 @@ export default function AvstemmingPage() {
 
   // Queries
   const { data: period = emptyPeriod, isLoading } = useQuery({
-    queryKey: ["reconciliation", "status", selectedPeriod],
+    queryKey: queryKeys.reconciliation.status(selectedPeriod),
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/reconciliation/status?period=${selectedPeriod}`);
       if (!res.ok) return emptyPeriod;
@@ -61,7 +66,7 @@ export default function AvstemmingPage() {
   });
 
   const { data: attentionItems = [] } = useQuery({
-    queryKey: ["reconciliation", "suggestions"],
+    queryKey: queryKeys.reconciliation.suggestions,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/reconciliation/suggestions`);
       if (!res.ok) return [] as MatchSuggestion[];
@@ -71,7 +76,7 @@ export default function AvstemmingPage() {
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ["bank", "transactions"],
+    queryKey: queryKeys.bank.transactions,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/transactions?limit=100`);
       if (!res.ok) return [] as Transaction[];
@@ -80,11 +85,9 @@ export default function AvstemmingPage() {
     },
   });
 
+  const crystallize = useCrystallize(isLoading);
+
   // Mutations
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["reconciliation"] });
-    queryClient.invalidateQueries({ queryKey: ["bank", "transactions"] });
-  };
 
   const confirmMutation = useMutation({
     mutationFn: async ({ matchId, feedback }: { matchId: string; feedback?: string }) => {
@@ -99,23 +102,23 @@ export default function AvstemmingPage() {
       if (!res.ok) throw new Error("Confirm failed");
     },
     onMutate: async ({ matchId }) => {
-      await queryClient.cancelQueries({ queryKey: ["reconciliation", "suggestions"] });
-      await queryClient.cancelQueries({ queryKey: ["bank", "transactions"] });
+      await queryClient.cancelQueries({ queryKey: queryKeys.reconciliation.suggestions });
+      await queryClient.cancelQueries({ queryKey: queryKeys.bank.transactions });
 
-      const prevSuggestions = queryClient.getQueryData<MatchSuggestion[]>(["reconciliation", "suggestions"]);
-      const prevTransactions = queryClient.getQueryData<Transaction[]>(["bank", "transactions"]);
+      const prevSuggestions = queryClient.getQueryData<MatchSuggestion[]>(queryKeys.reconciliation.suggestions);
+      const prevTransactions = queryClient.getQueryData<Transaction[]>(queryKeys.bank.transactions);
 
       const match = prevSuggestions?.find((s) => s.id === matchId);
 
       queryClient.setQueryData<MatchSuggestion[]>(
-        ["reconciliation", "suggestions"],
+        queryKeys.reconciliation.suggestions,
         (old) => (old || []).filter((s) => s.id !== matchId)
       );
 
       if (match?.transaction_id) {
         markModified(match.transaction_id);
         queryClient.setQueryData<Transaction[]>(
-          ["bank", "transactions"],
+          queryKeys.bank.transactions,
           (old) =>
             (old || []).map((tx) =>
               tx.id === match.transaction_id
@@ -129,13 +132,13 @@ export default function AvstemmingPage() {
     },
     onError: (_err, _vars, context) => {
       if (context?.prevSuggestions) {
-        queryClient.setQueryData(["reconciliation", "suggestions"], context.prevSuggestions);
+        queryClient.setQueryData(queryKeys.reconciliation.suggestions, context.prevSuggestions);
       }
       if (context?.prevTransactions) {
-        queryClient.setQueryData(["bank", "transactions"], context.prevTransactions);
+        queryClient.setQueryData(queryKeys.bank.transactions, context.prevTransactions);
       }
     },
-    onSettled: () => invalidateAll(),
+    onSettled: () => invalidateOnEvent(queryClient, "reconciliation:confirmed"),
   });
 
   const rejectMutation = useMutation({
@@ -156,23 +159,23 @@ export default function AvstemmingPage() {
       if (!res.ok) throw new Error("Reject failed");
     },
     onMutate: async ({ matchId }) => {
-      await queryClient.cancelQueries({ queryKey: ["reconciliation", "suggestions"] });
-      await queryClient.cancelQueries({ queryKey: ["bank", "transactions"] });
+      await queryClient.cancelQueries({ queryKey: queryKeys.reconciliation.suggestions });
+      await queryClient.cancelQueries({ queryKey: queryKeys.bank.transactions });
 
-      const prevSuggestions = queryClient.getQueryData<MatchSuggestion[]>(["reconciliation", "suggestions"]);
-      const prevTransactions = queryClient.getQueryData<Transaction[]>(["bank", "transactions"]);
+      const prevSuggestions = queryClient.getQueryData<MatchSuggestion[]>(queryKeys.reconciliation.suggestions);
+      const prevTransactions = queryClient.getQueryData<Transaction[]>(queryKeys.bank.transactions);
 
       const match = prevSuggestions?.find((s) => s.id === matchId);
 
       queryClient.setQueryData<MatchSuggestion[]>(
-        ["reconciliation", "suggestions"],
+        queryKeys.reconciliation.suggestions,
         (old) => (old || []).filter((s) => s.id !== matchId)
       );
 
       if (match?.transaction_id) {
         markModified(match.transaction_id);
         queryClient.setQueryData<Transaction[]>(
-          ["bank", "transactions"],
+          queryKeys.bank.transactions,
           (old) =>
             (old || []).map((tx) =>
               tx.id === match.transaction_id
@@ -186,13 +189,13 @@ export default function AvstemmingPage() {
     },
     onError: (_err, _vars, context) => {
       if (context?.prevSuggestions) {
-        queryClient.setQueryData(["reconciliation", "suggestions"], context.prevSuggestions);
+        queryClient.setQueryData(queryKeys.reconciliation.suggestions, context.prevSuggestions);
       }
       if (context?.prevTransactions) {
-        queryClient.setQueryData(["bank", "transactions"], context.prevTransactions);
+        queryClient.setQueryData(queryKeys.bank.transactions, context.prevTransactions);
       }
     },
-    onSettled: () => invalidateAll(),
+    onSettled: () => invalidateOnEvent(queryClient, "reconciliation:rejected"),
   });
 
   const refreshMutation = useMutation({
@@ -200,7 +203,7 @@ export default function AvstemmingPage() {
       const res = await fetch(`${API_BASE_URL}/api/bank/reconciliation/run`, { method: "POST" });
       if (!res.ok) throw new Error("Reconciliation run failed");
     },
-    onSuccess: () => invalidateAll(),
+    onSuccess: () => invalidateOnEvent(queryClient, "reconciliation:confirmed"),
   });
 
   const handleConfirmMatch = (matchId: string, feedback?: string) => {
@@ -275,7 +278,7 @@ export default function AvstemmingPage() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-end justify-between"
+        className={`flex items-end justify-between ${crystallize(1)}`}
       >
         <div>
           <div className="flex items-center gap-3">
@@ -356,7 +359,7 @@ export default function AvstemmingPage() {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: isLoading ? 0.5 : 1, y: 0 }}
         transition={{ delay: 0.04 }}
-        className="relative grid grid-cols-5 gap-px rounded-xl border bg-border overflow-hidden"
+        className={`relative grid grid-cols-5 gap-px rounded-xl border bg-border overflow-hidden ${crystallize(2)}`}
       >
         {/* Cell: Bank balance */}
         <div className="bg-card px-4 py-3">
@@ -464,7 +467,7 @@ export default function AvstemmingPage() {
       </motion.div>
 
       {/* Main content: suggestions + transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-5">
+      <div className={`grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-5 ${crystallize(3)}`}>
         {/* LEFT: Match suggestions */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -607,7 +610,12 @@ export default function AvstemmingPage() {
               {filteredTransactions.length > 0 ? (
                 <div className="divide-y divide-border/40">
                   {filteredTransactions.map((tx) => (
-                    <TransactionRow key={tx.id} tx={tx} isRecent={recentlyModified.has(tx.id)} />
+                    <TransactionRow
+                      key={tx.id}
+                      tx={tx}
+                      isRecent={recentlyModified.has(tx.id)}
+                      onClick={() => router.push(`/dashboard/bank?tx=${tx.id}`)}
+                    />
                   ))}
                 </div>
               ) : (

@@ -7,72 +7,21 @@
 3. [Autonomy Levels & Auto-Posting](#autonomy-levels--auto-posting)
 4. [Rule System](#rule-system)
 5. [Learning from Feedback](#learning-from-feedback)
-6. [End-to-End Flow](#end-to-end-flow)
+6. [Success Clusters](#success-clusters)
+7. [Three-Phase Reconciliation Pipeline](#three-phase-reconciliation-pipeline)
+8. [Source Files](#source-files)
 
 ---
 
 ## System Overview
 
-Ciri's reconciliation engine matches bank transactions to bilags (accounting documents) using a multi-factor weighted scoring algorithm. The system learns from user corrections to create rules that improve accuracy over time.
+Ciri's reconciliation engine matches bank transactions to bilags (accounting documents) using a **three-phase pipeline**:
 
-```
-                           ┌──────────────────────┐
-                           │   Bank Transaction    │
-                           │  (amount, date, ref,  │
-                           │   merchant, desc)     │
-                           └──────────┬───────────┘
-                                      │
-                           ┌──────────▼───────────┐
-                           │    Rule Engine        │
-                           │  (Check learned rules │
-                           │   first, by priority) │
-                           └──────────┬───────────┘
-                                      │
-                         ┌────────────┴────────────┐
-                    Rule matched?              No match
-                         │                         │
-                    ┌────▼────┐            ┌───────▼────────┐
-                    │  Apply  │            │  Multi-Factor  │
-                    │  Action │            │  Matcher       │
-                    │(ignore, │            │(6 weighted     │
-                    │ categorize,│         │ factors)       │
-                    │ match)  │            └───────┬────────┘
-                    └─────────┘                    │
-                                          ┌───────▼────────┐
-                                          │  Score → 0-1   │
-                                          │  Confidence:   │
-                                          │  HIGH ≥ 0.90   │
-                                          │  MED  ≥ 0.70   │
-                                          │  LOW  < 0.70   │
-                                          └───────┬────────┘
-                                                  │
-                                     ┌────────────▼────────────┐
-                                     │    Autonomy Gate        │
-                                     │                         │
-                                     │  ASSISTANT: auto HIGH   │
-                                     │  AUTONOMOUS: auto H+M   │
-                                     └────────────┬────────────┘
-                                                  │
-                              ┌───────────────────┴───────────────┐
-                         Auto-confirmed                       Suggested
-                              │                                   │
-                    ┌─────────▼──────────┐              ┌─────────▼──────────┐
-                    │  Mark as MATCHED   │              │  Show to user      │
-                    │  Create posteringer│              │  Await confirmation│
-                    └────────────────────┘              └─────────┬──────────┘
-                                                                  │
-                                                       ┌──────────▼──────────┐
-                                                       │  User feedback      │
-                                                       │  (confirm / reject  │
-                                                       │   / correct)        │
-                                                       └──────────┬──────────┘
-                                                                  │
-                                                       ┌──────────▼──────────┐
-                                                       │  Learn from         │
-                                                       │  feedback →         │
-                                                       │  Create new rule    │
-                                                       └─────────────────────┘
-```
+1. **Phase 1 — Mechanical Scoring** (event-driven, no AI): Rules + multi-factor weighted scoring triggered by changes in the transaction or bilag pools
+2. **Phase 2 — Cluster Validation** (mechanical, no AI): Statistical profile check against success clusters, readiness tier assignment
+3. **Phase 3 — AI Inspection** (Claude Opus, batched Mon+Fri): Final safety gate before autonomous booking (~$6.50/year per customer)
+
+The system learns from user corrections to create rules that improve accuracy over time. See [Three-Phase Reconciliation Pipeline](#three-phase-reconciliation-pipeline) for the full architecture.
 
 ---
 
@@ -82,14 +31,14 @@ The matcher evaluates each transaction-bilag pair across **6 independent factors
 
 ### Factor Weights
 
-| # | Factor | Weight | What it checks |
-|---|--------|--------|----------------|
-| 1 | Exact amount | **0.35** | `transaction.amount == bilag.gross_amount` (absolute values) |
-| 2 | Reference/KID match | **0.30** | Bank reference contains bilag number or shared numeric sequence |
-| 3 | Amount tolerance | **0.20** | Amount within 2% tolerance (only if exact match fails) |
-| 4 | Name similarity | **0.15** | Fuzzy match between merchant name and counterparty (SequenceMatcher) |
-| 5 | Date proximity | **0.15** | Transaction date within 14 days of bilag date (linear decay) |
-| 6 | Historical patterns | **0.10** | Reserved for future rule-based boosting |
+| #   | Factor              | Weight   | What it checks                                                       |
+| --- | ------------------- | -------- | -------------------------------------------------------------------- |
+| 1   | Exact amount        | **0.35** | `transaction.amount == bilag.gross_amount` (absolute values)         |
+| 2   | Reference/KID match | **0.30** | Bank reference contains bilag number or shared numeric sequence      |
+| 3   | Amount tolerance    | **0.20** | Amount within 2% tolerance (only if exact match fails)               |
+| 4   | Name similarity     | **0.15** | Fuzzy match between merchant name and counterparty (SequenceMatcher) |
+| 5   | Date proximity      | **0.15** | Transaction date within 14 days of bilag date (linear decay)         |
+| 6   | Historical patterns | **0.10** | Reserved for future rule-based boosting                              |
 
 > **Note:** Weights sum to 1.25, not 1.0. This is intentional — factors can stack (e.g., exact amount + reference + name = 0.80), but in practice a perfect match across all factors yields ~1.0 because amount tolerance doesn't fire when exact match succeeds.
 
@@ -137,17 +86,18 @@ The matcher evaluates each transaction-bilag pair across **6 independent factors
 │  └─────────────────┘                                            │
 │                                                                 │
 │  CONFIDENCE LEVELS:                                             │
-│  ┌────────────────────────────────────────┐                     │
-│  │  score ≥ 0.90  →  HIGH   (auto-post)  │                     │
-│  │  score ≥ 0.70  →  MEDIUM (review)     │                     │
-│  │  score < 0.70  →  LOW    (manual)     │                     │
-│  └────────────────────────────────────────┘                     │
+│  ┌──────────────────────────────────────────────┐               │
+│  │  score ≥ 0.90  →  HIGH   (queue for Phase 3) │               │
+│  │  score ≥ 0.70  →  MEDIUM (review/queue)      │               │
+│  │  score < 0.70  →  LOW    (suggest to user)    │               │
+│  └──────────────────────────────────────────────┘               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Scoring Examples
 
 **Example 1: Perfect match (score = 0.95)**
+
 ```
 Transaction: kr 12,500.00 from "Telenor Norge AS", ref "F-2025-042", date 2025-03-15
 Bilag:       kr 12,500.00, counterparty "Telenor AS", number "F-2025-042", date 2025-03-12
@@ -162,6 +112,7 @@ Factor 5 (Date):          0.15 × (1 - 3/14) = 0.12  ← 3 days apart
 ```
 
 **Example 2: Partial match (score = 0.72)**
+
 ```
 Transaction: kr 4,980.00 from "VIPPS*BYGGMAKKER", no ref, date 2025-04-02
 Bilag:       kr 4,980.00, counterparty "Byggmakker Storo", date 2025-03-28
@@ -219,7 +170,7 @@ Since 0.67 ≥ 0.60 threshold → name_score = 0.15 × 0.67 = 0.10
 
 ## Autonomy Levels & Auto-Posting
 
-The company's autonomy level determines which confidence levels are auto-confirmed vs. presented for review.
+The company's autonomy level determines which confidence levels are queued for AI inspection (Phase 3) vs. presented to the user for manual review. **Nothing is auto-posted without passing all three phases** (scoring → cluster → AI inspection).
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -227,12 +178,15 @@ The company's autonomy level determines which confidence levels are auto-confirm
 │                                                                    │
 │              │  HIGH (≥0.90)  │  MEDIUM (0.70-0.89) │  LOW (<0.70) │
 │  ────────────┼────────────────┼─────────────────────┼──────────────│
-│  ASSISTANT   │  AUTO-CONFIRM  │  Suggest             │  Suggest     │
-│  (Assistent) │  ✓ immediate   │  (user decides)      │  (user decides)│
+│  ASSISTANT   │  → Phase 3     │  Suggest             │  Suggest     │
+│  (Assistent) │  (AI verify)   │  (user decides)      │  (user decides)│
 │  ────────────┼────────────────┼─────────────────────┼──────────────│
-│  AUTONOMOUS  │  AUTO-CONFIRM  │  AUTO-CONFIRM        │  Suggest     │
-│  (Autonom)   │  ✓ immediate   │  ✓ immediate         │  (user decides)│
+│  AUTONOMOUS  │  → Phase 3     │  → Phase 3           │  Suggest     │
+│  (Autonom)   │  (AI verify)   │  (AI verify)         │  (user decides)│
 └─────────────────────────────────────────────────────────────────────┘
+
+  Phase 3 = queued for AI inspection batch (Mon + Fri).
+  Only after Claude Opus approves does the match get auto-booked.
 ```
 
 ### Auto-Posting for Bilags (Invoice Processing)
@@ -294,13 +248,13 @@ Each rule has a `criteria` field (JSONB) that defines what transactions it match
 
 ```json
 {
-  "description_contains": "SPOTIFY",     // Substring match (case-insensitive)
-  "amount_min": 99,                       // Minimum absolute amount
-  "amount_max": 199,                      // Maximum absolute amount
-  "amount_exact": 119,                    // Exact amount match
-  "merchant_name": "Spotify",             // Exact merchant name
-  "direction": "debit",                   // Transaction direction
-  "bank_account_id": "uuid"              // Specific bank account
+  "description_contains": "SPOTIFY", // Substring match (case-insensitive)
+  "amount_min": 99, // Minimum absolute amount
+  "amount_max": 199, // Maximum absolute amount
+  "amount_exact": 119, // Exact amount match
+  "merchant_name": "Spotify", // Exact merchant name
+  "direction": "debit", // Transaction direction
+  "bank_account_id": "uuid" // Specific bank account
 }
 ```
 
@@ -573,92 +527,17 @@ When creating a rule from feedback, the system extracts the most distinctive par
 
 ---
 
-## End-to-End Flow
+## Success Clusters
 
-### Transaction Reconciliation
+### Why Clusters, Not Rule Counts
 
-```
-  Bank transaction arrives
-           │
-           ▼
-  ┌─ apply_rules() ────────────────────────────────────┐
-  │  Query active rules for company, ordered by priority│
-  │  For each rule:                                     │
-  │    rule.matches_transaction(tx)?                    │
-  │      YES → return action + rule reference            │
-  │      NO  → try next rule                            │
-  │  No rule matched → return None                      │
-  │                                                     │
-  │  NOTE: record_application() is called later in       │
-  │  _apply_rule_action(), only when the rule actually   │
-  │  changes transaction state (IGNORE/CATEGORY).        │
-  │  AUTO_MATCH rules that can't fully resolve don't     │
-  │  inflate times_applied.                              │
-  └────────────────────────────┬────────────────────────┘
-                               │
-              ┌────────────────┴────────────────┐
-         Rule matched                      No rule
-              │                                 │
-    ┌─────────▼──────────┐           ┌──────────▼──────────┐
-    │ _apply_rule_action │           │  find_matches()     │
-    │                    │           │  Get top 100 bilags │
-    │ IGNORE:            │           │  Score each pair    │
-    │  mark private      │           │  Sort by score      │
-    │                    │           │  Return top 5       │
-    │ AUTO_CATEGORY:     │           └──────────┬──────────┘
-    │  set category      │                      │
-    │  set account       │           ┌──────────▼──────────┐
-    └────────────────────┘           │ auto_reconcile()    │
-                                     │ Check autonomy      │
-                                     │ level:              │
-                                     │                     │
-                                     │ AUTONOMOUS:         │
-                                     │  HIGH+MED → auto    │
-                                     │                     │
-                                     │ ASSISTANT:          │
-                                     │  HIGH → auto        │
-                                     │  MED → suggest      │
-                                     │                     │
-                                     │  LOW → suggest      │
-                                     └──────────┬──────────┘
-                                                │
-                                     ┌──────────▼──────────┐
-                                     │ Create              │
-                                     │ ReconciliationMatch  │
-                                     │ record with:        │
-                                     │  - confidence_score  │
-                                     │  - match_factors     │
-                                     │  - ciri_explanation  │
-                                     │  - status (auto/     │
-                                     │    suggested)        │
-                                     └─────────────────────┘
-```
-
-### Source Files
-
-| File | Purpose |
-|------|---------|
-| `services/reconciliation_matcher.py` | Multi-factor scoring, rule application, learning |
-| `services/rule_cascade.py` | Retroactive cleanup when IGNORE rules are created |
-| `models/reconciliation_rule.py` | Rule model, criteria matching, effectiveness tracking |
-| `services/invoice_processor.py` | OCR processing, auto-posting gate |
-| `models/company.py` | AutonomyLevel enum |
-| `models/bilag.py` | BilagStatus, confidence fields |
-| `models/bank_transaction.py` | ReconciliationStatus, transaction data |
-
----
-
-## Success Clusters & Autonomous Posting Maturity
-
-### The Problem with Rule-Count Thresholds
-
-The original maturity gate required >20 active rules before Ciri could auto-post. This is
+The original maturity gate required >20 active rules before Ciri could post autonomously. This is
 the wrong abstraction. Consider:
 
 - A company with 8 well-tested rules covering 90% of recurring transactions is blocked
 - A company with 25 untested single-character rules passes
 
-Rule count measures *volume*, not *competence*. Ciri's readiness to auto-post should be
+Rule count measures _volume_, not _competence_. Ciri's readiness for autonomous posting should be
 a function of how deeply she understands the company's transaction patterns — and that
 understanding is uneven. She may know software subscriptions perfectly while being blind to
 consulting fees.
@@ -769,7 +648,7 @@ Strength determines whether a cluster is reliable enough to inform autonomous de
 │                                                                   │
 │  STRENGTH LEVELS:                                                 │
 │  ┌──────────────────────────────────────────────────────────┐     │
-│  │  strength ≥ 0.75  →  STRONG   (can inform auto-posting) │     │
+│  │  strength ≥ 0.75  →  STRONG   (can inform Phase 3 queue) │     │
 │  │  strength ≥ 0.50  →  GROWING  (inform suggestions only) │     │
 │  │  strength < 0.50  →  WEAK     (not used in decisions)   │     │
 │  └──────────────────────────────────────────────────────────┘     │
@@ -820,53 +699,9 @@ Strength determines whether a cluster is reliable enough to inform autonomous de
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### How Clusters Inform Autonomous Posting
-
-When a **stranger transaction** arrives (no rule matches), the system uses clusters
-as contextual knowledge for the Claude validation step. Clusters do NOT replace the
-multi-factor matcher — they augment Claude's ability to validate the posting.
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│           STRANGER TRANSACTION FLOW                               │
-│                                                                   │
-│  New transaction: "FIGMA INC. -150.00 USD"                        │
-│           │                                                       │
-│           ▼                                                       │
-│  Step 1: Rule engine                                              │
-│    No rule matches "FIGMA" → pass through                         │
-│           │                                                       │
-│           ▼                                                       │
-│  Step 2: Multi-factor matcher                                     │
-│    Finds bilag candidate: "Figma subscription, kr 1,620"          │
-│    Score: 0.78 (MEDIUM — amount match + date proximity)           │
-│           │                                                       │
-│           ▼                                                       │
-│  Step 3: Cluster lookup                                           │
-│    If the bilag would be posted to 6540/IT:                       │
-│      → Is the 6540/IT cluster STRONG?                             │
-│      → Does FIGMA fit the cluster profile?                        │
-│        ✓ Direction: debit (cluster: 100% debit)                   │
-│        ✓ Amount: kr 1,620 (cluster: kr 49–2,890)                  │
-│        ✓ Type: software subscription (similar merchants)          │
-│      → Cluster fit score: HIGH                                    │
-│           │                                                       │
-│           ▼                                                       │
-│  Step 4: Decision                                                 │
-│    Multi-factor score: 0.78 (MEDIUM)                              │
-│    Cluster fit: HIGH on STRONG cluster                            │
-│    → Eligible for batch auto-posting with Claude validation       │
-│           │                                                       │
-│           ▼                                                       │
-│  Step 5: Batch + Claude validation (see next section)             │
-│    Claude receives the transaction + cluster context              │
-│    Claude approves or flags                                       │
-└──────────────────────────────────────────────────────────────────┘
-```
-
 **Critical safety property**: Clusters NEVER generate matches. They only provide
 contextual validation for matches that the multi-factor scorer already found. A
-transaction with no bilag candidate is never auto-posted, regardless of cluster
+transaction with no bilag candidate never reaches Phase 3, regardless of cluster
 strength.
 
 ### Transaction–Cluster Fit Scoring
@@ -921,8 +756,8 @@ readiness assessment based on how much evidence Ciri has for that specific decis
 │  TIER 1 — DIRECT RULE MATCH                                      │
 │    A tested rule with <20% override rate matches directly.        │
 │    Readiness: HIGH                                                │
-│    Action: Apply immediately (IGNORE/CATEGORY rules) or           │
-│            include in auto-post batch (AUTO_MATCH rules)          │
+│    Action: IGNORE/CATEGORY rules apply immediately (no AI).       │
+│            AUTO_MATCH rules → queue for Phase 3.                  │
 │                                                                   │
 │  TIER 2 — STRONG CLUSTER + BILAG MATCH                            │
 │    No rule matches, but:                                          │
@@ -930,8 +765,8 @@ readiness assessment based on how much evidence Ciri has for that specific decis
 │      ✓ Destination cluster is STRONG (strength ≥ 0.75)           │
 │      ✓ Transaction fits the cluster (fit ≥ 0.70)                 │
 │    Readiness: MEDIUM-HIGH                                         │
-│    Action: Include in auto-post batch. Claude receives cluster    │
-│            context for informed validation.                        │
+│    Action: Queue for Phase 3. Claude receives cluster context     │
+│            for informed validation.                                │
 │                                                                   │
 │  TIER 3 — GROWING CLUSTER + BILAG MATCH                           │
 │    No rule, but:                                                  │
@@ -950,186 +785,19 @@ readiness assessment based on how much evidence Ciri has for that specific decis
 │      ✗ Transaction doesn't fit any cluster                        │
 │    Readiness: LOW                                                 │
 │    Action: Suggest if bilag found, otherwise flag as unmatched.   │
-│            NEVER auto-post. This is novel territory for Ciri.     │
+│            NEVER queued for Phase 3. This is novel territory.     │
 │                                                                   │
 │  GLOBAL MINIMUM (safety floor):                                   │
-│    Even for Tier 1 and 2, autonomous posting requires:            │
+│    Even for Tier 1 and 2, Phase 3 queueing requires:              │
 │      ✓ Company in AUTONOMOUS mode                                 │
 │      ✓ At least 5 non-overridden rules exist                     │
 │      ✓ At least 1 STRONG cluster exists                           │
-│      ✓ Claude validation passes (always — never skip this)        │
+│      ✓ Phase 3 AI inspection passes (always — never skip this)    │
 │    These ensure Ciri doesn't go autonomous from one lucky rule.   │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Batch Auto-Posting with Cluster Context
-
-All autonomous posting happens in **batches**, never one-off. This enables prompt
-caching and gives Claude the full picture instead of isolated decisions.
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│           BATCH AUTO-POSTING PIPELINE                             │
-│                                                                   │
-│  Trigger: Scheduled (e.g., daily at 06:00) or manual via API      │
-│                                                                   │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │ Phase 1: COLLECT                                       │       │
-│  │                                                         │       │
-│  │  Query all unmatched, non-private transactions          │       │
-│  │  For each, compute readiness tier (1–4)                 │       │
-│  │  Collect TIER 1 + TIER 2 into the batch                 │       │
-│  │  TIER 3-4 are excluded from batch (suggest only)        │       │
-│  └────────────────────────────┬───────────────────────────┘       │
-│                               │                                   │
-│  ┌────────────────────────────▼───────────────────────────┐       │
-│  │ Phase 2: BUILD CLUSTER SUMMARIES                        │       │
-│  │                                                         │       │
-│  │  For each unique cluster referenced by batch items:     │       │
-│  │    Compute cluster summary:                             │       │
-│  │      - Total confirmed postings                         │       │
-│  │      - Distinct merchants seen                          │       │
-│  │      - Amount range (p5–p95)                            │       │
-│  │      - Override rate                                    │       │
-│  │      - Typical account + category                       │       │
-│  │      - 3 example merchants                              │       │
-│  │                                                         │       │
-│  │  These summaries are STATIC across the batch and are    │       │
-│  │  the ideal candidate for prompt caching.                │       │
-│  └────────────────────────────┬───────────────────────────┘       │
-│                               │                                   │
-│  ┌────────────────────────────▼───────────────────────────┐       │
-│  │ Phase 3: CLAUDE VALIDATION                              │       │
-│  │                                                         │       │
-│  │  Prompt structure (optimized for caching):              │       │
-│  │                                                         │       │
-│  │  ┌─ CACHED (cache_control: ephemeral) ───────────────┐ │       │
-│  │  │                                                    │ │       │
-│  │  │  System instructions:                              │ │       │
-│  │  │    "Du er Ciri, AI-regnskapsfører..."              │ │       │
-│  │  │                                                    │ │       │
-│  │  │  Cluster summaries:                                │ │       │
-│  │  │    Cluster "6540 IT": 18 postings, 5 merchants,    │ │       │
-│  │  │      kr 49–2890, 0% override. Ex: ANTHROPIC,       │ │       │
-│  │  │      GITHUB, SPOTIFY.                              │ │       │
-│  │  │    Cluster "6300 Leie": 12 postings, 2 merchants,  │ │       │
-│  │  │      kr 8000–15000, 0% override. Ex: ENTRA EIENDOM │ │       │
-│  │  │    Cluster "7700 Privat": ...                       │ │       │
-│  │  │                                                    │ │       │
-│  │  │  Norwegian accounting rules:                       │ │       │
-│  │  │    (Standard kontoplan reference for validation)    │ │       │
-│  │  │                                                    │ │       │
-│  │  └────────────────────────────────────────────────────┘ │       │
-│  │                                                         │       │
-│  │  ┌─ NOT CACHED (changes per batch) ──────────────────┐ │       │
-│  │  │                                                    │ │       │
-│  │  │  Transactions to validate:                         │ │       │
-│  │  │    1. FIGMA INC. -1620 → 6540 (cluster fit: HIGH)  │ │       │
-│  │  │    2. ADOBE SYSTEMS -599 → 6540 (cluster fit: HIGH)│ │       │
-│  │  │    3. MEED AS +45000 → 3000 (rule: "MEED AS")      │ │       │
-│  │  │                                                    │ │       │
-│  │  │  For each: tier, confidence_score, cluster_fit,    │ │       │
-│  │  │           suggested_account, matching_rule or       │ │       │
-│  │  │           cluster_name                             │ │       │
-│  │  │                                                    │ │       │
-│  │  └────────────────────────────────────────────────────┘ │       │
-│  │                                                         │       │
-│  │  Claude responds with:                                  │       │
-│  │    { approved: bool, flagged_indices: [...],            │       │
-│  │      corrections: [...], reasoning: "..." }             │       │
-│  │                                                         │       │
-│  │  Model: claude-haiku-4-5-20251001 (structured task)     │       │
-│  │  Cost: ~$0.001/batch (cached) vs $0.01/batch (no cache)│       │
-│  └────────────────────────────┬───────────────────────────┘       │
-│                               │                                   │
-│  ┌────────────────────────────▼───────────────────────────┐       │
-│  │ Phase 4: EXECUTE                                        │       │
-│  │                                                         │       │
-│  │  If Claude approved:                                    │       │
-│  │    For each non-flagged transaction in batch:           │       │
-│  │      → Create bilag                                     │       │
-│  │      → Create posteringer (debit + credit)              │       │
-│  │      → Update transaction status to MATCHED             │       │
-│  │      → Record data point in cluster                     │       │
-│  │      → Update rule times_applied (if Tier 1)            │       │
-│  │                                                         │       │
-│  │  If Claude flagged specific transactions:               │       │
-│  │    → Post the approved ones                             │       │
-│  │    → Move flagged ones to SUGGESTED (user review)       │       │
-│  │    → Include Claude's concern in ciri_explanation       │       │
-│  │                                                         │       │
-│  │  If Claude rejected entire batch:                       │       │
-│  │    → Post nothing                                       │       │
-│  │    → Log reasoning                                      │       │
-│  │    → All items become suggestions for user review       │       │
-│  └────────────────────────────┬───────────────────────────┘       │
-│                               │                                   │
-│  ┌────────────────────────────▼───────────────────────────┐       │
-│  │ Phase 5: CLUSTER UPDATE                                 │       │
-│  │                                                         │       │
-│  │  For each successfully posted transaction:              │       │
-│  │    → Add data point to its destination cluster          │       │
-│  │    → Recompute cluster strength                         │       │
-│  │  This means clusters grow stronger over time as Ciri    │       │
-│  │  successfully handles more transactions.                │       │
-│  └────────────────────────────────────────────────────────┘       │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Prompt Caching Strategy
-
-The batch pipeline is designed for optimal Claude API cost:
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│          PROMPT CACHING FOR AUTO-POSTING                          │
-│                                                                   │
-│  WHAT TO CACHE (cache_control: ephemeral, 5-min TTL):             │
-│                                                                   │
-│    1. System instructions (~500 tokens, static)                   │
-│       "Du er Ciri, AI-regnskapsfører for norske småbedrifter..."  │
-│                                                                   │
-│    2. Cluster summaries (~200-1000 tokens, changes daily)         │
-│       These change slowly — maybe 1 new data point per day.       │
-│       Within a single batch run they are completely static.       │
-│       Cache hit rate: ~95% within a batch.                        │
-│                                                                   │
-│    3. Kontoplan reference (~800 tokens, static)                   │
-│       Standard Norwegian chart of accounts for validation.        │
-│                                                                   │
-│  WHAT NOT TO CACHE (varies per batch):                            │
-│                                                                   │
-│    4. Transaction list (~50-200 tokens per transaction)           │
-│       These are unique to each batch. Always fresh.               │
-│                                                                   │
-│  COST MODEL:                                                      │
-│  ┌──────────────────────────────────────────────────────────┐     │
-│  │                                                          │     │
-│  │  Without caching:                                        │     │
-│  │    10 transactions × ~2500 tokens prompt = 25K input     │     │
-│  │    Cost: 25K × $0.25/M = $0.006 per batch                │     │
-│  │                                                          │     │
-│  │  With caching:                                           │     │
-│  │    Cached: ~2000 tokens × $0.025/M = $0.00005            │     │
-│  │    Fresh:  ~500 tokens × $0.25/M = $0.000125             │     │
-│  │    Cost: ~$0.0002 per batch (30× cheaper)                │     │
-│  │                                                          │     │
-│  │  At 1 batch/day × 365 days:                              │     │
-│  │    No cache: $2.19/year                                   │     │
-│  │    Cached:   $0.07/year                                   │     │
-│  │                                                          │     │
-│  └──────────────────────────────────────────────────────────┘     │
-│                                                                   │
-│  IMPLEMENTATION NOTE:                                             │
-│  Prompt caching only works on the SERVER SIDE — it caches the     │
-│  prompt TEXT, not the response. Each batch still gets a fresh      │
-│  analysis. No stale data risk. The cluster summaries and system   │
-│  instructions are simply re-read from cache instead of being      │
-│  re-tokenized.                                                    │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Dangerous Edge Cases & Safeguards
+### Edge Cases & Safeguards
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -1160,14 +828,14 @@ The batch pipeline is designed for optimal Claude API cost:
 │     point's was_overridden flag is set. If overrides accumulate,  │
 │     cluster strength drops. At >20% override rate, the cluster    │
 │     falls below the hard minimum and becomes WEAK → no longer     │
-│     used for auto-posting. Self-healing.                          │
+│     used for Phase 3 queueing. Self-healing.                     │
 │                                                                   │
 │  4. ONE-OFF TRANSACTIONS                                          │
 │     A unique consulting fee from a new vendor. Doesn't fit any    │
 │     pattern.                                                       │
 │                                                                   │
 │     Safeguard: No cluster match + no rule → Tier 4 (NEVER         │
-│     auto-post). One-offs are inherently unpredictable. Ciri       │
+│     Phase 3). One-offs are inherently unpredictable. Ciri         │
 │     suggests if a bilag is found, otherwise flags as unmatched.   │
 │                                                                   │
 │  5. CATEGORY BLEEDING                                             │
@@ -1187,9 +855,10 @@ The batch pipeline is designed for optimal Claude API cost:
 │                                                                   │
 │     Safeguard: Global minimum requires ≥1 STRONG cluster and      │
 │     ≥5 non-overridden rules. Even in AUTONOMOUS mode, Tier 3-4   │
-│     transactions are NEVER auto-posted. The company starts with   │
-│     a small set of auto-postable transactions and grows.          │
+│     transactions NEVER reach Phase 3. The company starts with     │
+│     a small set of Phase 3-eligible transactions and grows.       │
 └──────────────────────────────────────────────────────────────────┘
+
 ```
 
 ### Database Schema (New Table)
@@ -1253,16 +922,351 @@ WHERE company_id = :company_id
 GROUP BY company_id, account_number, category;
 ```
 
+---
+
+## Three-Phase Reconciliation Pipeline
+
+The reconciliation system operates as a three-phase pipeline. **Phases 1 and 2 are purely mechanical** — no AI is ever involved. **Phase 3 (AI inspection) is the only step that uses Claude**, and it runs in weekly batches.
+
+### Architecture Overview
+
+```
+┌─────────────────────┐              ┌─────────────────────┐
+│   Bank Transactions  │              │   Bilags             │
+│   (unmatched pool)   │              │   (open/seeking)     │
+└──────────┬──────────┘              └──────────┬──────────┘
+           │                                     │
+           │  either pool changes                │
+           │  (new item, status change,          │
+           │   dismissed match returns)          │
+           └─────────────┬───────────────────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │  PHASE 1            │
+              │  Mechanical Scoring │    ← No AI. Pure algorithm.
+              │  (event-driven)     │       Rules + multi-factor scoring.
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │  PHASE 2            │
+              │  Cluster Validation │    ← No AI. Statistical profile check.
+              │  (mechanical)       │       Readiness tier assignment.
+              └──────────┬──────────┘
+                         │
+                    Tier 1-2 matches
+                    queue for Phase 3
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │  PHASE 3            │
+              │  AI Inspection      │    ← Claude Opus. Batched weekly.
+              │  (scheduled batch)  │       Final safety gate.
+              └──────────┬──────────┘
+                         │
+                    Approved → auto-book
+                    Flagged  → user review
+```
+
+### Phase 1: Event-Driven Surveillance (Mechanical)
+
+The surveillance algorithm watches two pools: **unmatched transactions** and **open bilags**. Any change in either pool triggers a reconciliation sweep.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              SURVEILLANCE TRIGGERS                                │
+│                                                                   │
+│  Transaction pool changes:                                       │
+│    • New transactions imported from bank sync                    │
+│    • Transaction status changes (e.g., unlinked)                 │
+│                                                                   │
+│  Bilag pool changes:                                              │
+│    • New bilag created (OCR, email, manual)                      │
+│    • Bilag dismissed from a match → returns to "seeking" status  │
+│    • Bilag status changes (e.g., REJECTED → PENDING)             │
+│                                                                   │
+│  On trigger:                                                      │
+│    1. Collect all unmatched, non-private transactions             │
+│    2. Collect all bilags with status PENDING or APPROVED          │
+│    3. Check dismissed pairings exclusion list                    │
+│    4. Run rule engine (fast path)                                 │
+│    5. Run multi-factor scorer on remaining pairs                 │
+│    6. Emit scored candidates                                      │
+│                                                                   │
+│  Output: Match candidates with confidence scores                  │
+│  Tier 1-2 (per autonomy level) → queue for Phase 3 batch        │
+│  Tier 3-4 → suggest to user for manual review                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### Debouncing
+
+A bank sync importing 80 transactions at once must not trigger 80 separate sweeps. The surveillance debounces by collecting all changes within a short window (e.g., 5 seconds) and running a single sweep after the batch completes.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              DEBOUNCE STRATEGY                                    │
+│                                                                   │
+│  Bank sync imports 80 transactions over ~3 seconds:              │
+│                                                                   │
+│  tx_1 ──┐                                                        │
+│  tx_2 ──┤                                                        │
+│  tx_3 ──┤  debounce window (5s)                                  │
+│  ...    ├──────────────────────── → single reconciliation sweep   │
+│  tx_79 ─┤                                                        │
+│  tx_80 ─┘                                                        │
+│                                                                   │
+│  Implementation: After any pool change, set a 5-second timer.    │
+│  If another change arrives before the timer fires, reset it.     │
+│  When the timer fires, run one sweep covering all pending changes.│
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### Dismissed Match Handling
+
+When a user rejects a suggested match, the bilag returns to the open pool ("seeking transaction"). To prevent the system from immediately re-suggesting the same pairing, dismissed pairs are tracked.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              DISMISSED PAIRINGS                                   │
+│                                                                   │
+│  Table: dismissed_pairings                                       │
+│  ┌──────────────────┬──────────────────┬───────────────────┐     │
+│  │ transaction_id   │ bilag_id         │ dismissed_at      │     │
+│  └──────────────────┴──────────────────┴───────────────────┘     │
+│                                                                   │
+│  On dismiss:                                                      │
+│    1. Record (transaction_id, bilag_id) in dismissed_pairings    │
+│    2. Set bilag status back to PENDING ("seeking transaction")   │
+│    3. Pool change triggers surveillance sweep                    │
+│    4. Sweep skips any pair found in dismissed_pairings            │
+│                                                                   │
+│  The bilag is now free to match a DIFFERENT transaction.          │
+│  The transaction is free to match a DIFFERENT bilag.             │
+│  They just can't be paired with each other again.                │
+│                                                                   │
+│  No expiry — dismissed pairings are permanent.                   │
+│  (If the user truly wants to force a dismissed pair,             │
+│   they can do so via manual matching in the UI.)                 │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 2: Cluster Validation (Mechanical)
+
+After Phase 1 produces match candidates, Phase 2 checks each candidate against success clusters. This is still purely algorithmic — no AI.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              PHASE 2: CLUSTER CHECK                               │
+│                                                                   │
+│  For each match candidate from Phase 1:                          │
+│                                                                   │
+│  1. Look up the destination cluster                              │
+│     (account_number + category from the matched bilag)           │
+│                                                                   │
+│  2. Score cluster fit                                             │
+│     (direction, amount range, description similarity)            │
+│     See "Transaction–Cluster Fit Scoring" above.                 │
+│                                                                   │
+│  3. Compute readiness tier                                        │
+│     See "Per-Transaction Readiness" above.                       │
+│                                                                   │
+│  4. Route by tier:                                                │
+│     TIER 1 (direct rule match)     → queue for Phase 3 batch     │
+│     TIER 2 (strong cluster + match) → queue for Phase 3 batch    │
+│     TIER 3 (growing cluster)        → suggest to user            │
+│     TIER 4 (no cluster support)     → suggest to user            │
+│                                                                   │
+│  Tier 3-4 NEVER enter Phase 3. They are always shown to the     │
+│  user for manual review. AI inspection is reserved for matches   │
+│  that the mechanical system is already confident about.          │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 3: AI Inspection (Claude Opus, Batched Weekly)
+
+The only step involving AI. Runs on a weekly schedule. Validates matches that passed Phases 1 and 2 before they are auto-booked.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              PHASE 3: AI INSPECTION                               │
+│                                                                   │
+│  Schedule: Twice weekly (Monday + Friday, 06:00)                 │
+│  Model:    Claude Opus (claude-opus-4-6)                         │
+│  Purpose:  Final safety gate before autonomous booking            │
+│                                                                   │
+│  ┌────────────────────────────────────────────────────────┐      │
+│  │ Step 1: COLLECT BATCH                                   │      │
+│  │                                                         │      │
+│  │  Query all matches with:                                │      │
+│  │    status = QUEUED_FOR_AI                                │      │
+│  │    readiness_tier IN (1, 2)                              │      │
+│  │                                                         │      │
+│  │  Typical batch: 5-15 matches per week                   │      │
+│  │  for a ~10M NOK/year business                           │      │
+│  └─────────────────────────┬──────────────────────────────┘      │
+│                             │                                     │
+│  ┌─────────────────────────▼──────────────────────────────┐      │
+│  │ Step 2: BUILD PROMPT                                    │      │
+│  │                                                         │      │
+│  │  System context:                                        │      │
+│  │    "Du er Ciri, AI-regnskapsfører for norske            │      │
+│  │     småbedrifter. Verifiser at følgende posteringer      │      │
+│  │     er korrekte."                                       │      │
+│  │                                                         │      │
+│  │  Cluster summaries (for context):                       │      │
+│  │    Cluster "6540 IT": 18 postings, 5 merchants,         │      │
+│  │      kr 49–2890, 0% override. Ex: ANTHROPIC, GITHUB.   │      │
+│  │    Cluster "6300 Leie": 12 postings, 1 merchant,        │      │
+│  │      kr 15000, 0% override. Ex: MALLING & CO.           │      │
+│  │                                                         │      │
+│  │  Match list:                                            │      │
+│  │    1. FIGMA INC. -1620 → Bilag F-2026-042 → 6540 IT    │      │
+│  │       Score: 0.82, Cluster fit: HIGH, Tier: 2           │      │
+│  │    2. MALLING&CO -15000 → Bilag F-2026-045 → 6300 Leie │      │
+│  │       Score: 0.95, Cluster fit: HIGH, Tier: 1 (rule)    │      │
+│  │    ...                                                  │      │
+│  └─────────────────────────┬──────────────────────────────┘      │
+│                             │                                     │
+│  ┌─────────────────────────▼──────────────────────────────┐      │
+│  │ Step 3: CLAUDE VALIDATES                                │      │
+│  │                                                         │      │
+│  │  Claude checks each match for:                          │      │
+│  │    • Does the account code make sense for this vendor?  │      │
+│  │    • Is the amount reasonable for this category?        │      │
+│  │    • Are there any red flags (duplicate, unusual)?      │      │
+│  │    • Does the bilag description align with the tx?      │      │
+│  │                                                         │      │
+│  │  Response (structured JSON):                            │      │
+│  │    { approved: [1, 2, 5, 6, 7],                         │      │
+│  │      flagged: [                                         │      │
+│  │        { index: 3,                                      │      │
+│  │          reason: "Beløpet kr 12,990 er uvanlig høyt     │      │
+│  │                   for IT-abonnement. Kan dette være      │      │
+│  │                   maskinvare?" },                        │      │
+│  │        { index: 4,                                      │      │
+│  │          reason: "Duplikat — samme beløp og leverandør   │      │
+│  │                   som #2, sjekk om dette er dobbelt-     │      │
+│  │                   betaling." }                           │      │
+│  │      ] }                                                │      │
+│  └─────────────────────────┬──────────────────────────────┘      │
+│                             │                                     │
+│  ┌─────────────────────────▼──────────────────────────────┐      │
+│  │ Step 4: EXECUTE                                         │      │
+│  │                                                         │      │
+│  │  Approved matches:                                      │      │
+│  │    → Auto-book (create posteringer, mark MATCHED)       │      │
+│  │    → Record cluster data point                          │      │
+│  │    → Update rule times_applied (if Tier 1)              │      │
+│  │                                                         │      │
+│  │  Flagged matches:                                       │      │
+│  │    → Move to SUGGESTED (user review)                    │      │
+│  │    → Include Claude's concern in ciri_explanation       │      │
+│  │    → If user later confirms → still records data point  │      │
+│  │    → If user dismisses → bilag returns to pool          │      │
+│  └────────────────────────────────────────────────────────┘      │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Cost Estimate (Claude Opus)
+
+For a business doing ~10M NOK/year (~$1M), approximately 450 matches per year reach Phase 3.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              PHASE 3 COST ESTIMATE                                │
+│                                                                   │
+│  Transaction volume: ~1,200/year                                 │
+│  After rules + filtering: ~450 reach Phase 3                     │
+│  Batch frequency: Mon + Fri (104 batches/year)                   │
+│  Average batch size: ~4-5 matches                                │
+│                                                                   │
+│  Tokens per batch:                                                │
+│    Context (system + clusters + kontoplan): ~2,000 input          │
+│    Matches (5 × 150 tokens each):           ~750 input           │
+│    Output (5 × 70 tokens each):             ~350 output          │
+│                                                                   │
+│  Annual totals:                                                   │
+│    Input:  104 × 2,000 + 450 × 150 = 275,500 tokens             │
+│    Output: 450 × 70 = 31,500 tokens                              │
+│                                                                   │
+│  Cost (Opus: $15/M input, $75/M output):                         │
+│    Input:  275,500 × $15/M  = $4.13                              │
+│    Output:  31,500 × $75/M  = $2.36                              │
+│    ─────────────────────────────────                              │
+│    Total: ~$6.50/year per customer                                │
+│                                                                   │
+│  At scale:                                                        │
+│    100 customers  → ~$500/year                                    │
+│    1,000 customers → ~$5,000/year                                 │
+│    10,000 customers → ~$50,000/year                               │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Summary: What Uses AI, What Doesn't
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                   │
+│   NO AI (mechanical, instant, event-driven):                     │
+│                                                                   │
+│     ✓ Rule engine matching                                       │
+│     ✓ Multi-factor scoring (amount, ref, name, date)             │
+│     ✓ Cluster strength computation                               │
+│     ✓ Cluster fit scoring                                        │
+│     ✓ Readiness tier assignment                                  │
+│     ✓ Surveillance triggers and debouncing                       │
+│     ✓ Dismissed pairing tracking                                 │
+│     ✓ Rule effectiveness tracking and self-disabling             │
+│     ✓ Cluster data point recording                               │
+│                                                                   │
+│   AI (Claude Opus, batched weekly):                              │
+│                                                                   │
+│     ✓ Phase 3 inspection — final verification before auto-book   │
+│       Cost: ~$5/year per customer                                │
+│                                                                   │
+│   AI involvement is minimal by design. The mechanical system     │
+│   handles 100% of matching and scoring. Claude only validates    │
+│   matches that the system is already confident about, as a       │
+│   final safety gate before committing to the books.              │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ### Implementation Plan
 
-| Priority | Task | File(s) | Notes |
-|----------|------|---------|-------|
-| 1 | Create `ClusterDataPoint` model | `models/cluster_data_point.py` | New SQLAlchemy model matching schema above |
-| 2 | Create `ClusterService` | `services/cluster_service.py` | `record_data_point()`, `get_cluster_summary()`, `compute_strength()`, `score_fit()` |
-| 3 | Hook into confirm/reject flow | `api/bank.py` | On confirm → `record_data_point()`. On override → set `was_overridden` |
-| 4 | Hook into rule application | `services/reconciliation_matcher.py` | When IGNORE/CATEGORY rule fires → record data point |
-| 5 | Add readiness tier computation | `services/autonomous_posting.py` | Replace `maturity_checker()` with per-transaction `compute_readiness_tier()` |
-| 6 | Rewrite `create_posting_bundle()` | `services/autonomous_posting.py` | Tier-based collection instead of global maturity gate |
-| 7 | Update Claude validation prompt | `services/autonomous_posting.py` | Add cluster summaries to cached prompt section |
-| 8 | Add cluster stats to regler page | `api/bank.py`, `frontend/.../regler/page.tsx` | Show cluster strength visualization |
-| 9 | Backfill existing confirmations | Migration script | Create data points from existing `reconciliation_matches` with status CONFIRMED/AUTO_CONFIRMED |
+| Priority | Task                              | File(s)                                       | Notes                                                                                          |
+| -------- | --------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1        | Create `ClusterDataPoint` model   | `models/cluster_data_point.py`                | New SQLAlchemy model matching schema above                                                     |
+| 2        | Create `ClusterService`           | `services/cluster_service.py`                 | `record_data_point()`, `get_cluster_summary()`, `compute_strength()`, `score_fit()`            |
+| 3        | Hook into confirm/reject flow     | `api/bank.py`                                 | On confirm → `record_data_point()`. On override → set `was_overridden`                         |
+| 4        | Hook into rule application        | `services/reconciliation_matcher.py`          | When IGNORE/CATEGORY rule fires → record data point                                            |
+| 5        | Add readiness tier computation    | `services/autonomous_posting.py`              | Replace `maturity_checker()` with per-transaction `compute_readiness_tier()`                   |
+| 6        | Rewrite `create_posting_bundle()` | `services/autonomous_posting.py`              | Tier-based collection instead of global maturity gate                                          |
+| 7        | Update Claude validation prompt   | `services/autonomous_posting.py`              | Add cluster summaries to cached prompt section                                                 |
+| 8        | Add cluster stats to regler page  | `api/bank.py`, `frontend/.../regler/page.tsx` | Show cluster strength visualization                                                            |
+| 9        | Backfill existing confirmations   | Migration script                              | Create data points from existing `reconciliation_matches` with status CONFIRMED/AUTO_CONFIRMED |
+| 10       | Create `dismissed_pairings` table | `models/dismissed_pairing.py`                 | Track (transaction_id, bilag_id) pairs that were rejected by users                             |
+| 11       | Add surveillance debouncing       | `services/reconciliation_matcher.py`          | 5-second debounce window after pool changes before running sweep                               |
+| 12       | Add Phase 3 batch scheduler       | `services/ai_inspection.py`                   | Mon+Fri cron: collect QUEUED_FOR_AI matches, build Opus prompt, execute, route results          |
+
+---
+
+## Source Files
+
+| File | Purpose |
+|------|---------|
+| `services/reconciliation_matcher.py` | Phase 1: multi-factor scoring, rule application, surveillance |
+| `services/cluster_service.py` | Phase 2: cluster strength, fit scoring, data point recording |
+| `services/ai_inspection.py` | Phase 3: batch collection, Opus prompt, execution |
+| `services/rule_cascade.py` | Retroactive cleanup when IGNORE rules are created |
+| `models/reconciliation_rule.py` | Rule model, criteria matching, effectiveness tracking |
+| `models/cluster_data_point.py` | Cluster data point model |
+| `models/dismissed_pairing.py` | Dismissed (transaction, bilag) pair tracking |
+| `services/invoice_processor.py` | OCR processing, bilag auto-posting gate |
+| `models/company.py` | AutonomyLevel enum |
+| `models/bilag.py` | BilagStatus, confidence fields |
+| `models/bank_transaction.py` | ReconciliationStatus, transaction data |

@@ -8,3 +8,4 @@ export { RuleDialog } from "./rule-dialog";
 export { DeleteConfirmDialog } from "./delete-confirm-dialog";
 export { EmptyState } from "./empty-state";
 export { RuleDetailDialog } from "./rule-detail-dialog";
+export { RuleCompactRow } from "./rule-compact-row";

@@ -34,7 +34,7 @@ interface MVAPreviewDialogProps {
   isAutoMode?: boolean;
 }
 
-export function MVAPreviewDialog({ isAutoMode = false }: MVAPreviewDialogProps): JSX.Element {
+export function MVAPreviewDialog({ isAutoMode = false }: MVAPreviewDialogProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const handleDownloadPDF = useCallback(async () => {

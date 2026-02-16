@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import {
   PlusIcon,
   ZapIcon,
   SearchIcon,
@@ -30,9 +47,14 @@ import {
   RefreshCwIcon,
   ListIcon,
   NetworkIcon,
+  LayoutGridIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCiriActionListener } from "@/lib/ciri-actions";
+import { API_BASE_URL } from "@/lib/api";
+import { useCrystallize } from "@/lib/use-crystallize";
+import { queryKeys } from "@/lib/query-keys";
+import { invalidateOnEvent } from "@/lib/query-invalidation";
 import type {
   Rule,
   RuleType,
@@ -58,20 +80,22 @@ import {
   EmptyState,
   RuleDetailDialog,
   ClusterVisualization,
+  RuleCompactRow,
 } from "./components";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ============================================================================
 // MAIN PAGE
 // ============================================================================
+
+const RULES_PER_PAGE = 20;
 
 export default function ReglerPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [showInactive, setShowInactive] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "compact">("compact");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -98,7 +122,7 @@ export default function ReglerPage() {
 
   // ---- Queries ----
   const { data: rules = [], isLoading } = useQuery({
-    queryKey: ["bank", "rules"],
+    queryKey: queryKeys.rules.list,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/rules?active_only=false`);
       if (!res.ok) throw new Error("Kunne ikke hente regler");
@@ -107,7 +131,7 @@ export default function ReglerPage() {
   });
 
   const { data: stats = emptyStats } = useQuery({
-    queryKey: ["bank", "rules", "stats"],
+    queryKey: queryKeys.rules.stats,
     queryFn: async () => {
       if (USE_DEV_DATA) return DEV_RULE_STATS;
       const res = await fetch(`${API_BASE_URL}/api/bank/rules/stats`);
@@ -117,7 +141,7 @@ export default function ReglerPage() {
   });
 
   const { data: clusterStats = emptyClusterStats, isLoading: clustersLoading } = useQuery({
-    queryKey: ["bank", "clusters", "stats"],
+    queryKey: queryKeys.rules.clusters,
     queryFn: async () => {
       if (USE_DEV_DATA) return DEV_CLUSTER_DATA;
       const res = await fetch(`${API_BASE_URL}/api/bank/clusters/stats`);
@@ -127,7 +151,7 @@ export default function ReglerPage() {
   });
 
   const { data: kontoer = [] } = useQuery({
-    queryKey: ["bank", "kontoer"],
+    queryKey: queryKeys.bank.kontoer,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/kontoer`);
       if (!res.ok) return [];
@@ -165,8 +189,10 @@ export default function ReglerPage() {
     };
   }, [clusterStats, accountNameMap]);
 
+  const crystallize = useCrystallize(isLoading);
+
   function invalidateRules() {
-    queryClient.invalidateQueries({ queryKey: ["bank", "rules"] });
+    invalidateOnEvent(queryClient, "rules:changed");
   }
 
   // ---- Mutations ----
@@ -309,6 +335,20 @@ export default function ReglerPage() {
     [rules, searchQuery, typeFilter, showInactive]
   );
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, typeFilter, showInactive]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRules.length / RULES_PER_PAGE);
+  const paginatedRules = filteredRules.slice(
+    (currentPage - 1) * RULES_PER_PAGE,
+    currentPage * RULES_PER_PAGE
+  );
+  const showingFrom = filteredRules.length > 0 ? (currentPage - 1) * RULES_PER_PAGE + 1 : 0;
+  const showingTo = Math.min(currentPage * RULES_PER_PAGE, filteredRules.length);
+
   // ---- Handlers ----
   function handleSaveRule(data: {
     name: string;
@@ -359,7 +399,7 @@ export default function ReglerPage() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-end justify-between"
+        className={`flex items-end justify-between ${crystallize(1)}`}
       >
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">
@@ -433,7 +473,7 @@ export default function ReglerPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="space-y-4"
+            className={`space-y-4 ${crystallize(2)}`}
           >
             {/* Summary strip */}
             <div className="relative grid grid-cols-5 gap-px rounded-xl border bg-border overflow-hidden">
@@ -534,6 +574,27 @@ export default function ReglerPage() {
                 <Label htmlFor="show-inactive" className="text-[11px] text-muted-foreground">
                   Vis inaktive
                 </Label>
+                <div className="w-px h-5 bg-border ml-1" />
+                <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-muted/40">
+                  <Button
+                    variant={viewMode === "cards" ? "default" : "ghost"}
+                    size="icon"
+                    className="size-6"
+                    onClick={() => setViewMode("cards")}
+                    aria-label="Kortvisning"
+                  >
+                    <LayoutGridIcon className="size-3" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "compact" ? "default" : "ghost"}
+                    size="icon"
+                    className="size-6"
+                    onClick={() => setViewMode("compact")}
+                    aria-label="Listevisning"
+                  >
+                    <ListIcon className="size-3" />
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -547,25 +608,114 @@ export default function ReglerPage() {
             ) : (
               <AnimatePresence mode="popLayout">
                 {filteredRules.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredRules.map((rule, i) => (
-                      <motion.div
-                        key={rule.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04, duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                      >
-                        <RuleCard
-                          rule={rule}
-                          onEdit={() => openEditDialog(rule)}
-                          onDelete={() => setDeleteTarget(rule)}
-                          onToggle={() => toggleMutation.mutate(rule.id)}
-                          onDetail={() => setDetailRule(rule)}
-                          isToggling={togglingId === rule.id}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+                  <>
+                    {viewMode === "cards" ? (
+                      <div className="space-y-3">
+                        {paginatedRules.map((rule, i) => (
+                          <motion.div
+                            key={rule.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.04, duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                          >
+                            <RuleCard
+                              rule={rule}
+                              onEdit={() => openEditDialog(rule)}
+                              onDelete={() => setDeleteTarget(rule)}
+                              onToggle={() => toggleMutation.mutate(rule.id)}
+                              onDetail={() => setDetailRule(rule)}
+                              isToggling={togglingId === rule.id}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border bg-card overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="hover:bg-transparent">
+                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Navn</TableHead>
+                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[120px]">Type</TableHead>
+                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[90px]">Prioritet</TableHead>
+                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[70px]">Aktiv</TableHead>
+                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[80px] text-right">Brukt</TableHead>
+                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[100px]">Sist brukt</TableHead>
+                              <TableHead className="w-[50px]" />
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedRules.map((rule) => (
+                              <RuleCompactRow
+                                key={rule.id}
+                                rule={rule}
+                                onEdit={() => openEditDialog(rule)}
+                                onDelete={() => setDeleteTarget(rule)}
+                                onToggle={() => toggleMutation.mutate(rule.id)}
+                                onDetail={() => setDetailRule(rule)}
+                                isToggling={togglingId === rule.id}
+                              />
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <p className="text-[12px] text-muted-foreground">
+                          Viser {showingFrom}–{showingTo} av {filteredRules.length} regler
+                        </p>
+                        <Pagination className="w-auto mx-0">
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                              // Show first, last, and pages near current
+                              if (
+                                page === 1 ||
+                                page === totalPages ||
+                                Math.abs(page - currentPage) <= 1
+                              ) {
+                                return (
+                                  <PaginationItem key={page}>
+                                    <PaginationLink
+                                      isActive={page === currentPage}
+                                      onClick={() => setCurrentPage(page)}
+                                    >
+                                      {page}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                );
+                              }
+                              // Show ellipsis only once per gap
+                              if (
+                                (page === 2 && currentPage > 3) ||
+                                (page === totalPages - 1 && currentPage < totalPages - 2)
+                              ) {
+                                return (
+                                  <PaginationItem key={page}>
+                                    <PaginationEllipsis />
+                                  </PaginationItem>
+                                );
+                              }
+                              return null;
+                            })}
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
                 ) : searchQuery || typeFilter !== "all" ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -595,6 +745,7 @@ export default function ReglerPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
+            className={crystallize(2)}
           >
             <ClusterVisualization
               clusterStats={enrichedClusterStats}

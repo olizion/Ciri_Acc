@@ -51,7 +51,7 @@ const PosteringCorrectionDialog = dynamic(
   { ssr: false }
 );
 
-export function IncomeDetailsCard(): JSX.Element {
+export function IncomeDetailsCard() {
   const [isOpen, setIsOpen] = useState(true);
   const [selectedIncome, setSelectedIncome] = useState<IncomeItem | null>(null);
   const [correctionDialogOpen, setCorrectionDialogOpen] = useState(false);

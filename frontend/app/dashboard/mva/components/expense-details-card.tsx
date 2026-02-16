@@ -53,7 +53,7 @@ const PosteringCorrectionDialog = dynamic(
   { ssr: false }
 );
 
-export function ExpenseDetailsCard(): JSX.Element {
+export function ExpenseDetailsCard() {
   const [isOpen, setIsOpen] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);

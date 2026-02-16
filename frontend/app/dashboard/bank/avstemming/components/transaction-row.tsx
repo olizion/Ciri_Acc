@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { ExternalLinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Transaction } from "../types";
 import { dateShort, krFormat } from "../helpers";
@@ -13,6 +14,7 @@ import { StatusDot } from "./status-dot";
 interface TransactionRowProps {
   tx: Transaction;
   isRecent?: boolean;
+  onClick?: () => void;
 }
 
 function getStatusLabel(status: string): string {
@@ -38,12 +40,14 @@ function getStatusClassName(status: string): string {
   }
 }
 
-export const TransactionRow = memo(function TransactionRow({ tx, isRecent }: TransactionRowProps) {
+export const TransactionRow = memo(function TransactionRow({ tx, isRecent, onClick }: TransactionRowProps) {
   return (
     <div
+      onClick={onClick}
       className={cn(
         "grid grid-cols-[20px_60px_1fr_90px_100px] items-center gap-2 py-2 px-3",
         "hover:bg-muted/30 transition-colors group",
+        onClick && "cursor-pointer",
         isRecent && "animate-[recentFade_10s_ease-out_forwards]"
       )}
     >
@@ -51,14 +55,19 @@ export const TransactionRow = memo(function TransactionRow({ tx, isRecent }: Tra
       <span className="text-[11px] text-muted-foreground tabular-nums">
         {dateShort(tx.date)}
       </span>
-      <div className="min-w-0">
-        <span className="text-[13px] truncate block leading-tight">
-          {tx.merchant_name || tx.description}
-        </span>
-        {tx.merchant_name && tx.merchant_name !== tx.description && (
-          <span className="text-[10px] text-muted-foreground/70 truncate block">
-            {tx.description}
+      <div className="min-w-0 flex items-center gap-1">
+        <div className="min-w-0 flex-1">
+          <span className="text-[13px] truncate block leading-tight">
+            {tx.merchant_name || tx.description}
           </span>
+          {tx.merchant_name && tx.merchant_name !== tx.description && (
+            <span className="text-[10px] text-muted-foreground/70 truncate block">
+              {tx.description}
+            </span>
+          )}
+        </div>
+        {onClick && (
+          <ExternalLinkIcon className="size-3 shrink-0 opacity-0 group-hover:opacity-60 transition-opacity text-muted-foreground" />
         )}
       </div>
       <span

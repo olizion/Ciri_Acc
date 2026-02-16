@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE_URL, COMPANY_ID } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import LearnMoreDocs from "@/components/learn-more-docs";
+import { useCrystallize } from "@/lib/use-crystallize";
 import type { EmailConnection, OAuthStatus, NotificationSettings } from "./types";
 import {
   ConnectionCard,
@@ -46,8 +48,8 @@ export default function EmailSettingsPage() {
   const queryClient = useQueryClient();
 
   // Queries
-  const { data: connections = [] } = useQuery({
-    queryKey: ["email", "connections"],
+  const { data: connections = [], isLoading } = useQuery({
+    queryKey: queryKeys.email.connections,
     queryFn: async () => {
       const res = await fetch(
         `${API_BASE_URL}/api/email/oauth/connections?company_id=${COMPANY_ID}`
@@ -59,7 +61,7 @@ export default function EmailSettingsPage() {
   });
 
   const { data: oauthStatus = DEFAULT_OAUTH_STATUS } = useQuery({
-    queryKey: ["email", "oauthStatus"],
+    queryKey: queryKeys.email.oauthStatus,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/email/oauth/status`);
       if (!res.ok) return DEFAULT_OAUTH_STATUS;
@@ -68,13 +70,15 @@ export default function EmailSettingsPage() {
   });
 
   const { data: notifSettings = DEFAULT_NOTIFICATION_SETTINGS } = useQuery({
-    queryKey: ["email", "notificationSettings"],
+    queryKey: queryKeys.email.notificationSettings,
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/api/bank/notification-settings`);
       if (!res.ok) return DEFAULT_NOTIFICATION_SETTINGS;
       return (await res.json()) as NotificationSettings;
     },
   });
+
+  const crystallize = useCrystallize(isLoading);
 
   // Handle OAuth callback on mount
   useEffect(() => {
@@ -86,7 +90,7 @@ export default function EmailSettingsPage() {
     if (success) {
       toast.success(`E-postkonto tilkoblet: ${email || ""}`.trim());
       window.history.replaceState({}, "", window.location.pathname);
-      queryClient.invalidateQueries({ queryKey: ["email", "connections"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.email.connections });
     } else if (error) {
       toast.error(OAUTH_ERROR_MESSAGES[error] || "Noe gikk galt. Prøv igjen.");
       window.history.replaceState({}, "", window.location.pathname);
@@ -103,9 +107,9 @@ export default function EmailSettingsPage() {
       if (!res.ok) throw new Error("Toggle failed");
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["email", "connections"] });
-      const previous = queryClient.getQueryData<EmailConnection[]>(["email", "connections"]);
-      queryClient.setQueryData<EmailConnection[]>(["email", "connections"], (old) =>
+      await queryClient.cancelQueries({ queryKey: queryKeys.email.connections });
+      const previous = queryClient.getQueryData<EmailConnection[]>(queryKeys.email.connections);
+      queryClient.setQueryData<EmailConnection[]>(queryKeys.email.connections, (old) =>
         (old ?? []).map((c) => (c.id === id ? { ...c, is_active: !c.is_active } : c))
       );
       return { previous };
@@ -120,7 +124,7 @@ export default function EmailSettingsPage() {
     },
     onError: (_err, _id, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["email", "connections"], context.previous);
+        queryClient.setQueryData(queryKeys.email.connections, context.previous);
       }
       toast.error("Kunne ikke oppdatere tilkobling");
     },
@@ -146,7 +150,7 @@ export default function EmailSettingsPage() {
       if (!res.ok) throw new Error("Disconnect failed");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["email", "connections"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.email.connections });
       toast.success("E-postkonto frakoblet");
     },
     onError: () => toast.error("Kunne ikke koble fra e-postkonto"),
@@ -163,7 +167,7 @@ export default function EmailSettingsPage() {
       return (await res.json()) as NotificationSettings;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["email", "notificationSettings"], data);
+      queryClient.setQueryData(queryKeys.email.notificationSettings, data);
       toast.success("Varslingsinnstillinger lagret");
     },
     onError: () => toast.error("Kunne ikke lagre varslingsinnstillinger"),
@@ -197,7 +201,7 @@ export default function EmailSettingsPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-2"
+        className={`space-y-2 ${crystallize(1)}`}
       >
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-gradient-to-br from-[var(--primary)]/20 to-[var(--primary)]/5 p-3">
@@ -219,6 +223,7 @@ export default function EmailSettingsPage() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
+        className={crystallize(2)}
       >
         <Card className="overflow-hidden border-[var(--primary)]/20 bg-gradient-to-r from-[var(--primary)]/5 via-[var(--primary)]/[0.02] to-transparent">
           <CardContent className="p-6">
@@ -295,7 +300,7 @@ export default function EmailSettingsPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="space-y-4"
+        className={`space-y-4 ${crystallize(3)}`}
       >
         <h2 className="font-display text-lg font-semibold">
           {connections.length > 0 ? "Koble til flere kontoer" : "Koble til e-postkonto"}
@@ -321,7 +326,7 @@ export default function EmailSettingsPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.35 }}
-        className="space-y-4"
+        className={`space-y-4 ${crystallize(4)}`}
       >
         <h2 className="font-display text-lg font-semibold">Varsler</h2>
         <NotificationSettingsCard settings={notifSettings} onSave={handleSaveNotifications} />

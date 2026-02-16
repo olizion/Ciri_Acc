@@ -543,6 +543,121 @@ async def create_bilag_from_processed_invoice(
     return bilag
 
 
+# MVA code to utgående MVA account mapping (for sales invoices)
+UTGAENDE_MVA_CODE_TO_ACCOUNT = {
+    "3": "2700",   # Utgående MVA, høy sats (25%)
+    "31": "2701",  # Utgående MVA, middels sats (15%)
+    "33": "2702",  # Utgående MVA, lav sats (12%)
+    "5": None,     # MVA-fritatt eksport
+    "6": None,     # MVA-fritatt
+}
+
+# Kundefordringer account
+KUNDEFORDRINGER_ACCOUNT = "1500"
+
+
+def _create_income_posteringer(
+    bilag: Bilag,
+    company_id: uuid.UUID,
+    income_account: str,
+    mva_code: str | None,
+    net_amount: Decimal,
+    mva_amount: Decimal,
+    gross_amount: Decimal,
+    description: str,
+    posting_date,
+    period: str,
+    journal_id: str,
+    base_saft_id: str,
+) -> list[Postering]:
+    """
+    Create double-entry posteringer for a sales/income invoice (utgående faktura).
+
+    Pattern:
+    - DEBIT  1500  {gross_amount}  # Kundefordringer
+    - CREDIT {income_account}  {net_amount}  # Salgsinntekt
+    - CREDIT 2700  {mva_amount}  # Utgående MVA (if applicable)
+    """
+    posteringer = []
+    posting_seq = 1
+    total_debit = Decimal("0")
+    total_credit = Decimal("0")
+
+    # 1. DEBIT: Kundefordringer (what the customer owes us)
+    posteringer.append(Postering(
+        company_id=company_id,
+        bilag_id=bilag.id,
+        journal_id=journal_id,
+        posting_date=posting_date,
+        period=period,
+        account_number=KUNDEFORDRINGER_ACCOUNT,
+        description=f"Kundefordring - {description}",
+        debit_amount=gross_amount,
+        credit_amount=Decimal("0"),
+        mva_code=None,
+        mva_amount=Decimal("0"),
+        saft_transaction_id=f"{base_saft_id}-{posting_seq:02d}",
+        created_by_ciri=True,
+    ))
+    total_debit += gross_amount
+    posting_seq += 1
+
+    # 2. CREDIT: Income account (revenue)
+    posteringer.append(Postering(
+        company_id=company_id,
+        bilag_id=bilag.id,
+        journal_id=journal_id,
+        posting_date=posting_date,
+        period=period,
+        account_number=income_account,
+        description=description,
+        debit_amount=Decimal("0"),
+        credit_amount=net_amount,
+        mva_code=mva_code,
+        mva_amount=Decimal("0"),
+        saft_transaction_id=f"{base_saft_id}-{posting_seq:02d}",
+        created_by_ciri=True,
+    ))
+    total_credit += net_amount
+    posting_seq += 1
+
+    # 3. CREDIT: Utgående MVA (if applicable)
+    if mva_amount > 0:
+        if mva_code and mva_code in UTGAENDE_MVA_CODE_TO_ACCOUNT:
+            mva_account = UTGAENDE_MVA_CODE_TO_ACCOUNT[mva_code]
+        elif mva_code == "6" or mva_code == "5":
+            mva_account = None
+        else:
+            mva_account = "2700"  # Default to høy sats
+
+        if mva_account:
+            posteringer.append(Postering(
+                company_id=company_id,
+                bilag_id=bilag.id,
+                journal_id=journal_id,
+                posting_date=posting_date,
+                period=period,
+                account_number=mva_account,
+                description=f"Utgående MVA - {description}",
+                debit_amount=Decimal("0"),
+                credit_amount=mva_amount,
+                mva_code=mva_code,
+                mva_amount=mva_amount,
+                saft_transaction_id=f"{base_saft_id}-{posting_seq:02d}",
+                created_by_ciri=True,
+            ))
+            total_credit += mva_amount
+
+    # Verify balance
+    if total_debit != total_credit:
+        raise PostingValidationError(
+            f"Posteringer balanserer ikke! Debet: {total_debit}, Kredit: {total_credit}, "
+            f"Differanse: {total_debit - total_credit}"
+        )
+
+    return posteringer
+
+
 def create_posteringer_for_bilag(
     bilag: Bilag,
     company_id: uuid.UUID,
@@ -555,12 +670,17 @@ def create_posteringer_for_bilag(
     saft_id_suffix: str = "",  # For uniqueness in backfill scenarios
 ) -> list[Postering]:
     """
-    Create double-entry posteringer for an incoming invoice (inngående faktura).
+    Create double-entry posteringer for an invoice.
 
-    Standard posting pattern for Norwegian purchases:
+    For purchase invoices (inngående faktura, accounts 4xxx-7xxx):
     - DEBIT  {expense_account}  {net_amount}    # Expense
     - DEBIT  {mva_account}      {mva_amount}    # Inngående MVA (if applicable)
     - CREDIT 2400               {gross_amount}  # Leverandørgjeld
+
+    For sales invoices (utgående faktura, accounts 3xxx):
+    - DEBIT  1500               {gross_amount}  # Kundefordringer
+    - CREDIT {income_account}   {net_amount}    # Salgsinntekt
+    - CREDIT 2700               {mva_amount}    # Utgående MVA (if applicable)
 
     For reverse charge (codes 81, 86 - foreign purchases):
     - DEBIT  {expense_account}  {net_amount}    # Expense
@@ -584,6 +704,24 @@ def create_posteringer_for_bilag(
     # Validate we have something to post
     if gross_amount <= 0:
         raise PostingValidationError(f"Brutto beløp må være positivt: {gross_amount}")
+
+    # Detect income/sales invoices (account 3xxx)
+    is_income = expense_account.startswith("3")
+    if is_income:
+        return _create_income_posteringer(
+            bilag=bilag,
+            company_id=company_id,
+            income_account=expense_account,
+            mva_code=mva_code,
+            net_amount=net_amount,
+            mva_amount=mva_amount,
+            gross_amount=gross_amount,
+            description=description,
+            posting_date=posting_date,
+            period=period,
+            journal_id=journal_id,
+            base_saft_id=base_saft_id,
+        )
 
     # Handle credit notes (negative amounts) - flip debit/credit
     is_credit_note = net_amount < 0 or gross_amount < 0

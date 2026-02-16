@@ -12,8 +12,7 @@ import {
   ShieldCheckIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { API_BASE_URL } from "@/lib/api";
 
 interface PublicInvoice {
   invoice_number: string;
@@ -146,7 +145,7 @@ export default function PublicInvoicePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/invoices/public/${token}`)
+    fetch(`${API_BASE_URL}/api/invoices/public/${token}`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();

@@ -2,6 +2,9 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { invalidateOnEvent } from "@/lib/query-invalidation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,17 +30,25 @@ import {
   Loader2Icon,
   AlertTriangleIcon,
 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL, COMPANY_ID } from "@/lib/api";
 import CiriLogo from "@/components/layout/ciri-logo";
 import LearnMoreDocs from "@/components/learn-more-docs";
 import { useCiriActionListener } from "@/lib/ciri-actions";
-import { motion } from "framer-motion";
+import { useCrystallize } from "@/lib/use-crystallize";
 import { toast } from "sonner";
 
 import type { Bilag, BilagStatus } from "./types";
 import { statusConfig, bilagTypeConfig, mvaCodes } from "./data/constants";
-import { initialBilagData } from "./data/mock-bilag-data";
 import {
   CompanyLogo,
   BilagDetailDialog,
@@ -125,68 +136,55 @@ function transformApiBilag(apiItem: any): Bilag {
 export default function BilagPage() {
   const searchParams = useSearchParams();
   const urlBilagId = searchParams.get("id");
-  const hasHandledUrlId = useRef(false);
 
-  const [bilagData, setBilagData] = useState<Bilag[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const {
+    data: bilagData = [] as Bilag[],
+    isLoading,
+    error: queryError,
+  } = useQuery<Bilag[]>({
+    queryKey: queryKeys.bilag.list(),
+    queryFn: async () => {
+      const response = await fetch(
+        `${API_BASE_URL}/api/bilag?company_id=${COMPANY_ID}&per_page=100`
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bilags: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.items.map(transformApiBilag);
+    },
+    staleTime: 30_000,
+  });
+
+  const crystallize = useCrystallize(isLoading);
+
+  const apiError = queryError instanceof Error ? queryError.message : queryError ? "Kunne ikke hente bilag" : null;
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedBilag, setSelectedBilag] = useState<Bilag | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [urlDialogDismissed, setUrlDialogDismissed] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [currentPage, setCurrentPage] = useState(1);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingBilag, setEditingBilag] = useState<Bilag | null>(null);
   const [manualPostBilag, setManualPostBilag] = useState<Bilag | null>(null);
 
-  // Fetch bilags from API on mount
-  useEffect(() => {
-    async function fetchBilags() {
-      try {
-        setIsLoading(true);
-        setApiError(null);
-        const response = await fetch(
-          `${API_BASE_URL}/api/bilag?company_id=${COMPANY_ID}&per_page=100`
-        );
-        if (!response.ok) {
-          throw new Error(`Failed to fetch bilags: ${response.statusText}`);
-        }
-        const data = await response.json();
-        const transformed = data.items.map(transformApiBilag);
-        // Only use API data if we got results, otherwise fall back to mock
-        if (transformed.length > 0) {
-          setBilagData(transformed);
-        } else {
-          setBilagData(initialBilagData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch bilags:", error);
-        setApiError(error instanceof Error ? error.message : "Kunne ikke hente bilag");
-        // Fall back to initial data on error
-        setBilagData(initialBilagData);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchBilags();
-  }, []);
-
-  // Auto-select bilag when navigating from hovedbok/resultat with ?id= parameter
-  // Only do this once per URL change to allow closing the dialog
-  useEffect(() => {
-    if (urlBilagId && bilagData.length > 0 && !hasHandledUrlId.current) {
-      const bilag = bilagData.find(b => b.id === urlBilagId);
-      if (bilag) {
-        setSelectedBilag(bilag);
-        hasHandledUrlId.current = true;
-      }
-    }
-    // Reset when URL changes to a different ID
-    if (!urlBilagId) {
-      hasHandledUrlId.current = false;
-    }
+  // Derive URL-targeted bilag synchronously (no useEffect delay → no jitter)
+  const urlBilag = useMemo(() => {
+    if (!urlBilagId || bilagData.length === 0) return null;
+    return bilagData.find(b => b.id === urlBilagId) ?? null;
   }, [urlBilagId, bilagData]);
+
+  // Reset dismissed state when URL changes to a new ID
+  useEffect(() => { setUrlDialogDismissed(false); }, [urlBilagId]);
+
+  // Effective dialog bilag: manual selection wins, else URL-derived (unless dismissed)
+  const dialogBilag = selectedBilag ?? (urlDialogDismissed ? null : urlBilag);
 
   // Ciri bubble action listeners
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -200,6 +198,8 @@ export default function BilagPage() {
     setShowUploadDialog(true);
   }, []));
 
+  const BILAG_PER_PAGE = 20;
+
   const filteredBilag = useMemo(() => {
     return bilagData.filter((bilag) => {
       const matchesSearch =
@@ -211,6 +211,20 @@ export default function BilagPage() {
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [bilagData, searchQuery, statusFilter, typeFilter]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, typeFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBilag.length / BILAG_PER_PAGE);
+  const paginatedBilag = filteredBilag.slice(
+    (currentPage - 1) * BILAG_PER_PAGE,
+    currentPage * BILAG_PER_PAGE
+  );
+  const showingFrom = filteredBilag.length > 0 ? (currentPage - 1) * BILAG_PER_PAGE + 1 : 0;
+  const showingTo = Math.min(currentPage * BILAG_PER_PAGE, filteredBilag.length);
 
   const stats = useMemo(() => ({
     total: bilagData.length,
@@ -227,64 +241,75 @@ export default function BilagPage() {
     setEditingBilag(bilag);
     setShowEditDialog(true);
     setSelectedBilag(null);
+    setUrlDialogDismissed(true);
   }, []);
 
   // Handle approving a waiting bilag
   const handleApproveBilag = useCallback((bilag: Bilag) => {
-    setBilagData(prev => prev.map(b => {
-      if (b.id === bilag.id) {
-        return {
-          ...b,
-          status: "bokfort" as BilagStatus,
-          posteringsreferanse: `GL-2025-${1900 + parseInt(b.id)}`,
-          revisjonslogg: [
-            ...b.revisjonslogg,
-            {
-              timestamp: new Date().toISOString(),
-              handling: "Godkjent og bokført",
-              bruker: "Bruker",
-              detaljer: "Manuelt godkjent"
-            }
-          ]
-        };
-      }
-      return b;
-    }));
+    queryClient.setQueryData<Bilag[]>(queryKeys.bilag.list(), (prev) =>
+      (prev ?? []).map(b => {
+        if (b.id === bilag.id) {
+          return {
+            ...b,
+            status: "bokfort" as BilagStatus,
+            posteringsreferanse: `GL-2025-${1900 + parseInt(b.id)}`,
+            revisjonslogg: [
+              ...b.revisjonslogg,
+              {
+                timestamp: new Date().toISOString(),
+                handling: "Godkjent og bokført",
+                bruker: "Bruker",
+                detaljer: "Manuelt godkjent"
+              }
+            ]
+          };
+        }
+        return b;
+      })
+    );
+    invalidateOnEvent(queryClient, "bilag:approved");
     setSelectedBilag(null);
-  }, []);
+    setUrlDialogDismissed(true);
+  }, [queryClient]);
 
   // Handle saving edited bilag
   const handleSaveEdit = useCallback((updatedBilag: Bilag) => {
-    setBilagData(prev => prev.map(b => {
-      if (b.id === updatedBilag.id) {
-        return {
-          ...updatedBilag,
-          status: "bokfort" as BilagStatus,
-          missingFields: undefined,
-          ciriMessage: undefined,
-          posteringsreferanse: `GL-2025-${1900 + parseInt(updatedBilag.id)}`,
-          revisjonslogg: [
-            ...updatedBilag.revisjonslogg,
-            {
-              timestamp: new Date().toISOString(),
-              handling: "Fullført manuelt og bokført",
-              bruker: "Bruker",
-              detaljer: `Konto ${updatedBilag.kontonummer}, MVA-kode ${updatedBilag.mvaKode}`
-            }
-          ]
-        };
-      }
-      return b;
-    }));
+    queryClient.setQueryData<Bilag[]>(queryKeys.bilag.list(), (prev) =>
+      (prev ?? []).map(b => {
+        if (b.id === updatedBilag.id) {
+          return {
+            ...updatedBilag,
+            status: "bokfort" as BilagStatus,
+            missingFields: undefined,
+            ciriMessage: undefined,
+            posteringsreferanse: `GL-2025-${1900 + parseInt(updatedBilag.id)}`,
+            revisjonslogg: [
+              ...updatedBilag.revisjonslogg,
+              {
+                timestamp: new Date().toISOString(),
+                handling: "Fullført manuelt og bokført",
+                bruker: "Bruker",
+                detaljer: `Konto ${updatedBilag.kontonummer}, MVA-kode ${updatedBilag.mvaKode}`
+              }
+            ]
+          };
+        }
+        return b;
+      })
+    );
+    invalidateOnEvent(queryClient, "bilag:posted");
     setShowEditDialog(false);
     setEditingBilag(null);
-  }, []);
+  }, [queryClient]);
 
   // Handle new bilag from upload
   const handleNewBilag = useCallback((newBilag: Bilag) => {
-    setBilagData(prev => [newBilag, ...prev]);
+    queryClient.setQueryData<Bilag[]>(queryKeys.bilag.list(), (prev) =>
+      [newBilag, ...(prev ?? [])]
+    );
+    invalidateOnEvent(queryClient, "bilag:posted");
     setShowUploadDialog(false);
-  }, []);
+  }, [queryClient]);
 
   return (
     <div className="space-y-6">
@@ -322,7 +347,7 @@ export default function BilagPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className={`grid grid-cols-2 gap-4 lg:grid-cols-4 ${crystallize(1)}`}>
         <Card className="cursor-pointer transition-all hover:border-[var(--primary)]/30" onClick={() => setStatusFilter("all")}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -380,7 +405,7 @@ export default function BilagPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className={crystallize(2)}>
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -432,17 +457,14 @@ export default function BilagPage() {
           {/* Grid View */}
           {viewMode === "grid" && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredBilag.map((bilag) => {
+              {paginatedBilag.map((bilag) => {
                 const status = statusConfig[bilag.status] ?? statusConfig.venter;
                 const StatusIcon = status.icon;
                 const type = bilagTypeConfig[bilag.bilagstype] ?? bilagTypeConfig.inngaende_faktura;
 
                 return (
-                  <motion.div
+                  <div
                     key={bilag.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
                     onClick={() => setSelectedBilag(bilag)}
                     className={cn(
                       "group cursor-pointer rounded-xl border p-5 transition-all hover:border-[var(--primary)]/30 hover:shadow-md",
@@ -526,7 +548,7 @@ export default function BilagPage() {
                         <ChevronRightIcon className="size-3" />
                       </span>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -535,17 +557,14 @@ export default function BilagPage() {
           {/* List View */}
           {viewMode === "list" && (
             <div className="space-y-2">
-              {filteredBilag.map((bilag) => {
+              {paginatedBilag.map((bilag) => {
                 const status = statusConfig[bilag.status] ?? statusConfig.venter;
                 const StatusIcon = status.icon;
                 const type = bilagTypeConfig[bilag.bilagstype] ?? bilagTypeConfig.inngaende_faktura;
 
                 return (
-                  <motion.div
+                  <div
                     key={bilag.id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
                     onClick={() => setSelectedBilag(bilag)}
                     className={cn(
                       "group flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-all hover:border-[var(--primary)]/30 hover:bg-[var(--primary)]/5",
@@ -586,7 +605,7 @@ export default function BilagPage() {
                       {new Date(bilag.bilagsdato).toLocaleDateString("nb-NO")}
                     </span>
                     <ChevronRightIcon className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -601,16 +620,65 @@ export default function BilagPage() {
             </div>
           )}
 
-          {/* Results info */}
+          {/* Pagination + results info */}
           {filteredBilag.length > 0 && (
             <div className="mt-6 flex items-center justify-between border-t pt-4">
-              <p className="text-sm text-muted-foreground">
-                Viser {filteredBilag.length} av {bilagData.length} bilag
-              </p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <ShieldCheckIcon className="size-4 text-green-600" />
-                <span>Oppbevares til 31.12.2030 (5 år)</span>
+              <div className="flex items-center gap-4">
+                <p className="text-[12px] text-muted-foreground">
+                  Viser {showingFrom}–{showingTo} av {filteredBilag.length} bilag
+                </p>
+                <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <ShieldCheckIcon className="size-3.5 text-green-600" />
+                  <span>Oppbevares til 31.12.2030 (5 år)</span>
+                </div>
               </div>
+              {totalPages > 1 && (
+                <Pagination className="w-auto mx-0">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - currentPage) <= 1
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              isActive={page === currentPage}
+                              onClick={() => setCurrentPage(page)}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                      if (
+                        (page === 2 && currentPage > 3) ||
+                        (page === totalPages - 1 && currentPage < totalPages - 2)
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           )}
         </CardContent>
@@ -618,14 +686,20 @@ export default function BilagPage() {
 
       {/* Bilag Detail Dialog */}
       <BilagDetailDialog
-        bilag={selectedBilag}
-        open={!!selectedBilag}
-        onOpenChange={(open) => !open && setSelectedBilag(null)}
+        bilag={dialogBilag}
+        open={!!dialogBilag}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedBilag(null);
+            setUrlDialogDismissed(true);
+          }
+        }}
         onComplete={handleCompleteBilag}
         onApprove={handleApproveBilag}
         onManualPost={(bilag) => {
           setManualPostBilag(bilag);
           setSelectedBilag(null);
+          setUrlDialogDismissed(true);
         }}
       />
 
@@ -635,9 +709,12 @@ export default function BilagPage() {
         open={!!manualPostBilag}
         onOpenChange={(open) => !open && setManualPostBilag(null)}
         onSuccess={(bilag) => {
-          setBilagData(prev => prev.map(b =>
-            b.id === bilag.id ? { ...b, status: "bokfort" as BilagStatus } : b
-          ));
+          queryClient.setQueryData<Bilag[]>(queryKeys.bilag.list(), (prev) =>
+            (prev ?? []).map(b =>
+              b.id === bilag.id ? { ...b, status: "bokfort" as BilagStatus } : b
+            )
+          );
+          invalidateOnEvent(queryClient, "bilag:manualPosted");
           setManualPostBilag(null);
           toast.success("Bilag koblet til transaksjon og bokført");
         }}

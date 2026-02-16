@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL, COMPANY_ID } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { useCiriActionListener } from "@/lib/ciri-actions";
+import { useCrystallize } from "@/lib/use-crystallize";
 import { toast } from "sonner";
 import InvoiceTimelineDialog from "./invoice-timeline-dialog";
 
@@ -75,7 +78,7 @@ function InvoiceCreateForm({
   onCreated,
   onCancel,
 }: {
-  onCreated: (inv: Invoice) => void;
+  onCreated: () => void;
   onCancel: () => void;
 }) {
   const [customerName, setCustomerName] = useState("");
@@ -130,7 +133,7 @@ function InvoiceCreateForm({
         }
       }
 
-      onCreated(invoice);
+      onCreated();
     } catch {
       toast.error("Kunne ikke opprette faktura. Prøv igjen.");
     } finally {
@@ -331,41 +334,41 @@ function StatusBadge({ status }: { status: string }) {
 // ============================================================================
 
 export default function FakturaPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [showCreate, setShowCreate] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const queryClient = useQueryClient();
+
+  const {
+    data: allInvoices = [],
+    isLoading,
+  } = useQuery<Invoice[]>({
+    queryKey: queryKeys.invoices.list(),
+    queryFn: async () => {
+      const url = new URL(`${API_BASE_URL}/api/invoices`);
+      url.searchParams.set("company_id", COMPANY_ID);
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error("Kunne ikke hente fakturaer.");
+      const data = await res.json();
+      return data.items;
+    },
+    staleTime: 30_000,
+  });
+
+  const invoices = useMemo(
+    () => filter === "all" ? allInvoices : allInvoices.filter((i) => i.status === filter),
+    [allInvoices, filter],
+  );
+
+  const crystallize = useCrystallize(isLoading);
 
   // Ciri bubble action listeners
   useCiriActionListener("lag-faktura", useCallback(() => setShowCreate(true), []));
   useCiriActionListener("vis-sendte-fakturaer", useCallback(() => setFilter("sent"), []));
   useCiriActionListener("vis-ubetalte-fakturaer", useCallback(() => setFilter("viewed"), []));
 
-  const fetchInvoices = useCallback(async () => {
-    try {
-      const url = new URL(`${API_BASE_URL}/api/invoices`);
-      url.searchParams.set("company_id", COMPANY_ID);
-      if (filter !== "all") url.searchParams.set("status", filter);
-
-      const res = await fetch(url.toString());
-      if (res.ok) {
-        const data = await res.json();
-        setInvoices(data.items);
-      }
-    } catch {
-      toast.error("Kunne ikke hente fakturaer.");
-    } finally {
-      setLoading(false);
-    }
-  }, [filter]);
-
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
-
-  const handleCreated = (inv: Invoice) => {
-    setInvoices((prev) => [inv, ...prev]);
+  const handleCreated = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
     setShowCreate(false);
   };
 
@@ -379,18 +382,18 @@ export default function FakturaPage() {
       year: "numeric",
     });
 
-  const tabCounts = {
-    all: invoices.length,
-    draft: invoices.filter((i) => i.status === "draft").length,
-    sent: invoices.filter((i) => i.status === "sent").length,
-    viewed: invoices.filter((i) => i.status === "viewed").length,
-    paid: invoices.filter((i) => i.status === "paid").length,
-  };
+  const tabCounts = useMemo(() => ({
+    all: allInvoices.length,
+    draft: allInvoices.filter((i) => i.status === "draft").length,
+    sent: allInvoices.filter((i) => i.status === "sent").length,
+    viewed: allInvoices.filter((i) => i.status === "viewed").length,
+    paid: allInvoices.filter((i) => i.status === "paid").length,
+  }), [allInvoices]);
 
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className={`flex items-center justify-between ${crystallize(1)}`}>
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">
             Fakturaer
@@ -422,6 +425,7 @@ export default function FakturaPage() {
       <Tabs
         value={filter}
         onValueChange={(v) => setFilter(v as StatusFilter)}
+        className={crystallize(2)}
       >
         <TabsList>
           <TabsTrigger value="all">Alle ({tabCounts.all})</TabsTrigger>
@@ -433,7 +437,7 @@ export default function FakturaPage() {
       </Tabs>
 
       {/* Table */}
-      <div className="rounded-2xl border bg-white shadow-sm dark:bg-card">
+      <div className={`rounded-2xl border bg-white shadow-sm dark:bg-card ${crystallize(3)}`}>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -446,7 +450,7 @@ export default function FakturaPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                   <Loader2Icon className="mx-auto h-5 w-5 animate-spin" />

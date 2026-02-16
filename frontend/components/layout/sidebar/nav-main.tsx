@@ -23,6 +23,7 @@ import {
   ShieldCheckIcon,
   HelpCircleIcon,
   BrainCircuitIcon,
+  ActivityIcon,
   LandmarkIcon,
   BookOpenIcon,
   ScaleIcon,
@@ -62,7 +63,8 @@ export const navItems: NavGroup[] = [
     icon: LayoutDashboardIcon,
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
-      { title: "Ciri AI", href: "/dashboard/chat", icon: BrainCircuitIcon }
+      { title: "Ciri AI", href: "/dashboard/chat", icon: BrainCircuitIcon },
+      { title: "Aktivitet", href: "/dashboard/aktivitet", icon: ActivityIcon }
     ]
   },
   {

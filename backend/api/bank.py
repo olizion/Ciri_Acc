@@ -25,11 +25,13 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func, desc
 
 from config.database import get_db
+from config.cache import cache_key, get_cached, set_cached, invalidate_event, CACHE_TTLS
 from config.settings import settings
 from models import (
     BankAccount, BankAccountStatus, BankAggregator,
@@ -1452,6 +1454,11 @@ async def get_reconciliation_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Get overall reconciliation status for a period."""
+    ck = cache_key("reconciliation", endpoint="status", period=period, account_id=account_id)
+    cached = await get_cached(ck)
+    if cached is not None:
+        return JSONResponse(content=cached)
+
     company_id = await get_company_id(db)
 
     # Default to current month
@@ -1500,7 +1507,7 @@ async def get_reconciliation_status(
 
     auto_match_rate = (matched / total * 100) if total > 0 else 100.0
 
-    return ReconciliationStatusResponse(
+    response = ReconciliationStatusResponse(
         period=period,
         bank_balance=bank_balance,
         booked_balance=booked_balance,
@@ -1511,6 +1518,8 @@ async def get_reconciliation_status(
         pending_suggestions=suggested,
         auto_match_rate=auto_match_rate,
     )
+    await set_cached(ck, response.model_dump(mode="json"), CACHE_TTLS["reconciliation"])
+    return response
 
 
 @router.get("/reconciliation/suggestions", response_model=list[MatchSuggestionResponse])
@@ -1519,6 +1528,11 @@ async def list_pending_suggestions(
     db: AsyncSession = Depends(get_db),
 ):
     """Get pending match suggestions requiring user review."""
+    ck = cache_key("reconciliation", endpoint="suggestions", limit=limit)
+    cached = await get_cached(ck)
+    if cached is not None:
+        return JSONResponse(content=cached)
+
     company_id = await get_company_id(db)
 
     query = select(ReconciliationMatch).where(
@@ -1573,6 +1587,7 @@ async def list_pending_suggestions(
             match_factors=m.match_factors if m.match_factors else None,
         ))
 
+    await set_cached(ck, [s.model_dump(mode="json") for s in suggestions], CACHE_TTLS["reconciliation"])
     return suggestions
 
 
@@ -1653,6 +1668,7 @@ async def confirm_match(
                 logging.getLogger(__name__).warning(f"Could not post bilag {bilag.bilag_number}: {e}")
 
     await db.commit()
+    await invalidate_event("reconciliation:confirm")
 
     return {"message": "Match bekreftet"}
 
@@ -1765,6 +1781,7 @@ async def reject_match(
         )
 
     await db.commit()
+    await invalidate_event("reconciliation:reject")
 
     return {"message": "Match avvist"}
 
@@ -2215,6 +2232,7 @@ async def create_rule(
             cascade_data = CascadeResultResponse(**cascade_result.to_dict())
 
     await db.commit()
+    await invalidate_event("rules:create")
     await db.refresh(rule)
 
     return RuleResponse(
@@ -2286,6 +2304,7 @@ async def apply_rules_to_unmatched(
             logger.warning(f"Rule re-apply failed for tx {tx.id}: {e}")
 
     await db.commit()
+    await invalidate_event("rules:apply")
     matcher.clear_cache()
 
     return {
@@ -2337,6 +2356,7 @@ async def update_rule(
             cascade_data = CascadeResultResponse(**cascade_result.to_dict())
 
     await db.commit()
+    await invalidate_event("rules:update")
     await db.refresh(rule)
 
     return RuleResponse(
@@ -2380,6 +2400,7 @@ async def delete_rule(
 
     db.delete(rule)
     await db.commit()
+    await invalidate_event("rules:delete")
 
     return {"message": "Regel slettet"}
 
@@ -2406,6 +2427,7 @@ async def toggle_rule(
 
     rule.is_active = not rule.is_active
     await db.commit()
+    await invalidate_event("rules:update")
 
     return {"message": f"Regel {'aktivert' if rule.is_active else 'deaktivert'}"}
 

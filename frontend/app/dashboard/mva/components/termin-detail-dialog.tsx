@@ -39,7 +39,7 @@ export function TerminDetailDialog({
   open,
   onOpenChange,
   autonomyMode,
-}: TerminDetailDialogProps): JSX.Element | null {
+}: TerminDetailDialogProps) {
   if (!termin) return null;
 
   const isSubmitted = termin.status === "submitted";

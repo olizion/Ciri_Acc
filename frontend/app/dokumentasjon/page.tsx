@@ -1571,302 +1571,91 @@ const DOC_SECTIONS: DocSection[] = [
     id: "teknisk-arkitektur",
     title: "Teknisk arkitektur",
     icon: CpuIcon,
-    description: "Konfidensscoring, regelsystem, vekting og hvordan Ciri laerer over tid.",
+    description: "Tre-fase avstemmingspipeline, konfidensscoring, regelsystem, vekting og hvordan Ciri laerer over tid.",
     subsections: [
-      // ── KONFIDENSSCORING ──
+
+      // ── TRE-FASE PIPELINE ──
       {
-        id: "konfidensscoring",
-        title: "Konfidensscoring og vekting",
+        id: "tre-fase-pipeline",
+        title: "Tre-fase avstemmingspipeline",
         content: (
           <>
             <p>
-              Nar Ciri matcher en banktransaksjon mot et bilag, beregnes en
-              konfidensscoring basert pa <strong>seks uavhengige faktorer</strong>.
-              Hver faktor har en fast vekt, og summen avgjar konfidensniva.
+              Ciris avstemmingssystem opererer som en <strong>tre-fase pipeline</strong>.
+              Hver fase bygger pa den forrige. Fase 1 og 2 er rent mekaniske
+              (ingen AI), mens Fase 3 bruker Claude som en siste sikkerhetsport.
             </p>
 
-            {/* Weight bars */}
-            <div className="my-6 space-y-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
-                Faktorvekter
-              </p>
-              <WeightBar
-                label="Eksakt belop"
-                weight={0.35}
-                description="Transaksjonsbelop matcher bilagsbelop noyaktig"
-              />
-              <WeightBar
-                label="Referanse / KID"
-                weight={0.30}
-                description="Betalingsreferanse inneholder bilagsnummer eller KID"
-              />
-              <WeightBar
-                label="Beloptoleranse"
-                weight={0.20}
-                description="Belop innenfor 2% avvik (kun nar eksakt match feiler)"
-              />
-              <WeightBar
-                label="Navnelikhet"
-                weight={0.15}
-                description="Leverandornavn matcher motpart (fuzzy matching, terskel 60%)"
-              />
-              <WeightBar
-                label="Datonaerhet"
-                weight={0.15}
-                description="Transaksjonsdato innen 14 dager fra bilagsdato (lineaert avtak)"
-              />
-              <WeightBar
-                label="Historiske monstre"
-                weight={0.10}
-                description="Laerte regler fra tidligere tilbakemeldinger"
-              />
-            </div>
-
-            {/* Scoring flow */}
-            <p className="mb-4 text-[13px] font-semibold text-[#1a2e23]">
-              Scoringsflyt
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <div className="space-y-0">
-                  <FlowStep
-                    label="Hent uposterte bilag"
-                    detail="Maks 100, sortert etter dato"
-                  />
-                  <FlowStep
-                    label="Beregn 6 faktorer per par"
-                    detail="Transaksjon × Bilag"
-                  />
-                  <FlowStep
-                    label="Summer vektede scorer"
-                    detail="Total = Σ (faktor × vekt)"
-                  />
-                  <FlowStep
-                    label="Filtrer < 0.30 bort"
-                    detail="Minimum terskel for kandidat"
-                  />
-                  <FlowStep
-                    label="Klassifiser konfidens"
-                    detail="HOY / MEDIUM / LAV"
-                    last
-                  />
-                </div>
-              </div>
-
-              {/* Confidence thresholds */}
-              <div className="space-y-3">
-                <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-[#3E715C]" />
-                    <span className="text-[13px] font-bold text-[#3E715C]">
-                      HOY — score ≥ 0.90
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
-                    Nesten sikker match. Kan auto-bekreftes i Assistent- og
-                    Autonom-modus.
+            <div className="my-6 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4 text-center">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                    Fase 1
+                  </p>
+                  <p className="mt-1.5 text-[12px] font-semibold text-[#1a2e23]">
+                    Regler + scoring
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#8a9a8e]">
+                    Regelmotor matcher kjente monstre. Multi-faktor scorer ukjente par.
                   </p>
                 </div>
-                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-amber-400" />
-                    <span className="text-[13px] font-bold text-amber-700">
-                      MEDIUM — score 0.70–0.89
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
-                    Sannsynlig match. Auto-bekreftes kun i Autonom-modus,
-                    ellers foreslatt.
+                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-center">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-amber-700">
+                    Fase 2
+                  </p>
+                  <p className="mt-1.5 text-[12px] font-semibold text-[#1a2e23]">
+                    Klyngevalidering
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#8a9a8e]">
+                    Matcher sjekkes mot historiske suksessmonstre for a verifisere troverdighet.
                   </p>
                 </div>
-                <div className="rounded-xl border border-red-200 bg-red-50/50 p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-red-400" />
-                    <span className="text-[13px] font-bold text-red-600">
-                      LAV — score &lt; 0.70
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
-                    Usikker match. Vises alltid som forslag — krever manuell
-                    gjennomgang.
+                <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-center">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-blue-600">
+                    Fase 3
+                  </p>
+                  <p className="mt-1.5 text-[12px] font-semibold text-[#1a2e23]">
+                    AI-inspeksjon
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#8a9a8e]">
+                    Claude validerer utvalgte matcher ukentlig for endelig godkjenning.
                   </p>
                 </div>
               </div>
+
+              <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#8a9a8e]">
+                <span className="rounded-lg bg-white px-2.5 py-1 border border-[#d4dbd6]">
+                  Ny transaksjon
+                </span>
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+                <span className="rounded-lg bg-[#3E715C]/10 px-2.5 py-1 font-semibold text-[#3E715C]">
+                  Fase 1
+                </span>
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+                <span className="rounded-lg bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">
+                  Fase 2
+                </span>
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+                <span className="rounded-lg bg-blue-50 px-2.5 py-1 font-semibold text-blue-600">
+                  Fase 3
+                </span>
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+                <span className="rounded-lg bg-white px-2.5 py-1 border border-[#d4dbd6]">
+                  Postert / Foreslatt
+                </span>
+              </div>
             </div>
 
-            {/* Scoring examples */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Eksempler
+            <p>
+              Seksjonene nedenfor forklarer hvert konsept i detalj: forst regler
+              og scoring (Fase 1), deretter klynger (Fase 2), og til slutt
+              AI-inspeksjon (Fase 3).
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <ScoreExample
-                title="Faktura med KID — perfekt match"
-                items={[
-                  { label: "Eksakt belop (kr 12 500)", score: "+0.35", hit: true },
-                  { label: "Referanse matcher F-2025-042", score: "+0.30", hit: true },
-                  { label: "Beloptoleranse (hoppet)", score: "0.00", hit: false },
-                  { label: "Navn: Telenor → 87% likhet", score: "+0.13", hit: true },
-                  { label: "Dato: 3 dager forskjell", score: "+0.12", hit: true },
-                ]}
-                total="0.90"
-                level="HIGH"
-              />
-              <ScoreExample
-                title="Vipps-betaling — delvis match"
-                items={[
-                  { label: "Eksakt belop (kr 4 980)", score: "+0.35", hit: true },
-                  { label: "Ingen referanse", score: "0.00", hit: false },
-                  { label: "Beloptoleranse (hoppet)", score: "0.00", hit: false },
-                  { label: "Navn: Byggmakker → 68% likhet", score: "+0.10", hit: true },
-                  { label: "Dato: 5 dager forskjell", score: "+0.10", hit: true },
-                ]}
-                total="0.55"
-                level="LOW"
-              />
-            </div>
-
-            <Tip>
-              Referanse/KID-matching bruker bade direkte substringsoking og
-              numerisk ekstraksjon. Vanlige betalingsprefixer som
-              &ldquo;VIPPS*&rdquo;, &ldquo;KORTBETALING&rdquo; osv. fjernes for
-              sammenligning.
-            </Tip>
           </>
         ),
       },
 
-      // ── AUTONOMIMATRISE ──
-      {
-        id: "autonomimatrise",
-        title: "Autonominivaer og auto-postering",
-        content: (
-          <>
-            <p>
-              Bedriftens <strong>autonominiva</strong> avgjar hvilke
-              konfidensnivaer som auto-bekreftes vs. presenteres for
-              gjennomgang.
-            </p>
-
-            {/* Autonomy matrix */}
-            <div className="my-6 overflow-hidden rounded-xl border border-[#d4dbd6]">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr className="bg-[#f5f7f2]">
-                    <th className="px-4 py-3 text-left font-semibold text-[#1a2e23]">
-                      Modus
-                    </th>
-                    <th className="px-3 py-3 text-center font-semibold text-[#3E715C]">
-                      <div className="flex items-center justify-center gap-1">
-                        <div className="h-2 w-2 rounded-full bg-[#3E715C]" />
-                        Hoy (≥0.90)
-                      </div>
-                    </th>
-                    <th className="px-3 py-3 text-center font-semibold text-amber-700">
-                      <div className="flex items-center justify-center gap-1">
-                        <div className="h-2 w-2 rounded-full bg-amber-400" />
-                        Medium
-                      </div>
-                    </th>
-                    <th className="px-3 py-3 text-center font-semibold text-red-600">
-                      <div className="flex items-center justify-center gap-1">
-                        <div className="h-2 w-2 rounded-full bg-red-400" />
-                        Lav
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-t border-[#d4dbd6]">
-                    <td className="px-4 py-3 font-medium text-[#1a2e23]">
-                      Assistent
-                      <p className="text-[10px] font-normal text-[#8a9a8e]">
-                        Auto ved hoy konfidens
-                      </p>
-                    </td>
-                    <td className="px-3 py-3">
-                      <AutonomyCell mode="auto" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <AutonomyCell mode="suggest" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <AutonomyCell mode="suggest" />
-                    </td>
-                  </tr>
-                  <tr className="border-t border-[#d4dbd6]">
-                    <td className="px-4 py-3 font-medium text-[#1a2e23]">
-                      Autonom
-                      <p className="text-[10px] font-normal text-[#8a9a8e]">
-                        Auto ved hoy + medium
-                      </p>
-                    </td>
-                    <td className="px-3 py-3">
-                      <AutonomyCell mode="auto" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <AutonomyCell mode="auto" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <AutonomyCell mode="suggest" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Auto-posting gate for bilags */}
-            <p className="mb-3 text-[13px] font-semibold text-[#1a2e23]">
-              Auto-postering av bilag (OCR-pipeline)
-            </p>
-            <p className="mb-4">
-              Nar et bilag behandles via OCR, kan det auto-posteres hvis
-              <strong> alle</strong> folgende krav er oppfylt:
-            </p>
-
-            <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              <div className="space-y-2">
-                {[
-                  { field: "OCR-konfidens", req: "≥ 90%" },
-                  { field: "Leverandornavn", req: "Identifisert" },
-                  { field: "Bruttobelop", req: "> 0" },
-                  { field: "Fakturadato", req: "Gyldig dato" },
-                  { field: "Beskrivelse", req: "Utfylt" },
-                  { field: "Kontokode", req: "Foreslatt" },
-                  { field: "MVA-kode", req: "Identifisert" },
-                ].map((item) => (
-                  <div
-                    key={item.field}
-                    className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-[12px]"
-                  >
-                    <span className="flex items-center gap-2 text-[#1a2e23]">
-                      <CheckIcon className="h-3.5 w-3.5 text-[#3E715C]" />
-                      {item.field}
-                    </span>
-                    <span className="font-mono text-[11px] font-medium text-[#3E715C]">
-                      {item.req}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex gap-2 text-[11px]">
-                <div className="flex-1 rounded-lg bg-[#3E715C]/10 px-3 py-2 text-center font-semibold text-[#3E715C]">
-                  Alle oppfylt → POSTERT
-                </div>
-                <div className="flex-1 rounded-lg bg-amber-50 px-3 py-2 text-center font-semibold text-amber-700">
-                  Noe mangler → VENTER
-                </div>
-              </div>
-            </div>
-
-            <Tip>
-              Hvis auto-postering feiler (f.eks. ugyldig kontooppsett), settes
-              bilaget tilbake til VENTER med en forklaring i statusfeltet.
-            </Tip>
-          </>
-        ),
-      },
-
-      // ── REGELSYSTEMET ──
+      // ── REGELSYSTEMET (Fase 1) ──
       {
         id: "regelsystemet",
         title: "Regelsystemet",
@@ -2041,6 +1830,759 @@ const DOC_SECTIONS: DocSection[] = [
                 </div>
               </div>
             </div>
+          </>
+        ),
+      },
+
+      // ── KONFIDENSSCORING (Fase 1) ──
+      {
+        id: "konfidensscoring",
+        title: "Konfidensscoring og vekting",
+        content: (
+          <>
+            <p>
+              Nar Ciri matcher en banktransaksjon mot et bilag, beregnes en
+              konfidensscoring basert pa <strong>seks uavhengige faktorer</strong>.
+              Hver faktor har en fast vekt, og summen avgjar konfidensniva.
+            </p>
+
+            {/* Weight bars */}
+            <div className="my-6 space-y-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
+              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
+                Faktorvekter
+              </p>
+              <WeightBar
+                label="Eksakt belop"
+                weight={0.35}
+                description="Transaksjonsbelop matcher bilagsbelop noyaktig"
+              />
+              <WeightBar
+                label="Referanse / KID"
+                weight={0.30}
+                description="Betalingsreferanse inneholder bilagsnummer eller KID"
+              />
+              <WeightBar
+                label="Beloptoleranse"
+                weight={0.20}
+                description="Belop innenfor 2% avvik (kun nar eksakt match feiler)"
+              />
+              <WeightBar
+                label="Navnelikhet"
+                weight={0.15}
+                description="Leverandornavn matcher motpart (fuzzy matching, terskel 60%)"
+              />
+              <WeightBar
+                label="Datonaerhet"
+                weight={0.15}
+                description="Transaksjonsdato innen 14 dager fra bilagsdato (lineaert avtak)"
+              />
+              <WeightBar
+                label="Historiske monstre"
+                weight={0.10}
+                description="Laerte regler fra tidligere tilbakemeldinger"
+              />
+            </div>
+
+            {/* Scoring flow */}
+            <p className="mb-4 text-[13px] font-semibold text-[#1a2e23]">
+              Scoringsflyt
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <div className="space-y-0">
+                  <FlowStep
+                    label="Hent uposterte bilag"
+                    detail="Maks 100, sortert etter dato"
+                  />
+                  <FlowStep
+                    label="Beregn 6 faktorer per par"
+                    detail="Transaksjon × Bilag"
+                  />
+                  <FlowStep
+                    label="Summer vektede scorer"
+                    detail="Total = Σ (faktor × vekt)"
+                  />
+                  <FlowStep
+                    label="Filtrer < 0.30 bort"
+                    detail="Minimum terskel for kandidat"
+                  />
+                  <FlowStep
+                    label="Klassifiser konfidens"
+                    detail="HOY / MEDIUM / LAV"
+                    last
+                  />
+                </div>
+              </div>
+
+              {/* Confidence thresholds */}
+              <div className="space-y-3">
+                <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#3E715C]" />
+                    <span className="text-[13px] font-bold text-[#3E715C]">
+                      HOY — score ≥ 0.90
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                    Nesten sikker match. Kan auto-bekreftes i Assistent- og
+                    Autonom-modus.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-amber-400" />
+                    <span className="text-[13px] font-bold text-amber-700">
+                      MEDIUM — score 0.70–0.89
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                    Sannsynlig match. Auto-bekreftes kun i Autonom-modus,
+                    ellers foreslatt.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-red-200 bg-red-50/50 p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-red-400" />
+                    <span className="text-[13px] font-bold text-red-600">
+                      LAV — score &lt; 0.70
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                    Usikker match. Vises alltid som forslag — krever manuell
+                    gjennomgang.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Scoring examples */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Eksempler
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ScoreExample
+                title="Faktura med KID — perfekt match"
+                items={[
+                  { label: "Eksakt belop (kr 12 500)", score: "+0.35", hit: true },
+                  { label: "Referanse matcher F-2025-042", score: "+0.30", hit: true },
+                  { label: "Beloptoleranse (hoppet)", score: "0.00", hit: false },
+                  { label: "Navn: Telenor → 87% likhet", score: "+0.13", hit: true },
+                  { label: "Dato: 3 dager forskjell", score: "+0.12", hit: true },
+                ]}
+                total="0.90"
+                level="HIGH"
+              />
+              <ScoreExample
+                title="Vipps-betaling — delvis match"
+                items={[
+                  { label: "Eksakt belop (kr 4 980)", score: "+0.35", hit: true },
+                  { label: "Ingen referanse", score: "0.00", hit: false },
+                  { label: "Beloptoleranse (hoppet)", score: "0.00", hit: false },
+                  { label: "Navn: Byggmakker → 68% likhet", score: "+0.10", hit: true },
+                  { label: "Dato: 5 dager forskjell", score: "+0.10", hit: true },
+                ]}
+                total="0.55"
+                level="LOW"
+              />
+            </div>
+
+            <Tip>
+              Referanse/KID-matching bruker bade direkte substringsoking og
+              numerisk ekstraksjon. Vanlige betalingsprefixer som
+              &ldquo;VIPPS*&rdquo;, &ldquo;KORTBETALING&rdquo; osv. fjernes for
+              sammenligning.
+            </Tip>
+          </>
+        ),
+      },
+
+      // ── KLYNGER OG LAERINGSSYKLUSEN (Fase 2) ──
+      {
+        id: "klynger",
+        title: "Klynger og laeringssyklusen",
+        content: (
+          <>
+            <p>
+              Klynger er kjernen i Ciris langsiktige laering. Mens regler
+              handterer enkeltmonstre, bygger klynger en <strong>helhetlig
+              forstaaelse</strong> av bedriftens utgifts- og inntektsmonstre
+              over tid.
+            </p>
+
+            {/* What is a cluster */}
+            <p className="mb-3 mt-6 text-[13px] font-semibold text-[#1a2e23]">
+              Hva er en klynge?
+            </p>
+            <p className="mb-4">
+              En klynge er en gruppering av bekreftede treff etter{" "}
+              <strong>kontonummer</strong> og <strong>kategori</strong>. Hver
+              gang du bekrefter en avstemming, opprettes et datapunkt i den
+              relevante klyngen. Etter hvert som datapunkter akkumuleres fra
+              ulike leverandorer og belop, vokser klyngen i styrke.
+            </p>
+
+            <div className="my-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-4">
+              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-3">
+                Eksempel: Klyngen &ldquo;Kontorrekvisita&rdquo; (konto 6540)
+              </p>
+              <div className="space-y-1.5 text-[11px] text-[#4a5e52]">
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                  <span>Elkjop — kr 4 299 (skjerm) → bekreftet 28. jan</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                  <span>Komplett.no — kr 1 890 (tastatur) → bekreftet 3. feb</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                  <span>Clas Ohlson — kr 349 (kabler) → bekreftet 10. feb</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                  <span>Dustin — kr 2 150 (headset) → bekreftet 15. feb</span>
+                </div>
+              </div>
+              <p className="mt-3 text-[11px] text-[#8a9a8e]">
+                Fire datapunkter, fire leverandorer — alle bekreftet til konto
+                6540.
+              </p>
+            </div>
+
+            {/* The learning cycle */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Laeringssyklusen
+            </p>
+            <p className="mb-4">
+              Hele Ciris laering folger en syklus der hver handling forsterker
+              systemets forstaaelse:
+            </p>
+
+            <div className="max-w-sm">
+              <FlowStep
+                label="Banktransaksjoner importeres"
+                detail="Daglig synkronisering fra bankkonto"
+              />
+              <FlowStep
+                label="Ciri analyserer og foreslar"
+                detail="Multi-faktor matching mot bilag"
+              />
+              <FlowStep
+                label="Du bekrefter eller korrigerer"
+                detail="Avstemming med konfidensscore"
+              />
+              <FlowStep
+                label="Regler laeres fra handlinger"
+                detail="AUTO_MATCH, AUTO_CATEGORY, IGNORE"
+              />
+              <FlowStep
+                label="Klynger bygges fra datapunkter"
+                detail="Gruppering etter konto og kategori"
+              />
+              <FlowStep
+                label="Styrke beregnes"
+                detail="Volum + diversitet + paalitelighet + aktualitet"
+              />
+              <FlowStep
+                label="Autonom bokforing aktiveres"
+                detail="Nar klynger er sterke nok"
+                last
+              />
+            </div>
+
+            {/* Strength formula */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Styrkeformelen
+            </p>
+            <p className="mb-4">
+              Klyngestyrke beregnes som en vektet sum av fire faktorer.
+              Resultatet bestemmer om klyngen er <strong>svak</strong>,{" "}
+              <strong>voksende</strong> eller <strong>sterk</strong>.
+            </p>
+
+            <div className="my-4 space-y-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
+              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
+                Styrkeberegning
+              </p>
+              <WeightBar
+                label="Volum (antall datapunkter)"
+                weight={0.30}
+                description="Flere bekreftede treff gir hoyere volum-score"
+              />
+              <WeightBar
+                label="Diversitet (unike leverandorer)"
+                weight={0.30}
+                description="Ulike leverandorer til samme konto styrker klyngen"
+              />
+              <WeightBar
+                label="Paalitelighet (riktige vs overstyrte)"
+                weight={0.25}
+                description="Lav overstyringsrate gir hoy paalitelighet"
+              />
+              <WeightBar
+                label="Aktualitet (nylige datapunkter)"
+                weight={0.15}
+                description="Ferske datapunkter teller mer enn gamle"
+              />
+            </div>
+
+            {/* Hard minimums */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Harde minimumskrav
+            </p>
+            <p className="mb-4">
+              Uavhengig av vektet score, settes styrken til{" "}
+              <strong>0</strong> hvis noen av disse minimumene ikke er oppfylt:
+            </p>
+
+            <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
+              <div className="space-y-2">
+                {[
+                  { field: "Datapunkter", req: "≥ 8", desc: "Minimum 8 bekreftede treff i klyngen" },
+                  { field: "Leverandorer", req: "≥ 3", desc: "Minimum 3 unike leverandornavn" },
+                  { field: "Overstyringsrate", req: "≤ 20%", desc: "Maks 20% av treff overstyrt av bruker" },
+                ].map((item) => (
+                  <div
+                    key={item.field}
+                    className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-[12px]"
+                  >
+                    <span className="flex items-center gap-2 text-[#1a2e23]">
+                      <CheckIcon className="h-3.5 w-3.5 text-[#3E715C]" />
+                      {item.field}
+                      <span className="text-[10px] text-[#8a9a8e]">
+                        — {item.desc}
+                      </span>
+                    </span>
+                    <span className="font-mono text-[11px] font-medium text-[#3E715C]">
+                      {item.req}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Strength levels */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Styrkenivaaer
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-xl border border-[#d4dbd6] bg-white p-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-[#8a9a8e]" />
+                  <span className="text-[13px] font-bold text-[#8a9a8e]">
+                    Svak — styrke &lt; 0.4
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                  Faerre enn 8 datapunkter, eller lav diversitet. Klyngen gir
+                  ingen autonom autoritet — fungerer kun som statistikk.
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-amber-400" />
+                  <span className="text-[13px] font-bold text-amber-700">
+                    Voksende — styrke 0.4–0.7
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                  Minimum 8 datapunkter og 3 leverandorer. Klyngen brukes til
+                  forbedret matching, men gir ikke autonom bokforing alene.
+                </p>
+              </div>
+              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-[#3E715C]" />
+                  <span className="text-[13px] font-bold text-[#3E715C]">
+                    Sterk — styrke &gt; 0.7
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                  Hoy diversitet, lav feilrate, jevnlig aktivitet. Denne
+                  klyngen kvalifiserer for autonom bokforing nar globale krav er
+                  oppfylt.
+                </p>
+              </div>
+            </div>
+
+
+            {/* Cluster gatekeeper */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Klyngen som portvakt (Fase 2)
+            </p>
+            <p className="mb-4">
+              I Fase 2 av pipelinen fungerer klynger som en <strong>portvakt</strong> for
+              auto-bokforing. Klyngestyrke og tilpasningsgrad bestemmer om en
+              match kan auto-bokfores eller ma gjennomgas manuelt.
+            </p>
+
+            <div className="my-4 rounded-xl border border-[#d4dbd6] overflow-hidden">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr className="bg-[#f5f7f2]">
+                    <th className="px-4 py-3 text-left font-semibold text-[#1a2e23]">Klyngestyrke</th>
+                    <th className="px-3 py-3 text-left font-semibold text-[#1a2e23]">Tilpasning</th>
+                    <th className="px-3 py-3 text-left font-semibold text-[#1a2e23]">Krav til match</th>
+                    <th className="px-3 py-3 text-left font-semibold text-[#1a2e23]">Resultat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-[#d4dbd6]">
+                    <td className="px-4 py-3">
+                      <span className="rounded-md bg-[#3E715C]/10 px-2 py-0.5 text-[10px] font-bold text-[#3E715C]">Sterk</span>
+                    </td>
+                    <td className="px-3 py-3 text-[#4a5e52]">Hoy</td>
+                    <td className="px-3 py-3 text-[#4a5e52]">MEDIUM eller HOY</td>
+                    <td className="px-3 py-3 text-[#3E715C] font-semibold">Kan auto-bokfores</td>
+                  </tr>
+                  <tr className="border-t border-[#d4dbd6]">
+                    <td className="px-4 py-3">
+                      <span className="rounded-md bg-[#3E715C]/10 px-2 py-0.5 text-[10px] font-bold text-[#3E715C]">Sterk</span>
+                    </td>
+                    <td className="px-3 py-3 text-[#4a5e52]">Delvis</td>
+                    <td className="px-3 py-3 text-[#4a5e52]">Kun HOY</td>
+                    <td className="px-3 py-3 text-[#3E715C] font-semibold">Kan auto-bokfores</td>
+                  </tr>
+                  <tr className="border-t border-[#d4dbd6]">
+                    <td className="px-4 py-3">
+                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">Voksende</span>
+                    </td>
+                    <td className="px-3 py-3 text-[#4a5e52]">Hoy / Delvis</td>
+                    <td className="px-3 py-3 text-[#4a5e52]">Kun HOY</td>
+                    <td className="px-3 py-3 text-amber-700 font-semibold">Kan auto-bokfores</td>
+                  </tr>
+                  <tr className="border-t border-[#d4dbd6]">
+                    <td className="px-4 py-3">
+                      <span className="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">Svak / Ingen</span>
+                    </td>
+                    <td className="px-3 py-3 text-[#4a5e52]">—</td>
+                    <td className="px-3 py-3 text-[#4a5e52]">—</td>
+                    <td className="px-3 py-3 text-red-600 font-semibold">Aldri auto-bokfor</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <Tip>
+              Uten en klynge kan Ciri <strong>aldri</strong> auto-bokfore en transaksjon,
+              uansett hvor hoy matchscoren er. Klyngen er den obligatoriske portvakten.
+            </Tip>
+
+            {/* Cluster growth example */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Klyngevekst over tid
+            </p>
+            <div className="space-y-3">
+              {[
+                {
+                  period: "Start",
+                  points: 0,
+                  merchants: 0,
+                  strength: 0,
+                  level: "Ingen data",
+                  desc: "Klyngen eksisterer ikke enna — ingen bekreftede treff for denne kontoen.",
+                  color: "bg-[#d4dbd6]",
+                },
+                {
+                  period: "Maned 1",
+                  points: 3,
+                  merchants: 1,
+                  strength: 0.1,
+                  level: "Svak",
+                  desc: "3 bekreftelser fra 1 leverandor. Under minimum (8 pkt, 3 lev.).",
+                  color: "bg-[#8a9a8e]",
+                },
+                {
+                  period: "Maned 2",
+                  points: 6,
+                  merchants: 2,
+                  strength: 0.25,
+                  level: "Svak",
+                  desc: "6 datapunkter, 2 leverandorer. Naermer seg, men fortsatt under minimum.",
+                  color: "bg-[#8a9a8e]",
+                },
+                {
+                  period: "Maned 3",
+                  points: 10,
+                  merchants: 3,
+                  strength: 0.52,
+                  level: "Voksende",
+                  desc: "Alle minimumskrav oppfylt! Klyngen begynner a pavirke matching-konfidens.",
+                  color: "bg-amber-400",
+                },
+                {
+                  period: "Maned 5",
+                  points: 24,
+                  merchants: 5,
+                  strength: 0.82,
+                  level: "Sterk",
+                  desc: "Hoy diversitet, ingen overstyringer. Kvalifiserer for autonom bokforing.",
+                  color: "bg-[#3E715C]",
+                },
+              ].map((item) => (
+                <div
+                  key={item.period}
+                  className="rounded-xl border border-[#d4dbd6] bg-white px-4 py-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-semibold text-[#1a2e23]">
+                      {item.period}
+                    </span>
+                    <div className="flex items-center gap-3 text-[11px]">
+                      <span className="text-[#8a9a8e]">
+                        {item.points} pkt · {item.merchants} lev.
+                      </span>
+                      <span className="font-bold tabular-nums text-[#3E715C]">
+                        {item.strength.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#e8ede9]">
+                    <div
+                      className={cn("h-full rounded-full", item.color)}
+                      style={{ width: `${Math.max(item.strength * 100, 2)}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-[11px] text-[#4a5e52]">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* What confirmation creates */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Hva skjer nar du bekrefter en avstemming?
+            </p>
+
+            <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
+              {/* Confirm path */}
+              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
+                <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                  Bekreftelse
+                </p>
+                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Transaksjon matches med bilaget
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Nytt datapunkt opprettes i klyngen (konto + kategori)
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Konfidens for lignende fremtidige treff okes
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Klyngestyrken beregnes pa nytt
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center py-2">
+                <ArrowDownIcon className="h-4 w-4 text-[#8a9a8e]" />
+              </div>
+
+              {/* Reject path */}
+              <div className="rounded-xl border border-red-200 bg-red-50/50 p-4">
+                <p className="text-[10px] font-bold tracking-wider uppercase text-red-600">
+                  Avvisning / overstyring
+                </p>
+                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    Matchen forkastes
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    Konfidens for lignende treff senkes
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    Overstyringsrate i klyngen okes
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    Hvis rate &gt; 20% → klyngestyrke faller til 0
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Autonomy requirements */}
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Globale krav for autonom bokforing
+            </p>
+            <p className="mb-4">
+              Autonom-modus krever at <strong>begge</strong> disse kravene er
+              oppfylt:
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
+                <p className="text-[12px] font-semibold text-[#3E715C]">
+                  5+ paalitelige regler
+                </p>
+                <p className="mt-1 text-[11px] text-[#4a5e52]">
+                  Regler med ≥ 80% treffsikkerhet og ≥ 5 bruk.
+                </p>
+              </div>
+              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
+                <p className="text-[12px] font-semibold text-[#3E715C]">
+                  1+ sterk klynge
+                </p>
+                <p className="mt-1 text-[11px] text-[#4a5e52]">
+                  Minst en klynge med styrke &gt; 0.7.
+                </p>
+              </div>
+            </div>
+
+            <Tip>
+              Du kan se klyngenes status under{" "}
+              <PathBreadcrumb path="Bank → Regler" /> i seksjonen
+              &ldquo;Klynger og laering&rdquo;. Hver klynge viser antall
+              datapunkter, leverandorer, styrke og styrkenivaa.
+            </Tip>
+          </>
+        ),
+      },
+
+      // ── AI-INSPEKSJON (FASE 3) ──
+      {
+        id: "ai-inspeksjon",
+        title: "AI-inspeksjon (Fase 3)",
+        content: (
+          <>
+            <p>
+              Det eneste steget i pipelinen som involverer AI. Kjorer pa fast
+              tidsplan og validerer matcher som allerede har bestatt regler,
+              scoring og klyngevalidering.
+            </p>
+
+            <div className="my-6 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
+              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-4">
+                Batchdetaljer
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg bg-white px-3 py-2.5 border border-[#d4dbd6]">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">Tidsplan</p>
+                  <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">Man + Fre kl. 06:00</p>
+                </div>
+                <div className="rounded-lg bg-white px-3 py-2.5 border border-[#d4dbd6]">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">Modell</p>
+                  <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">Claude Opus</p>
+                </div>
+                <div className="rounded-lg bg-white px-3 py-2.5 border border-[#d4dbd6]">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">Typisk batch</p>
+                  <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">5-15 matcher/uke</p>
+                </div>
+              </div>
+            </div>
+
+            <Step number={1} title="Samle batch">
+              Hent alle matcher med readiness tier 1 eller 2 (regler + sterke
+              klynger). Tier 3-4 gar aldri hit — de vises direkte til brukeren.
+            </Step>
+            <Step number={2} title="Bygg prompt">
+              Systemkontekst, klyngeoppsummeringer og matchliste med scorer
+              og bilagsdetaljer sendes til Claude.
+            </Step>
+            <Step number={3} title="Claude validerer">
+              Claude sjekker hver match for: riktig kontokode, rimelig belop
+              for kategorien, duplikater, og samsvar mellom bilag og transaksjon.
+            </Step>
+            <Step number={4} title="Utfor resultat">
+              Godkjente matcher auto-bokfores. Flaggede matcher sendes til bruker
+              med Claudes begrunnelse.
+            </Step>
+
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
+                <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                  Godkjent av AI
+                </p>
+                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Auto-bokfor (opprett posteringer, merk POSTERT)
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Registrer klyngedatapunkt
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
+                    Oppdater regelstatistikk
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                <p className="text-[10px] font-bold tracking-wider uppercase text-amber-700">
+                  Flagget av AI
+                </p>
+                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 flex items-center justify-center text-amber-500 shrink-0 text-[10px] font-bold">!</span>
+                    Flytt til FORESLATT (brukergjennomgang)
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 flex items-center justify-center text-amber-500 shrink-0 text-[10px] font-bold">!</span>
+                    Inkluder Claudes bekymring i forklaring
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Eksempel: AI flagging
+            </p>
+            <div className="rounded-xl border border-amber-200 bg-amber-50/30 p-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                  <span className="text-[11px] font-bold text-amber-700">!</span>
+                </div>
+                <div>
+                  <p className="text-[12px] font-semibold text-amber-800">
+                    Match #3 flagget
+                  </p>
+                  <p className="mt-1 text-[11px] text-[#4a5e52] italic">
+                    &ldquo;Belopet kr 12 990 er uvanlig hoyt for IT-abonnement (konto 6540).
+                    Gjennomsnitt i klyngen er kr 49-2 890. Kan dette vaere maskinvare
+                    (konto 1200)?&rdquo;
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
+              Kostnad
+            </p>
+            <div className="rounded-xl border border-[#d4dbd6] bg-white p-4">
+              <div className="space-y-2">
+                {[
+                  { label: "~1 200 transaksjoner/ar", detail: "Typisk ~10M NOK/ar bedrift" },
+                  { label: "~450 nar Fase 3", detail: "Etter regler + filtrering" },
+                  { label: "104 batcher/ar", detail: "Man + Fre, ~4-5 matcher per batch" },
+                  { label: "~$6,50/ar per kunde", detail: "Opus: $15/M input, $75/M output" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between rounded-lg bg-[#f5f7f2]/80 px-3 py-2 text-[11px]"
+                  >
+                    <span className="font-semibold text-[#1a2e23]">{item.label}</span>
+                    <span className="text-[#8a9a8e]">{item.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Tip>
+              Hele det mekaniske systemet handterer matching og scoring. Claude
+              fungerer kun som en ekstra sikkerhetsport for matcher systemet
+              allerede er sikre pa, for de bokfores.
+            </Tip>
           </>
         ),
       },
@@ -2264,151 +2806,104 @@ const DOC_SECTIONS: DocSection[] = [
         ),
       },
 
-      // ── KLYNGER OG LAERINGSSYKLUSEN ──
+      // ── AUTONOMIMATRISE ──
       {
-        id: "klynger",
-        title: "Klynger og laeringssyklusen",
+        id: "autonomimatrise",
+        title: "Autonominivaer og auto-postering",
         content: (
           <>
             <p>
-              Klynger er kjernen i Ciris langsiktige laering. Mens regler
-              handterer enkeltmonstre, bygger klynger en <strong>helhetlig
-              forstaaelse</strong> av bedriftens utgifts- og inntektsmonstre
-              over tid.
+              Bedriftens <strong>autonominiva</strong> avgjar hvilke
+              konfidensnivaer som auto-bekreftes vs. presenteres for
+              gjennomgang.
             </p>
 
-            {/* What is a cluster */}
-            <p className="mb-3 mt-6 text-[13px] font-semibold text-[#1a2e23]">
-              Hva er en klynge?
-            </p>
-            <p className="mb-4">
-              En klynge er en gruppering av bekreftede treff etter{" "}
-              <strong>kontonummer</strong> og <strong>kategori</strong>. Hver
-              gang du bekrefter en avstemming, opprettes et datapunkt i den
-              relevante klyngen. Etter hvert som datapunkter akkumuleres fra
-              ulike leverandorer og belop, vokser klyngen i styrke.
-            </p>
-
-            <div className="my-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-4">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-3">
-                Eksempel: Klyngen &ldquo;Kontorrekvisita&rdquo; (konto 6540)
-              </p>
-              <div className="space-y-1.5 text-[11px] text-[#4a5e52]">
-                <div className="flex items-center gap-2">
-                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                  <span>Elkjop — kr 4 299 (skjerm) → bekreftet 28. jan</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                  <span>Komplett.no — kr 1 890 (tastatur) → bekreftet 3. feb</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                  <span>Clas Ohlson — kr 349 (kabler) → bekreftet 10. feb</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                  <span>Dustin — kr 2 150 (headset) → bekreftet 15. feb</span>
-                </div>
-              </div>
-              <p className="mt-3 text-[11px] text-[#8a9a8e]">
-                Fire datapunkter, fire leverandorer — alle bekreftet til konto
-                6540.
-              </p>
+            {/* Autonomy matrix */}
+            <div className="my-6 overflow-hidden rounded-xl border border-[#d4dbd6]">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr className="bg-[#f5f7f2]">
+                    <th className="px-4 py-3 text-left font-semibold text-[#1a2e23]">
+                      Modus
+                    </th>
+                    <th className="px-3 py-3 text-center font-semibold text-[#3E715C]">
+                      <div className="flex items-center justify-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-[#3E715C]" />
+                        Hoy (≥0.90)
+                      </div>
+                    </th>
+                    <th className="px-3 py-3 text-center font-semibold text-amber-700">
+                      <div className="flex items-center justify-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-amber-400" />
+                        Medium
+                      </div>
+                    </th>
+                    <th className="px-3 py-3 text-center font-semibold text-red-600">
+                      <div className="flex items-center justify-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-red-400" />
+                        Lav
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-[#d4dbd6]">
+                    <td className="px-4 py-3 font-medium text-[#1a2e23]">
+                      Assistent
+                      <p className="text-[10px] font-normal text-[#8a9a8e]">
+                        Auto ved hoy konfidens
+                      </p>
+                    </td>
+                    <td className="px-3 py-3">
+                      <AutonomyCell mode="auto" />
+                    </td>
+                    <td className="px-3 py-3">
+                      <AutonomyCell mode="suggest" />
+                    </td>
+                    <td className="px-3 py-3">
+                      <AutonomyCell mode="suggest" />
+                    </td>
+                  </tr>
+                  <tr className="border-t border-[#d4dbd6]">
+                    <td className="px-4 py-3 font-medium text-[#1a2e23]">
+                      Autonom
+                      <p className="text-[10px] font-normal text-[#8a9a8e]">
+                        Auto ved hoy + medium
+                      </p>
+                    </td>
+                    <td className="px-3 py-3">
+                      <AutonomyCell mode="auto" />
+                    </td>
+                    <td className="px-3 py-3">
+                      <AutonomyCell mode="auto" />
+                    </td>
+                    <td className="px-3 py-3">
+                      <AutonomyCell mode="suggest" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            {/* The learning cycle */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Laeringssyklusen
+            {/* Auto-posting gate for bilags */}
+            <p className="mb-3 text-[13px] font-semibold text-[#1a2e23]">
+              Auto-postering av bilag (OCR-pipeline)
             </p>
             <p className="mb-4">
-              Hele Ciris laering folger en syklus der hver handling forsterker
-              systemets forstaaelse:
-            </p>
-
-            <div className="max-w-sm">
-              <FlowStep
-                label="Banktransaksjoner importeres"
-                detail="Daglig synkronisering fra bankkonto"
-              />
-              <FlowStep
-                label="Ciri analyserer og foreslar"
-                detail="Multi-faktor matching mot bilag"
-              />
-              <FlowStep
-                label="Du bekrefter eller korrigerer"
-                detail="Avstemming med konfidensscore"
-              />
-              <FlowStep
-                label="Regler laeres fra handlinger"
-                detail="AUTO_MATCH, AUTO_CATEGORY, IGNORE"
-              />
-              <FlowStep
-                label="Klynger bygges fra datapunkter"
-                detail="Gruppering etter konto og kategori"
-              />
-              <FlowStep
-                label="Styrke beregnes"
-                detail="Volum + diversitet + paalitelighet + aktualitet"
-              />
-              <FlowStep
-                label="Autonom bokforing aktiveres"
-                detail="Nar klynger er sterke nok"
-                last
-              />
-            </div>
-
-            {/* Strength formula */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Styrkeformelen
-            </p>
-            <p className="mb-4">
-              Klyngestyrke beregnes som en vektet sum av fire faktorer.
-              Resultatet bestemmer om klyngen er <strong>svak</strong>,{" "}
-              <strong>voksende</strong> eller <strong>sterk</strong>.
-            </p>
-
-            <div className="my-4 space-y-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
-                Styrkeberegning
-              </p>
-              <WeightBar
-                label="Volum (antall datapunkter)"
-                weight={0.30}
-                description="Flere bekreftede treff gir hoyere volum-score"
-              />
-              <WeightBar
-                label="Diversitet (unike leverandorer)"
-                weight={0.30}
-                description="Ulike leverandorer til samme konto styrker klyngen"
-              />
-              <WeightBar
-                label="Paalitelighet (riktige vs overstyrte)"
-                weight={0.25}
-                description="Lav overstyringsrate gir hoy paalitelighet"
-              />
-              <WeightBar
-                label="Aktualitet (nylige datapunkter)"
-                weight={0.15}
-                description="Ferske datapunkter teller mer enn gamle"
-              />
-            </div>
-
-            {/* Hard minimums */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Harde minimumskrav
-            </p>
-            <p className="mb-4">
-              Uavhengig av vektet score, settes styrken til{" "}
-              <strong>0</strong> hvis noen av disse minimumene ikke er oppfylt:
+              Nar et bilag behandles via OCR, kan det auto-posteres hvis
+              <strong> alle</strong> folgende krav er oppfylt:
             </p>
 
             <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
               <div className="space-y-2">
                 {[
-                  { field: "Datapunkter", req: "≥ 8", desc: "Minimum 8 bekreftede treff i klyngen" },
-                  { field: "Leverandorer", req: "≥ 3", desc: "Minimum 3 unike leverandornavn" },
-                  { field: "Overstyringsrate", req: "≤ 20%", desc: "Maks 20% av treff overstyrt av bruker" },
+                  { field: "OCR-konfidens", req: "≥ 90%" },
+                  { field: "Leverandornavn", req: "Identifisert" },
+                  { field: "Bruttobelop", req: "> 0" },
+                  { field: "Fakturadato", req: "Gyldig dato" },
+                  { field: "Beskrivelse", req: "Utfylt" },
+                  { field: "Kontokode", req: "Foreslatt" },
+                  { field: "MVA-kode", req: "Identifisert" },
                 ].map((item) => (
                   <div
                     key={item.field}
@@ -2417,9 +2912,6 @@ const DOC_SECTIONS: DocSection[] = [
                     <span className="flex items-center gap-2 text-[#1a2e23]">
                       <CheckIcon className="h-3.5 w-3.5 text-[#3E715C]" />
                       {item.field}
-                      <span className="text-[10px] text-[#8a9a8e]">
-                        — {item.desc}
-                      </span>
                     </span>
                     <span className="font-mono text-[11px] font-medium text-[#3E715C]">
                       {item.req}
@@ -2427,228 +2919,19 @@ const DOC_SECTIONS: DocSection[] = [
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Strength levels */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Styrkenivaaer
-            </p>
-            <div className="space-y-3">
-              <div className="rounded-xl border border-[#d4dbd6] bg-white p-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-[#8a9a8e]" />
-                  <span className="text-[13px] font-bold text-[#8a9a8e]">
-                    Svak — styrke &lt; 0.4
-                  </span>
+              <div className="mt-4 flex gap-2 text-[11px]">
+                <div className="flex-1 rounded-lg bg-[#3E715C]/10 px-3 py-2 text-center font-semibold text-[#3E715C]">
+                  Alle oppfylt → POSTERT
                 </div>
-                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
-                  Faerre enn 8 datapunkter, eller lav diversitet. Klyngen gir
-                  ingen autonom autoritet — fungerer kun som statistikk.
-                </p>
-              </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-amber-400" />
-                  <span className="text-[13px] font-bold text-amber-700">
-                    Voksende — styrke 0.4–0.7
-                  </span>
+                <div className="flex-1 rounded-lg bg-amber-50 px-3 py-2 text-center font-semibold text-amber-700">
+                  Noe mangler → VENTER
                 </div>
-                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
-                  Minimum 8 datapunkter og 3 leverandorer. Klyngen brukes til
-                  forbedret matching, men gir ikke autonom bokforing alene.
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-[#3E715C]" />
-                  <span className="text-[13px] font-bold text-[#3E715C]">
-                    Sterk — styrke &gt; 0.7
-                  </span>
-                </div>
-                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
-                  Hoy diversitet, lav feilrate, jevnlig aktivitet. Denne
-                  klyngen kvalifiserer for autonom bokforing nar globale krav er
-                  oppfylt.
-                </p>
-              </div>
-            </div>
-
-            {/* Cluster growth example */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Klyngevekst over tid
-            </p>
-            <div className="space-y-3">
-              {[
-                {
-                  period: "Start",
-                  points: 0,
-                  merchants: 0,
-                  strength: 0,
-                  level: "Ingen data",
-                  desc: "Klyngen eksisterer ikke enna — ingen bekreftede treff for denne kontoen.",
-                  color: "bg-[#d4dbd6]",
-                },
-                {
-                  period: "Maned 1",
-                  points: 3,
-                  merchants: 1,
-                  strength: 0.1,
-                  level: "Svak",
-                  desc: "3 bekreftelser fra 1 leverandor. Under minimum (8 pkt, 3 lev.).",
-                  color: "bg-[#8a9a8e]",
-                },
-                {
-                  period: "Maned 2",
-                  points: 6,
-                  merchants: 2,
-                  strength: 0.25,
-                  level: "Svak",
-                  desc: "6 datapunkter, 2 leverandorer. Naermer seg, men fortsatt under minimum.",
-                  color: "bg-[#8a9a8e]",
-                },
-                {
-                  period: "Maned 3",
-                  points: 10,
-                  merchants: 3,
-                  strength: 0.52,
-                  level: "Voksende",
-                  desc: "Alle minimumskrav oppfylt! Klyngen begynner a pavirke matching-konfidens.",
-                  color: "bg-amber-400",
-                },
-                {
-                  period: "Maned 5",
-                  points: 24,
-                  merchants: 5,
-                  strength: 0.82,
-                  level: "Sterk",
-                  desc: "Hoy diversitet, ingen overstyringer. Kvalifiserer for autonom bokforing.",
-                  color: "bg-[#3E715C]",
-                },
-              ].map((item) => (
-                <div
-                  key={item.period}
-                  className="rounded-xl border border-[#d4dbd6] bg-white px-4 py-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold text-[#1a2e23]">
-                      {item.period}
-                    </span>
-                    <div className="flex items-center gap-3 text-[11px]">
-                      <span className="text-[#8a9a8e]">
-                        {item.points} pkt · {item.merchants} lev.
-                      </span>
-                      <span className="font-bold tabular-nums text-[#3E715C]">
-                        {item.strength.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#e8ede9]">
-                    <div
-                      className={cn("h-full rounded-full", item.color)}
-                      style={{ width: `${Math.max(item.strength * 100, 2)}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-[11px] text-[#4a5e52]">
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* What confirmation creates */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Hva skjer nar du bekrefter en avstemming?
-            </p>
-
-            <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              {/* Confirm path */}
-              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
-                  Bekreftelse
-                </p>
-                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
-                  <div className="flex items-center gap-2">
-                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                    Transaksjon matches med bilaget
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                    Nytt datapunkt opprettes i klyngen (konto + kategori)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                    Konfidens for lignende fremtidige treff okes
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
-                    Klyngestyrken beregnes pa nytt
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-center py-2">
-                <ArrowDownIcon className="h-4 w-4 text-[#8a9a8e]" />
-              </div>
-
-              {/* Reject path */}
-              <div className="rounded-xl border border-red-200 bg-red-50/50 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-red-600">
-                  Avvisning / overstyring
-                </p>
-                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
-                    Matchen forkastes
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
-                    Konfidens for lignende treff senkes
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
-                    Overstyringsrate i klyngen okes
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
-                    Hvis rate &gt; 20% → klyngestyrke faller til 0
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Autonomy requirements */}
-            <p className="mb-3 mt-8 text-[13px] font-semibold text-[#1a2e23]">
-              Globale krav for autonom bokforing
-            </p>
-            <p className="mb-4">
-              Autonom-modus krever at <strong>begge</strong> disse kravene er
-              oppfylt:
-            </p>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <p className="text-[12px] font-semibold text-[#3E715C]">
-                  5+ paalitelige regler
-                </p>
-                <p className="mt-1 text-[11px] text-[#4a5e52]">
-                  Regler med ≥ 80% treffsikkerhet og ≥ 5 bruk.
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <p className="text-[12px] font-semibold text-[#3E715C]">
-                  1+ sterk klynge
-                </p>
-                <p className="mt-1 text-[11px] text-[#4a5e52]">
-                  Minst en klynge med styrke &gt; 0.7.
-                </p>
               </div>
             </div>
 
             <Tip>
-              Du kan se klyngenes status under{" "}
-              <PathBreadcrumb path="Bank → Regler" /> i seksjonen
-              &ldquo;Klynger og laering&rdquo;. Hver klynge viser antall
-              datapunkter, leverandorer, styrke og styrkenivaa.
+              Hvis auto-postering feiler (f.eks. ugyldig kontooppsett), settes
+              bilaget tilbake til VENTER med en forklaring i statusfeltet.
             </Tip>
           </>
         ),

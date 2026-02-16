@@ -1,0 +1,72 @@
+import type { Employee } from "../types";
+
+export const employees: Employee[] = [
+  {
+    id: "1",
+    name: "Henrik Berge",
+    position: "Daglig leder",
+    email: "henrik@firma.no",
+    phone: "+47 912 34 567",
+    personnummer: "150485 *****",
+    salary: 65000,
+    taxRate: 34,
+    taxTable: "7100",
+    status: "active",
+    employmentType: "fast",
+    startDate: "2020-03-01",
+    feriepenger: 78000,
+    vacationDays: { used: 5, total: 25 },
+    bankAccount: "1234 56 *****"
+  },
+  {
+    id: "2",
+    name: "Maria Olsen",
+    position: "Utvikler",
+    email: "maria@firma.no",
+    phone: "+47 923 45 678",
+    personnummer: "220392 *****",
+    salary: 55000,
+    taxRate: 30,
+    taxTable: "7100",
+    status: "active",
+    employmentType: "fast",
+    startDate: "2021-08-15",
+    feriepenger: 66000,
+    vacationDays: { used: 8, total: 25 },
+    bankAccount: "2345 67 *****"
+  },
+  {
+    id: "3",
+    name: "Erik Hansen",
+    position: "Designer",
+    email: "erik@firma.no",
+    phone: "+47 934 56 789",
+    personnummer: "080590 *****",
+    salary: 52000,
+    taxRate: 28,
+    taxTable: "7100",
+    status: "vacation",
+    employmentType: "fast",
+    startDate: "2022-01-10",
+    feriepenger: 62400,
+    vacationDays: { used: 12, total: 25 },
+    bankAccount: "3456 78 *****"
+  },
+  {
+    id: "4",
+    name: "Sofie Nilsen",
+    position: "Markedsfører",
+    email: "sofie@firma.no",
+    phone: "+47 945 67 890",
+    personnummer: "121195 *****",
+    salary: 48000,
+    taxRate: 26,
+    taxTable: "7100",
+    status: "active",
+    employmentType: "deltid",
+    startDate: "2023-04-01",
+    feriepenger: 57600,
+    vacationDays: { used: 3, total: 15 },
+    bankAccount: "4567 89 *****"
+  }
+];

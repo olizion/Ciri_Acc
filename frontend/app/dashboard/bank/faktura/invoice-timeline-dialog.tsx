@@ -24,8 +24,7 @@ import {
   BanknoteIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { API_BASE_URL } from "@/lib/api";
 
 interface Invoice {
   id: string;
@@ -232,7 +231,7 @@ export default function InvoiceTimelineDialog({
     }
     if (!open || !invoiceId) return;
     setLoading(true);
-    fetch(`${API_URL}/api/invoices/${invoiceId}`)
+    fetch(`${API_BASE_URL}/api/invoices/${invoiceId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setInvoice(data))
       .finally(() => setLoading(false));

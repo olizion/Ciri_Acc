@@ -4,7 +4,7 @@ Document upload, processing, and management
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, date, timezone
 from decimal import Decimal
@@ -17,6 +17,7 @@ from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.database import get_db
+from config.cache import cache_key, get_cached, set_cached, invalidate_event, CACHE_TTLS
 from models.bilag import Bilag, BilagStatus
 from models.company import Company
 
@@ -128,6 +129,13 @@ async def list_bilag(
     """
     List bilag with filtering and pagination.
     """
+    # Check Redis cache
+    ck = cache_key("bilag", company_id=company_id, page=page, per_page=per_page,
+                   status=status, from_date=from_date, to_date=to_date, search=search)
+    cached = await get_cached(ck)
+    if cached is not None:
+        return JSONResponse(content=cached)
+
     resolved_company_id = await _resolve_company_id(company_id, db)
 
     # Build query
@@ -195,12 +203,14 @@ async def list_bilag(
         for b in bilags
     ]
 
-    return BilagListResponse(
+    response = BilagListResponse(
         items=items,
         total=total,
         page=page,
         per_page=per_page
     )
+    await set_cached(ck, response.model_dump(mode="json"), CACHE_TTLS["bilag"])
+    return response
 
 
 @router.get("/{bilag_id}", response_model=BilagResponse)
@@ -356,6 +366,7 @@ async def approve_bilag(
             # Create posteringer and update status to POSTED
             posteringer = await post_bilag_with_entries(bilag, db)
             await db.commit()
+            await invalidate_event("bilag:approve")
 
             return PostResponse(
                 message="Bilag godkjent og bokført",
@@ -379,6 +390,7 @@ async def approve_bilag(
         # Just approve, don't post yet
         bilag.status = BilagStatus.APPROVED
         await db.commit()
+        await invalidate_event("bilag:approve")
 
         return PostResponse(
             message="Bilag godkjent (ikke bokført)",
@@ -420,6 +432,7 @@ async def reject_bilag(
     bilag.status = BilagStatus.REJECTED
     bilag.ciri_reasoning = f"Avvist: {request.reason}"
     await db.commit()
+    await invalidate_event("bilag:reject")
 
     return {"message": "Bilag avvist", "reason": request.reason}
 
@@ -462,6 +475,7 @@ async def post_bilag(
         # Create posteringer and update status
         posteringer = await post_bilag_with_entries(bilag, db)
         await db.commit()
+        await invalidate_event("bilag:post")
 
         return PostResponse(
             message="Bilag bokført",
@@ -598,6 +612,7 @@ async def record_payment(
         db.add(p)
 
     await db.commit()
+    await invalidate_event("bilag:pay")
 
     return PaymentResponse(
         message="Betaling registrert",
@@ -869,6 +884,7 @@ async def manual_post_bilag(
     transaction.reconciled_at = datetime.now(timezone.utc)
 
     await db.commit()
+    await invalidate_event("bilag:manual_post")
 
     return ManualPostResponse(
         message="Bilag koblet til transaksjon og bokført",
