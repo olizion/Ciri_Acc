@@ -85,13 +85,28 @@ class Settings(BaseSettings):
     # Your organization number (9 digits)
     maskinporten_issuer: str = ""
 
+    # Key ID (kid) from Samarbeidsportalen — required in JWT header
+    maskinporten_kid: str = ""
+
+    # =======================================================================
+    # ALTINN SYSTEM USER CONFIGURATION
+    # Required for Skatteetaten APIs that mandate authorization_details
+    # Register system at: https://altinn.no/ui/SystemUser
+    # =======================================================================
+
+    # System user UUID from Altinn (created by org admin)
+    altinn_systemuser_id: str = ""
+
+    # System identifier (format: "{org_number}_{system_name}")
+    altinn_system_id: str = ""
+
     # =======================================================================
     # SKATTEETATEN API CONFIGURATION
     # Apply for access: https://skatteetaten.github.io/api-dokumentasjon/
     # =======================================================================
 
-    # Scopes to request (space-separated)
-    skatteetaten_scopes: str = "skatteetaten:skattekort"
+    # Scopes to request
+    skatteetaten_scopes: str = "skatteetaten:skattekorttilarbeidsgiver"
 
     # =======================================================================
     # FOLKEREGISTERET (POPULATION REGISTRY) - Optional

@@ -134,7 +134,7 @@ Norwegian bank payments use KID numbers — structured payment references. The m
 ┌────────────────────────────────────────────────────┐
 │             REFERENCE MATCHING                     │
 │                                                    │
-│  1. Direct substring:                              │
+│  1. Direct substring:                              │ 
 │     tx.reference IN bilag.bilag_number             │
 │     "F-2025-042" in "F-2025-042" → TRUE            │
 │                                                    │

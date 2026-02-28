@@ -2,10 +2,15 @@
 Skatteetaten API Service
 Handles communication with Norwegian Tax Authority APIs
 
-Documentation: https://skatteetaten.github.io/api-dokumentasjon/
+API: skattekorttilarbeidsgiver (async bestill/svar pattern)
+Scope: skatteetaten:skattekorttilarbeidsgiver
+Docs: https://skatteetaten.github.io/api-dokumentasjon/anvendelsesomraader/skattekorttilarbeidsgiver
+Swagger: https://app.swaggerhub.com/apis/skatteetaten/skattekort-til-arbeidsgiver/1.0.1
 """
 
+import asyncio
 import logging
+import uuid
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -25,24 +30,26 @@ class SkatteetatenError(Exception):
 class TaxCard(BaseModel):
     """Tax card (skattekort) information for an employee."""
 
-    # Personal info
     personnummer: str
-    name: Optional[str] = None  # May not always be returned
+    name: Optional[str] = None
 
-    # Tax deduction type
-    tax_card_type: str  # "tabelltrekk" or "prosenttrekk"
+    # Tax deduction type: "tabelltrekk", "prosenttrekk", or "frikort"
+    tax_card_type: str
 
     # For table-based deduction (tabelltrekk)
     tax_table: Optional[str] = None  # e.g., "7100"
-    tax_class: Optional[str] = None  # Skatteklasse
+    tax_class: Optional[str] = None
 
     # For percentage-based deduction (prosenttrekk)
     tax_percentage: Optional[float] = None
 
     # Additional info
-    tax_municipality: Optional[str] = None  # Kommune code
-    frikort_amount: Optional[float] = None  # For frikort holders
-    frikort_used: Optional[float] = None  # Amount already used
+    tax_municipality: Optional[str] = None
+    frikort_amount: Optional[float] = None
+    frikort_used: Optional[float] = None
+
+    # Result status from Skatteetaten
+    result_status: Optional[str] = None  # e.g., "skattekortopplysningerOK"
 
     # Metadata
     valid_from: Optional[str] = None
@@ -53,10 +60,10 @@ class TaxCard(BaseModel):
         json_schema_extra = {
             "example": {
                 "personnummer": "12345678901",
-                "name": "Ola Nordmann",
                 "tax_card_type": "tabelltrekk",
                 "tax_table": "7100",
                 "tax_municipality": "0301",
+                "result_status": "skattekortopplysningerOK",
                 "fetched_at": "2026-02-01T10:00:00Z",
             }
         }
@@ -74,159 +81,221 @@ class FolkeregisterPerson(BaseModel):
 
 class SkatteetatenService:
     """
-    Service for interacting with Skatteetaten (Norwegian Tax Authority) APIs.
+    Service for the skattekorttilarbeidsgiver API (async bestill/svar pattern).
 
-    Available APIs:
-    - Skattekort API: Fetch employee tax cards
-    - A-melding API: Submit monthly payroll reports (separate service)
+    Flow:
+    1. POST /api/forskudd/bestillSkattekort — submit order
+    2. GET  /api/forskudd/skattekortTilArbeidsgiver/svar/{id} — poll for response
 
     Prerequisites:
-    1. Register as employer in Enhetsregisteret
-    2. Set up Maskinporten integration with required scopes
-    3. Apply for API access at skatteetaten.github.io
+    1. Maskinporten integration with scope skatteetaten:skattekorttilarbeidsgiver
+    2. Kid (key ID) registered in Samarbeidsportalen
     """
 
-    # API endpoints
     ENDPOINTS = {
         "test": {
-            "skattekort": "https://api-test.sits.no/api/innkreving/skattekort/v1",
+            "forskudd": "https://api-test.sits.no/api/forskudd",
             "folkeregister": "https://folkeregisteret-api-konsument.sits.no/folkeregisteret/offentlig-med-hjemmel/api/v1",
         },
         "prod": {
-            "skattekort": "https://api.skatteetaten.no/api/innkreving/skattekort/v1",
+            "forskudd": "https://api.skatteetaten.no/api/forskudd",
             "folkeregister": "https://folkeregisteret.api.skatteetaten.no/folkeregisteret/offentlig-med-hjemmel/api/v1",
         },
     }
+
+    # Max time to wait for async response
+    POLL_MAX_ATTEMPTS = 20
+    POLL_INTERVAL_SECONDS = 3
 
     def __init__(self):
         self.env = settings.maskinporten_env
 
     @property
     def endpoints(self) -> dict:
-        """Get endpoints for current environment."""
         return self.ENDPOINTS.get(self.env, self.ENDPOINTS["test"])
 
-    async def fetch_tax_card(self, personnummer: str, year: Optional[int] = None) -> TaxCard:
+    async def fetch_tax_card(
+        self,
+        personnummer: str,
+        year: Optional[int] = None,
+        employer_org: Optional[str] = None,
+    ) -> TaxCard:
         """
-        Fetch tax card (skattekort) for an employee.
-
-        The tax card contains the employee's tax deduction rate/table,
-        which is required for calculating correct tax withholding.
+        Fetch tax card (skattekort) for an employee via the async bestill/svar API.
 
         Args:
             personnummer: 11-digit Norwegian personal ID
             year: Tax year (defaults to current year)
+            employer_org: Employer org number (defaults to MASKINPORTEN_ISSUER)
 
         Returns:
-            TaxCard object with tax information
+            TaxCard with tax deduction information
 
         Raises:
             SkatteetatenError: If the API call fails
-            MaskinportenError: If authentication fails
         """
         if not maskinporten.is_configured():
             raise SkatteetatenError(
-                "Maskinporten is not configured. Cannot fetch tax card.\n"
-                "Configure the following in your .env file:\n"
+                "Maskinporten er ikke konfigurert. Sjekk .env:\n"
                 "  - MASKINPORTEN_CLIENT_ID\n"
-                "  - MASKINPORTEN_PRIVATE_KEY_PATH or MASKINPORTEN_PRIVATE_KEY_BASE64\n"
-                "  - MASKINPORTEN_ISSUER (your organization number)"
+                "  - MASKINPORTEN_KID\n"
+                "  - MASKINPORTEN_PRIVATE_KEY_PATH"
             )
 
-        # Validate personnummer format
         personnummer = personnummer.replace(" ", "").replace("-", "")
         if len(personnummer) != 11 or not personnummer.isdigit():
             raise SkatteetatenError("Ugyldig fødselsnummer. Må være 11 siffer.")
 
         year = year or datetime.now().year
+        org_nr = employer_org or settings.maskinporten_issuer
+        if not org_nr:
+            raise SkatteetatenError("Mangler organisasjonsnummer (MASKINPORTEN_ISSUER).")
 
-        # Get access token
         token = await maskinporten.get_token(settings.skatteetaten_scopes)
+        base = self.endpoints["forskudd"]
 
-        # Make API request
-        url = f"{self.endpoints['skattekort']}/personer/{personnummer}/skattekort/{year}"
+        # Step 1: Submit order
+        bestilling = {
+            "inntektsaar": year,
+            "bestillingstype": "HENT_ALLE_OPPGITTE",
+            "kontaktinformasjon": {"epostadresse": settings.smtp_from_email or "ciri@ciri.no"},
+            "varslingstype": "INGEN_VARSEL",
+            "forespoerselOmSkattekortTilArbeidsgiver": {
+                "arbeidsgiver": [{
+                    "arbeidsgiveridentifikator": {"organisasjonsnummer": org_nr},
+                    "arbeidstakeridentifikator": [personnummer],
+                }]
+            },
+        }
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+
+            idempotens_id = str(uuid.uuid4())
+            url = f"{base}/bestillSkattekort?idempotensid={idempotens_id}"
+
             try:
-                response = await client.get(
-                    url,
-                    headers={
-                        "Authorization": f"Bearer {token}",
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    timeout=30.0,
-                )
-
-                if response.status_code == 404:
-                    raise SkatteetatenError(
-                        f"Fant ikke skattekort for {personnummer[:6]}*****. "
-                        "Personen er kanskje ikke skattepliktig i Norge."
-                    )
-
-                if response.status_code == 403:
-                    raise SkatteetatenError(
-                        "Mangler tilgang til Skattekort API. "
-                        "Sjekk at du har riktige scopes i Maskinporten."
-                    )
-
-                if response.status_code != 200:
-                    raise SkatteetatenError(
-                        f"Skatteetaten API feil ({response.status_code}): {response.text}"
-                    )
-
-                data = response.json()
-
-                # Parse response into TaxCard
-                return self._parse_tax_card_response(personnummer, data)
-
+                response = await client.post(url, json=bestilling, headers=headers)
             except httpx.RequestError as e:
                 raise SkatteetatenError(f"Nettverksfeil: Kunne ikke koble til Skatteetaten: {e}")
 
-    def _parse_tax_card_response(self, personnummer: str, data: dict) -> TaxCard:
-        """Parse the Skatteetaten API response into a TaxCard object."""
+            if response.status_code == 403:
+                raise SkatteetatenError(
+                    "Mangler tilgang til Skattekort API. "
+                    "Sjekk scopes i Maskinporten."
+                )
+            if response.status_code == 400:
+                detail = response.json() if response.headers.get("content-type", "").startswith("application/json") else response.text
+                raise SkatteetatenError(f"Ugyldig forespørsel: {detail}")
+            if response.status_code != 200:
+                raise SkatteetatenError(
+                    f"Skatteetaten API feil ({response.status_code}): {response.text[:500]}"
+                )
 
-        # The actual response structure varies, this is a simplified parser
-        # Real implementation needs to handle the full XML/JSON schema
+            kvittering = response.json()
+            bestillingsid = kvittering.get("bestillingsreferanse") or kvittering.get("dialogreferanse")
+            if not bestillingsid:
+                raise SkatteetatenError(f"Mangler bestillingsreferanse i svar: {kvittering}")
 
-        skattekort = data.get("skattekort", data)
-        trekktype = skattekort.get("trekktype", "tabelltrekk")
+            logger.info(f"Skattekort bestilling submitted: {bestillingsid}")
 
+            # Step 2: Poll for response
+            svar_url = f"{base}/skattekortTilArbeidsgiver/svar/{bestillingsid}"
+
+            for attempt in range(self.POLL_MAX_ATTEMPTS):
+                await asyncio.sleep(self.POLL_INTERVAL_SECONDS)
+
+                try:
+                    response = await client.get(svar_url, headers={
+                        "Authorization": f"Bearer {token}",
+                        "Accept": "application/json",
+                    })
+                except httpx.RequestError as e:
+                    logger.warning(f"Poll attempt {attempt+1} network error: {e}")
+                    continue
+
+                if response.status_code == 200:
+                    data = response.json()
+                    logger.info(f"Skattekort received for {personnummer[:6]}*****")
+                    return self._parse_svar_response(personnummer, data)
+                elif response.status_code == 204:
+                    logger.debug(f"Poll attempt {attempt+1}/{self.POLL_MAX_ATTEMPTS}: not ready")
+                    continue
+                else:
+                    raise SkatteetatenError(
+                        f"Feil ved henting av svar ({response.status_code}): {response.text[:500]}"
+                    )
+
+            raise SkatteetatenError(
+                f"Tidsavbrudd: Fikk ikke svar fra Skatteetaten etter {self.POLL_MAX_ATTEMPTS * self.POLL_INTERVAL_SECONDS}s"
+            )
+
+    def _parse_svar_response(self, personnummer: str, data: dict) -> TaxCard:
+        """Parse the SkattekortTilArbeidsgiver svar into a TaxCard."""
+
+        status = data.get("status")
+        if status and status != "FORESPOERSEL_OK":
+            raise SkatteetatenError(f"Skatteetaten avviste forespørselen: {status}")
+
+        # Navigate: arbeidsgiver[0] -> arbeidstaker[0] -> skattekort
+        arbeidsgivere = data.get("arbeidsgiver", [])
+        if not arbeidsgivere:
+            raise SkatteetatenError("Ingen arbeidsgiverdata i svar fra Skatteetaten.")
+
+        arbeidstakere = arbeidsgivere[0].get("arbeidstaker", [])
+        if not arbeidstakere:
+            raise SkatteetatenError(
+                f"Fant ikke skattekort for {personnummer[:6]}*****."
+            )
+
+        melding = arbeidstakere[0]
+        result_status = melding.get("resultatstatus", "")
+        skattekort = melding.get("skattekort", {})
+        trekkode_liste = skattekort.get("trekkode", [])
+
+        # Build TaxCard from first trekkode
         tax_card = TaxCard(
             personnummer=personnummer,
-            name=skattekort.get("navn"),
-            tax_card_type=trekktype,
+            tax_card_type="ukjent",
+            result_status=result_status,
+            fetched_at=datetime.now(),
         )
 
-        if trekktype == "tabelltrekk":
-            tax_card.tax_table = skattekort.get("tabellnummer")
-            tax_card.tax_class = skattekort.get("skatteklasse")
-        else:
-            tax_card.tax_percentage = skattekort.get("trekkprosent")
+        if result_status in ("ikkeSkattekort", "ikkeTrekkplikt"):
+            tax_card.tax_card_type = "ingen"
+            return tax_card
 
-        tax_card.tax_municipality = skattekort.get("skattekommune")
+        if not trekkode_liste:
+            tax_card.tax_card_type = "ukjent"
+            return tax_card
 
-        # Frikort handling
-        frikort = skattekort.get("frikort", {})
-        if frikort:
-            tax_card.frikort_amount = frikort.get("frikortbeloep")
-            tax_card.frikort_used = frikort.get("bruktBeloep")
+        # Parse the withholding info from the first trekkode
+        for trekkode in trekkode_liste:
+            frikort = trekkode.get("frikort")
+            trekktabell = trekkode.get("trekktabell")
+            trekkprosent = trekkode.get("trekkprosent")
+
+            if frikort:
+                tax_card.tax_card_type = "frikort"
+                tax_card.frikort_amount = frikort.get("frikortbeloep")
+            elif trekktabell:
+                tax_card.tax_card_type = "tabelltrekk"
+                tax_card.tax_table = trekktabell.get("tabellnummer")
+            elif trekkprosent:
+                tax_card.tax_card_type = "prosenttrekk"
+                tax_card.tax_percentage = trekkprosent.get("prosent")
+
+            # Use the first relevant entry
+            break
 
         return tax_card
 
     async def fetch_person_info(self, personnummer: str) -> Optional[FolkeregisterPerson]:
-        """
-        Fetch basic person information from Folkeregisteret.
-
-        NOTE: This requires special approval from Skatteetaten.
-        Most payroll systems won't have access to this.
-
-        Args:
-            personnummer: 11-digit Norwegian personal ID
-
-        Returns:
-            FolkeregisterPerson or None if not available
-        """
+        """Fetch basic person information from Folkeregisteret (requires special access)."""
         if not settings.folkeregister_enabled:
             return None
 
@@ -237,16 +306,12 @@ class SkatteetatenService:
 
         try:
             token = await maskinporten.get_token(settings.folkeregister_scopes)
-
             url = f"{self.endpoints['folkeregister']}/personer/{personnummer}"
 
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     url,
-                    headers={
-                        "Authorization": f"Bearer {token}",
-                        "Accept": "application/json",
-                    },
+                    headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
                     timeout=30.0,
                 )
 
@@ -254,8 +319,6 @@ class SkatteetatenService:
                     return None
 
                 data = response.json()
-
-                # Parse response
                 navn = data.get("navn", {})
                 return FolkeregisterPerson(
                     personnummer=personnummer,
@@ -269,16 +332,13 @@ class SkatteetatenService:
             return None
 
     def is_configured(self) -> bool:
-        """Check if the service is properly configured."""
         return maskinporten.is_configured()
 
     def get_configuration_status(self) -> dict:
-        """Get configuration status for debugging."""
         return {
             "maskinporten": maskinporten.get_configuration_status(),
-            "skattekort_endpoint": self.endpoints["skattekort"],
+            "forskudd_endpoint": self.endpoints["forskudd"],
             "folkeregister_enabled": settings.folkeregister_enabled,
-            "folkeregister_endpoint": self.endpoints["folkeregister"],
         }
 
 

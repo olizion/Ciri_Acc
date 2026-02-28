@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ActivityIcon,
@@ -251,7 +252,7 @@ export function ClusterDetailDialog({
   const myAngle = siblings.length > 0 ? (2 * Math.PI * Math.max(myIdx, 0)) / siblings.length - Math.PI / 2 : 0;
   const myOrbitR = orbRadii[cluster.strength_level];
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key="cluster-dialog-overlay"
@@ -543,7 +544,8 @@ export function ClusterDetailDialog({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

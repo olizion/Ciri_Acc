@@ -57,6 +57,7 @@ class MaskinportenService:
         self.env = settings.maskinporten_env
         self.client_id = settings.maskinporten_client_id
         self.issuer = settings.maskinporten_issuer
+        self.kid = settings.maskinporten_kid
         self._private_key = None
         self._token_cache: dict = {}
 
@@ -104,6 +105,9 @@ class MaskinportenService:
         Create a signed JWT assertion for the token request.
 
         The JWT must be signed with your virksomhetssertifikat private key.
+        If Altinn system user credentials are configured, includes
+        authorization_details for system user authentication (required by
+        Skatteetaten APIs).
         """
         if not self.client_id:
             raise MaskinportenError(
@@ -126,6 +130,21 @@ class MaskinportenService:
         if self.issuer:
             payload["consumer_org"] = self.issuer
 
+        # Include Altinn system user authorization_details if configured
+        # Required by Skatteetaten APIs for system user authentication
+        if settings.altinn_systemuser_id and settings.altinn_system_id:
+            payload["authorization_details"] = [
+                {
+                    "type": "urn:altinn:systemuser",
+                    "systemuser_org": {
+                        "authority": "iso6523-actorid-upis",
+                        "ID": f"0192:{self.issuer}",
+                    },
+                    "systemuser_id": [settings.altinn_systemuser_id],
+                    "system_id": settings.altinn_system_id,
+                }
+            ]
+
         private_key = self._load_private_key()
 
         # Convert to PEM format for jwt library
@@ -135,7 +154,11 @@ class MaskinportenService:
             encryption_algorithm=serialization.NoEncryption()
         )
 
-        return jwt.encode(payload, private_key_pem, algorithm="RS256")
+        headers = {}
+        if self.kid:
+            headers["kid"] = self.kid
+
+        return jwt.encode(payload, private_key_pem, algorithm="RS256", headers=headers)
 
     async def get_token(self, scope: str) -> str:
         """
@@ -193,10 +216,11 @@ class MaskinportenService:
 
     def is_configured(self) -> bool:
         """Check if Maskinporten credentials are configured."""
-        return bool(self.client_id) and (
+        has_key = (
             settings.maskinporten_private_key_base64 or
             Path(settings.maskinporten_private_key_path).exists()
         )
+        return bool(self.client_id) and bool(self.kid) and has_key
 
     def get_configuration_status(self) -> dict:
         """Get the current configuration status for debugging."""
@@ -205,6 +229,7 @@ class MaskinportenService:
         return {
             "environment": self.env,
             "client_id_set": bool(self.client_id),
+            "kid_set": bool(self.kid),
             "issuer_set": bool(self.issuer),
             "private_key_file_exists": key_path.exists(),
             "private_key_base64_set": bool(settings.maskinporten_private_key_base64),
