@@ -43,7 +43,7 @@ export function MiniChart({ chart, size = "sm" }: MiniChartProps) {
       )}
       <ChartContainer
         config={config}
-        className={cn(height, "w-full [&_.recharts-cartesian-axis-tick_text]:text-[10px]")}
+        className={cn(height, "w-full [&_.recharts-cartesian-axis-tick_text]:text-[12px]")}
       >
         {chart.type === "bar" ? (
           <BarChart data={chart.data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
@@ -152,7 +152,7 @@ export function MiniChart({ chart, size = "sm" }: MiniChartProps) {
                 className="inline-block h-2.5 w-2.5 rounded-sm"
                 style={{ backgroundColor: val.color }}
               />
-              <span className={cn("text-muted-foreground", size === "lg" ? "text-xs" : "text-[10px]")}>
+              <span className={cn("text-muted-foreground", size === "lg" ? "text-xs" : "text-[12px]")}>
                 {val.label}
               </span>
             </div>

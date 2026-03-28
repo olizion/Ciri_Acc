@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from config.database import Base
+from models.mixins import RetentionMixin
 
 
 class TransactionDirection(str, Enum):
@@ -45,7 +46,7 @@ class TransactionCategory(str, Enum):
     UKATEGORISERT = "ukategorisert"  # Uncategorized
 
 
-class BankTransaction(Base):
+class BankTransaction(RetentionMixin, Base):
     """
     Bank transaction model.
 
@@ -108,11 +109,17 @@ class BankTransaction(Base):
     )
     reconciled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reconciled_by_ciri: Mapped[bool] = mapped_column(Boolean, default=False)
+    reconciled_by_user: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who confirmed reconciliation, null if Ciri
 
     # Private transaction (not for business accounting)
     is_private: Mapped[bool] = mapped_column(Boolean, default=False)
     private_marked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     private_marked_by_ciri: Mapped[bool] = mapped_column(Boolean, default=False)
+    private_marked_by_user: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who marked as private, null if Ciri
 
     # Matching metadata
     match_attempts: Mapped[int] = mapped_column(default=0)

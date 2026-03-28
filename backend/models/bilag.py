@@ -10,9 +10,10 @@ from enum import Enum
 from sqlalchemy import String, Boolean, DateTime, Date, Numeric, Text, ForeignKey
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from config.database import Base
+from models.mixins import RetentionMixin
 
 
 class BilagStatus(str, Enum):
@@ -24,7 +25,7 @@ class BilagStatus(str, Enum):
     AWAITING_TRANSACTION = "awaiting_transaction"  # Waiting for bank transaction match
 
 
-class Bilag(Base):
+class Bilag(RetentionMixin, Base):
     """
     Bilag (document/receipt) model.
 
@@ -87,10 +88,33 @@ class Bilag(Base):
         SQLEnum(BilagStatus), default=BilagStatus.PENDING
     )
 
+    # Actor tracking (Bokføringsloven §13a — who changed what, when)
+    created_by_user: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who uploaded/created, null if Ciri
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who approved
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    posted_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who posted, null if Ciri
+
     # AI metadata
     created_by_ciri: Mapped[bool] = mapped_column(Boolean, default=False)
     ciri_confidence: Mapped[float | None] = mapped_column(Numeric(5, 4))
     ciri_reasoning: Mapped[str | None] = mapped_column(Text)
+    source_rule_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("reconciliation_rules.id"), nullable=True
+    )  # Rule that drove auto-posting decision (traceability for override feedback)
+
+    # Periodisering suggestion (AI-detected, user can accept/dismiss)
+    periodisering_suggestion: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Tracks whether the LLM has assessed this bilag for periodisering
+    # Auto-posted bilags get this set at creation; manual bilags stay NULL until weekly scan
+    periodisering_scanned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

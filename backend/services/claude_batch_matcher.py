@@ -61,6 +61,15 @@ Returner et JSON-array med matcher:
   }
 ]
 
+Konfidensystem:
+Skalaen er 0.0–1.0. Terskel for match er 0.5. Over 0.9 er sterk match.
+
+Avvisningshistorikk:
+Hvis det er oppgitt en avvisningshistorikk nedenfor, bruk den som kontekst. Juster confidence
+ned med 0.05–0.15 for transaksjoner som ligner avviste matcher, men ALDRI avvis en god match
+bare fordi en lignende ble avvist. Verifiser spesifikt at de oppgitte avvisningsgrunnene IKKE
+gjelder den aktuelle matchen før du justerer.
+
 Regler:
 - Bare returner matcher der du er rimelig sikker (confidence >= 0.5)
 - Hver transaksjon kan kun matches med ett bilag og omvendt
@@ -115,6 +124,7 @@ async def batch_match(
     transactions: list[dict],
     bilags: list[dict],
     company_id: uuid.UUID,
+    rejection_context: str = "",
 ) -> BatchMatchResult:
     """
     Match unmatched transactions against unmatched bilags using Claude.
@@ -123,6 +133,7 @@ async def batch_match(
         transactions: List of dicts with keys: id, date, amount, description, merchant_name
         bilags: List of dicts with keys: id, date, gross_amount, supplier_name, reference, kid_number
         company_id: Company ID for logging
+        rejection_context: Pre-formatted rejection history text for relevant sectors
 
     Returns:
         BatchMatchResult with matches and cost tracking
@@ -156,8 +167,11 @@ async def batch_match(
         if not tx_chunk or not bilag_chunk:
             continue
 
+        payload = {"transactions": tx_chunk, "bilags": bilag_chunk}
+        if rejection_context:
+            payload["rejection_context"] = rejection_context
         data_payload = json.dumps(
-            {"transactions": tx_chunk, "bilags": bilag_chunk},
+            payload,
             default=_serialize_decimal,
             ensure_ascii=False,
         )

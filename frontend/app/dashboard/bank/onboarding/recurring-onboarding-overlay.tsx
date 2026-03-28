@@ -140,7 +140,7 @@ function TransactionTimeline({ transactions }: { transactions: RecurringPattern[
         <div key={i} className="flex items-center">
           <div className="flex flex-col items-center gap-0.5">
             <div className="size-2.5 rounded-full bg-[var(--primary)]" />
-            <span className="text-[9px] text-muted-foreground tabular-nums whitespace-nowrap">
+            <span className="text-[13px] text-muted-foreground tabular-nums whitespace-nowrap">
               {formatDate(tx.date)}
             </span>
           </div>
@@ -197,7 +197,7 @@ function PatternCard({
               <CalendarIcon className="size-3" />
               {pattern.transactions.length} forekomster
             </span>
-            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+            <Badge variant="secondary" className="text-[12px] h-4 px-1.5">
               {pattern.categoryLabel}
             </Badge>
           </div>
@@ -206,7 +206,7 @@ function PatternCard({
           <TransactionTimeline transactions={pattern.transactions} />
 
           {/* Account suggestion */}
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-[13px] text-muted-foreground">
             Konto {pattern.suggestedAccount} · ca. kr {formatAmount(pattern.avgAmount)}/{pattern.frequency === "monthly" ? "mnd" : pattern.frequency === "quarterly" ? "kvartal" : "uke"}
           </p>
         </div>

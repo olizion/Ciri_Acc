@@ -38,7 +38,7 @@ export function CiriActivityTimeline({ currentTermin }: CiriActivityTimelineProp
                   {isScheduled && index > 0 && ciriTimeline[index - 1]?.type === "completed" && (
                     <div className="absolute -top-2 left-0 right-0 flex items-center gap-2 pl-12">
                       <div className="h-px flex-1 bg-border" />
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
                         Planlagt
                       </span>
                       <div className="h-px flex-1 bg-border" />
@@ -74,7 +74,7 @@ export function CiriActivityTimeline({ currentTermin }: CiriActivityTimelineProp
                           {event.action}
                         </p>
                         {isScheduled && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="outline" className="text-[12px] px-1.5 py-0">
                             Planlagt
                           </Badge>
                         )}

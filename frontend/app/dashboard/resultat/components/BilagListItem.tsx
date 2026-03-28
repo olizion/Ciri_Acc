@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
 import { BilagDetail } from "../types";
+import { CiriPostedBadge } from "@/components/ui/ciri-posted-badge";
 
 interface BilagListItemProps {
   bilag: BilagDetail;
@@ -26,6 +27,9 @@ export const BilagListItem = React.memo<BilagListItemProps>(({ bilag }) => {
           <span className="text-xs text-muted-foreground truncate max-w-[150px]">
             — {bilag.counterparty_name}
           </span>
+        )}
+        {bilag.created_by_ciri && (
+          <CiriPostedBadge bilagId={bilag.id} showOverrideLink={false} />
         )}
       </div>
       <div className="flex items-center gap-2">

@@ -56,7 +56,7 @@ export default function MarketingFooter() {
           {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([title, links]) => (
             <div key={title}>
-              <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#3E715C]">
+              <p className="text-[12px] font-bold tracking-[0.2em] uppercase text-[#3E715C]">
                 {title}
               </p>
               <ul className="mt-4 space-y-3">

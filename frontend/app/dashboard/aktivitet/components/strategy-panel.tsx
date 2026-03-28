@@ -47,7 +47,7 @@ export function StrategyPanel() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium">Autonominivå</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 Autopostering via alle 3 faser
               </p>
             </div>
@@ -71,7 +71,7 @@ export function StrategyPanel() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium">Batch-plan</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 Når AI kjører Fase 3
               </p>
             </div>
@@ -96,7 +96,7 @@ export function StrategyPanel() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium">AI-modell</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 Claude-modell for Fase 3
               </p>
             </div>
@@ -126,7 +126,7 @@ export function StrategyPanel() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium">Ignorer privat</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 Auto-ignorer private transaksjoner
               </p>
             </div>
@@ -140,7 +140,7 @@ export function StrategyPanel() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium">Min. konfidens</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 Terskel for Fase 3-kø
               </p>
             </div>
@@ -153,7 +153,7 @@ export function StrategyPanel() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium">Min. klyngestyrke</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 For klynge-verifisering
               </p>
             </div>

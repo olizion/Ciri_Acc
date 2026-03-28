@@ -228,7 +228,7 @@ export function Reveal({
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-[#3E715C]/20 bg-[#3E715C]/10 px-4 py-1.5 text-[11px] font-bold tracking-[0.15em] text-[#3E715C] uppercase">
+    <span className="inline-flex items-center gap-2 rounded-full border border-[#3E715C]/20 bg-[#3E715C]/10 px-4 py-1.5 text-[13px] font-bold tracking-[0.15em] text-[#3E715C] uppercase">
       {children}
     </span>
   );

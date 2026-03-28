@@ -68,7 +68,7 @@ export function ConfidenceChart() {
             Konfidensfordeling
           </CardTitle>
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[12px] text-muted-foreground">
           Hvordan beslutninger fordeler seg etter konfidensverdi
         </p>
       </CardHeader>

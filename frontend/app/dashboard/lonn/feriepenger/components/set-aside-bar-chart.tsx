@@ -9,7 +9,11 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
-import { scenarios } from "../data/feriepenger-scenarios";
+import type { SetAsideScenario } from "../types";
+
+interface SetAsideBarChartProps {
+  scenarios: SetAsideScenario[];
+}
 
 const chartConfig = {
   ingen: {
@@ -33,7 +37,7 @@ function krFmt(n: number) {
 }
 
 // Merge scenario data into a single array for grouped bar chart
-function buildChartData(activeScenarios: Set<string>) {
+function buildChartData(activeScenarios: Set<string>, scenarios: SetAsideScenario[]) {
   const months = [
     "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
     "Jul", "Aug", "Sep", "Okt", "Nov", "Des",
@@ -49,7 +53,7 @@ function buildChartData(activeScenarios: Set<string>) {
   });
 }
 
-export default function SetAsideBarChart() {
+export default function SetAsideBarChart({ scenarios }: SetAsideBarChartProps) {
   const [activeScenarios, setActiveScenarios] = useState<Set<string>>(
     new Set(["ingen", "ciri", "kvartalsvis"])
   );
@@ -66,7 +70,7 @@ export default function SetAsideBarChart() {
     });
   };
 
-  const chartData = buildChartData(activeScenarios);
+  const chartData = buildChartData(activeScenarios, scenarios);
 
   return (
     <div className="space-y-3">
@@ -79,7 +83,7 @@ export default function SetAsideBarChart() {
               key={s.id}
               onClick={() => toggleScenario(s.id)}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all border",
+                "flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium transition-all border",
                 isActive
                   ? "border-border bg-card shadow-sm"
                   : "border-transparent bg-muted/40 text-muted-foreground opacity-60"
@@ -179,7 +183,7 @@ export default function SetAsideBarChart() {
         {scenarios
           .filter((s) => activeScenarios.has(s.id))
           .map((s) => (
-            <div key={s.id} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div key={s.id} className="flex items-center gap-2 text-[13px] text-muted-foreground">
               <div
                 className="size-1.5 rounded-full shrink-0"
                 style={{ backgroundColor: s.color }}

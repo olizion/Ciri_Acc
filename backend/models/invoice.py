@@ -14,6 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 
 from config.database import Base
+from models.mixins import RetentionMixin
 
 
 class InvoiceStatus(str, Enum):
@@ -24,7 +25,7 @@ class InvoiceStatus(str, Enum):
     PAID = "paid"
 
 
-class Invoice(Base):
+class Invoice(RetentionMixin, Base):
     """Outgoing invoice (faktura) model."""
 
     __tablename__ = "invoices"
@@ -67,6 +68,14 @@ class Invoice(Base):
     status: Mapped[InvoiceStatus] = mapped_column(
         SQLEnum(InvoiceStatus), default=InvoiceStatus.DRAFT
     )
+
+    # Actor tracking (Bokføringsloven §13a)
+    created_by_user: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who created the invoice
+    sent_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who sent the invoice
 
     # Tracking
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

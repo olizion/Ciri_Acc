@@ -208,7 +208,7 @@ export function PipelineSchema() {
             <span className="mt-2 text-center text-xs font-semibold tabular-nums text-muted-foreground leading-tight">
               {PIPELINE_STATS.totalTransactions.toLocaleString("nb-NO")}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-[12px] text-muted-foreground">
               transaksjoner
             </span>
           </div>
@@ -438,7 +438,7 @@ export function PipelineSchema() {
                 >
                   {out.count.toLocaleString("nb-NO")}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[12px] text-muted-foreground">
                   {out.label}
                 </span>
               </motion.div>
@@ -577,7 +577,7 @@ export function PipelineSchema() {
                                 {cluster.label}
                               </span>
                               <span
-                                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                                className="rounded-full px-1.5 py-0.5 text-[12px] font-bold"
                                 style={{
                                   backgroundColor:
                                     cluster.strengthLevel === "STRONG"
@@ -807,7 +807,7 @@ export function PipelineSchema() {
                           }}
                         />
                       </div>
-                      <span className="mt-0.5 text-[10px] text-muted-foreground">
+                      <span className="mt-0.5 text-[12px] text-muted-foreground">
                         {item.tier === 1 ? "Regel-match" : "Videre"}
                       </span>
                     </div>
@@ -815,7 +815,7 @@ export function PipelineSchema() {
                     {/* Phase 2: Cluster fit */}
                     <div className="flex flex-col items-center">
                       <span
-                        className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                        className="rounded-full px-1.5 py-0.5 text-[12px] font-bold"
                         style={{
                           backgroundColor:
                             item.clusterFit === "HIGH"
@@ -833,7 +833,7 @@ export function PipelineSchema() {
                       >
                         {item.clusterFit}
                       </span>
-                      <span className="mt-0.5 text-[10px] text-muted-foreground">
+                      <span className="mt-0.5 text-[12px] text-muted-foreground">
                         {item.clusterName === "—"
                           ? "Ingen"
                           : item.clusterName}
@@ -855,7 +855,7 @@ export function PipelineSchema() {
                       >
                         {(item.confidenceScore * 100).toFixed(0)}%
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[12px] text-muted-foreground">
                         konfidens
                       </span>
                     </div>

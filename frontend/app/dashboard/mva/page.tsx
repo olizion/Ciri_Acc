@@ -173,47 +173,47 @@ export default function MVAPage() {
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <TrendingUpIcon className="size-3 text-rose-500" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Utgående MVA
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
             {krFmt(currentTermin?.utgaende ?? 0)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             denne termin
           </p>
         </div>
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <TrendingDownIcon className="size-3 text-emerald-500" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Inngående MVA
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
             {krFmt(currentTermin?.inngaende ?? 0)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">fradrag</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">fradrag</p>
         </div>
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <ReceiptIcon className="size-3 text-[var(--primary)]" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Netto å betale
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none text-[var(--primary)]">
             {krFmt(Math.abs(currentTermin?.tilGode ?? 0))}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             {currentTermin?.termin}
           </p>
         </div>
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <CalendarIcon className="size-3" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Frist
             </p>
           </div>
@@ -227,7 +227,7 @@ export default function MVAPage() {
           >
             {daysUntilDeadline != null ? `${daysUntilDeadline} dager` : "—"}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             10. feb 2026
           </p>
         </div>
@@ -235,7 +235,7 @@ export default function MVAPage() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold cursor-help border-b border-dashed border-muted-foreground/30 w-fit">
+                <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold cursor-help border-b border-dashed border-muted-foreground/30 w-fit">
                   Sendt i år
                 </p>
               </TooltipTrigger>
@@ -254,7 +254,7 @@ export default function MVAPage() {
             <p className="text-lg font-display font-bold tabular-nums leading-none">
               {submittedCount}
             </p>
-            <span className="text-[10px] text-muted-foreground">/ 6</span>
+            <span className="text-[12px] text-muted-foreground">/ 6</span>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-muted/60 mt-2">
             <motion.div
@@ -430,7 +430,7 @@ export default function MVAPage() {
                       </div>
                       <Badge
                         variant="outline"
-                        className="text-[10px] border-[var(--primary)]/30 text-[var(--primary)]"
+                        className="text-[12px] border-[var(--primary)]/30 text-[var(--primary)]"
                       >
                         Klar til sending
                       </Badge>
@@ -442,7 +442,7 @@ export default function MVAPage() {
                       <div className="rounded-lg border bg-muted/20 p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <TrendingUpIcon className="size-3 text-rose-500" />
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          <span className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
                             Utgående
                           </span>
                         </div>
@@ -453,7 +453,7 @@ export default function MVAPage() {
                       <div className="rounded-lg border bg-muted/20 p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <TrendingDownIcon className="size-3 text-emerald-500" />
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          <span className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
                             Inngående
                           </span>
                         </div>
@@ -464,7 +464,7 @@ export default function MVAPage() {
                       <div className="rounded-lg border bg-[var(--primary)]/[0.04] border-[var(--primary)]/15 p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <ReceiptIcon className="size-3 text-[var(--primary)]" />
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          <span className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
                             Å betale
                           </span>
                         </div>
@@ -485,7 +485,7 @@ export default function MVAPage() {
                     {/* Year totals compact */}
                     <div className="flex items-center gap-6 pt-2 border-t border-dashed border-border/60 mt-auto">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-[13px] text-muted-foreground">
                           Årstotal utgående:
                         </span>
                         <span className="text-[13px] font-display font-semibold tabular-nums">
@@ -493,7 +493,7 @@ export default function MVAPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-[13px] text-muted-foreground">
                           Årstotal inngående:
                         </span>
                         <span className="text-[13px] font-display font-semibold tabular-nums">
@@ -501,7 +501,7 @@ export default function MVAPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-[13px] text-muted-foreground">
                           Netto betalt:
                         </span>
                         <span className="text-[13px] font-display font-semibold tabular-nums text-[var(--primary)]">
@@ -520,7 +520,7 @@ export default function MVAPage() {
                     <h3 className="text-[13px] font-semibold">
                       Ciri-aktivitet
                     </h3>
-                    <span className="text-[10px] text-muted-foreground ml-auto">
+                    <span className="text-[12px] text-muted-foreground ml-auto">
                       {completedSteps}/{totalSteps} fullført
                     </span>
                   </div>
@@ -557,14 +557,14 @@ export default function MVAPage() {
                             <div className="flex-1 min-w-0 pt-0.5">
                               <p
                                 className={cn(
-                                  "text-[11px] leading-snug",
+                                  "text-[13px] leading-snug",
                                   isScheduled && "text-muted-foreground"
                                 )}
                               >
                                 {event.action}
                               </p>
                             </div>
-                            <span className="text-[9px] text-muted-foreground tabular-nums shrink-0 pt-1">
+                            <span className="text-[13px] text-muted-foreground tabular-nums shrink-0 pt-1">
                               {isScheduled
                                 ? new Date(
                                     event.timestamp.replace(" ", "T")
@@ -624,7 +624,7 @@ export default function MVAPage() {
                   <h3 className="text-sm font-semibold">
                     Alle terminer 2025
                   </h3>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[13px] text-muted-foreground">
                     {submittedCount} av 6 sendt
                   </span>
                 </div>
@@ -662,21 +662,21 @@ export default function MVAPage() {
                           <p className="text-[13px] font-medium">
                             {termin.termin}
                           </p>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[13px] text-muted-foreground">
                             {termin.period}
                           </span>
                           {termin.status === "submitted" &&
                             autonomyMode === "autonomous" && (
                               <Badge
                                 variant="secondary"
-                                className="gap-0.5 text-[10px] h-4 px-1.5"
+                                className="gap-0.5 text-[12px] h-4 px-1.5"
                               >
                                 <SparklesIcon className="size-2.5" />
                                 Ciri
                               </Badge>
                             )}
                         </div>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[13px] text-muted-foreground">
                           {termin.status === "submitted"
                             ? `Sendt ${new Date(termin.submittedDate!).toLocaleDateString("nb-NO")}`
                             : termin.status === "ready"
@@ -686,7 +686,7 @@ export default function MVAPage() {
                       </div>
                       <div className="hidden sm:grid grid-cols-3 gap-6 text-right">
                         <div>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[12px] text-muted-foreground">
                             Utgående
                           </p>
                           <p className="text-[13px] font-display font-medium tabular-nums">
@@ -694,7 +694,7 @@ export default function MVAPage() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[12px] text-muted-foreground">
                             Inngående
                           </p>
                           <p className="text-[13px] font-display font-medium tabular-nums">
@@ -702,7 +702,7 @@ export default function MVAPage() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[12px] text-muted-foreground">
                             Netto
                           </p>
                           <p className="text-[13px] font-display font-medium tabular-nums text-[var(--primary)]">

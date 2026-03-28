@@ -122,6 +122,7 @@ export default function HovedbokPage() {
           debet: t.debet,
           kredit: t.kredit,
           motpart: t.motpart,
+          createdByCiri: t.created_by_ciri ?? false,
         })),
       }));
       return transformed;

@@ -11,9 +11,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from config.database import Base
+from models.mixins import RetentionMixin
 
 
-class Postering(Base):
+class Postering(RetentionMixin, Base):
     """
     Postering (accounting entry) model.
 
@@ -63,10 +64,13 @@ class Postering(Base):
     # SAF-T reference
     saft_transaction_id: Mapped[str] = mapped_column(String(50), unique=True)
 
-    # AI metadata
+    # Actor tracking (Bokføringsloven §13a)
     created_by_ciri: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_by_user: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who triggered posting, null if Ciri
 
-    # Timestamp (no updated_at - immutable)
+    # Timestamp (no updated_at - immutable per Bokføringsloven §6)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
@@ -91,10 +95,17 @@ class Postering(Base):
 
 @event.listens_for(Postering, "before_update")
 def _prevent_postering_update(mapper, connection, target):
-    raise ValueError(
-        "Postering kan ikke endres etter opprettelse (Bokføringsloven §6). "
-        "Opprett en korreksjonpostering i stedet."
-    )
+    # Allow updates ONLY to retention metadata fields
+    from sqlalchemy import inspect
+    state = inspect(target)
+    changed = [attr.key for attr in state.attrs if attr.history.has_changes()]
+    retention_fields = {"fiscal_year", "retention_category", "retention_expires_at", "audit_hold", "purged_at"}
+    forbidden = set(changed) - retention_fields
+    if forbidden:
+        raise ValueError(
+            "Postering kan ikke endres etter opprettelse (Bokføringsloven §6). "
+            "Opprett en korreksjonpostering i stedet."
+        )
 
 
 @event.listens_for(Postering, "before_delete")

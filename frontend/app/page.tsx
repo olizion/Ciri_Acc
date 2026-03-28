@@ -162,7 +162,7 @@ function AnimatedChatDemo() {
         </div>
         <div>
           <p className="text-sm font-medium text-[#1a2e23]">Snakk med Ciri</p>
-          <p className="text-[10px] text-[#5B906F]">Online</p>
+          <p className="text-[12px] text-[#5B906F]">Online</p>
         </div>
       </div>
 
@@ -280,7 +280,7 @@ function AnimatedChatDemo() {
                                 }}
                                 className="w-full rounded-t-md bg-gradient-to-t from-[#3E715C]/80 to-[#5B906F]/70 backdrop-blur-md"
                               />
-                              <span className="mt-1.5 text-[9px] text-[#8a9a8e]">{bar.month}</span>
+                              <span className="mt-1.5 text-[13px] text-[#8a9a8e]">{bar.month}</span>
                             </div>
                           );
                         })}
@@ -291,19 +291,19 @@ function AnimatedChatDemo() {
                         transition={{ delay: 0.8 }}
                         className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-white/10 bg-white/[0.08] p-2.5 backdrop-blur-xl">
                         <div className="text-center">
-                          <p className="text-[9px] text-[#8a9a8e]">Totalt</p>
+                          <p className="text-[13px] text-[#8a9a8e]">Totalt</p>
                           <p className="text-xs font-medium text-[#1a2e23]">
                             kr {convo.summary.total}
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[9px] text-[#8a9a8e]">Trend</p>
+                          <p className="text-[13px] text-[#8a9a8e]">Trend</p>
                           <p className="text-xs font-medium text-[#3E715C]">
                             {convo.summary.trend}
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[9px] text-[#8a9a8e]">Snitt/mnd</p>
+                          <p className="text-[13px] text-[#8a9a8e]">Snitt/mnd</p>
                           <p className="text-xs font-medium text-[#1a2e23]">
                             kr {convo.summary.avg}
                           </p>
@@ -320,30 +320,30 @@ function AnimatedChatDemo() {
                       transition={{ duration: 0.4 }}
                       className="mt-3 space-y-1.5 rounded-xl border border-white/10 bg-white/[0.08] p-3 backdrop-blur-xl">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-[#8a9a8e]">Til</span>
-                        <span className="text-[11px] font-medium text-[#1a2e23]">
+                        <span className="text-[13px] text-[#8a9a8e]">Til</span>
+                        <span className="text-[13px] font-medium text-[#1a2e23]">
                           {convo.invoiceData.to}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-[#8a9a8e]">Beløp</span>
-                        <span className="text-[11px] text-[#1a2e23]">
+                        <span className="text-[13px] text-[#8a9a8e]">Beløp</span>
+                        <span className="text-[13px] text-[#1a2e23]">
                           {convo.invoiceData.amount}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-[#8a9a8e]">MVA (25%)</span>
-                        <span className="text-[11px] text-[#1a2e23]">{convo.invoiceData.mva}</span>
+                        <span className="text-[13px] text-[#8a9a8e]">MVA (25%)</span>
+                        <span className="text-[13px] text-[#1a2e23]">{convo.invoiceData.mva}</span>
                       </div>
                       <div className="flex items-center justify-between border-t border-white/15 pt-1.5">
-                        <span className="text-[9px] font-medium text-[#8a9a8e]">Totalt</span>
+                        <span className="text-[13px] font-medium text-[#8a9a8e]">Totalt</span>
                         <span className="text-xs font-medium text-[#3E715C]">
                           {convo.invoiceData.total}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-[#8a9a8e]">Forfall</span>
-                        <span className="text-[11px] text-[#1a2e23]">{convo.invoiceData.due}</span>
+                        <span className="text-[13px] text-[#8a9a8e]">Forfall</span>
+                        <span className="text-[13px] text-[#1a2e23]">{convo.invoiceData.due}</span>
                       </div>
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -351,7 +351,7 @@ function AnimatedChatDemo() {
                         transition={{ delay: 0.6 }}
                         className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[#3E715C]/20 bg-[#3E715C]/10 py-1.5 backdrop-blur-lg">
                         <CheckIcon className="h-3 w-3 text-[#3E715C]" />
-                        <span className="text-[10px] font-medium text-[#3E715C]">
+                        <span className="text-[12px] font-medium text-[#3E715C]">
                           Sendt til {convo.invoiceData.to}
                         </span>
                       </motion.div>
@@ -369,7 +369,7 @@ function AnimatedChatDemo() {
                         <div
                           key={row.label}
                           className={cn(
-                            "flex items-center justify-between rounded-lg px-3 py-1.5 text-[11px] backdrop-blur-xl",
+                            "flex items-center justify-between rounded-lg px-3 py-1.5 text-[13px] backdrop-blur-xl",
                             row.highlight
                               ? "border border-[#3E715C]/20 bg-[#3E715C]/10 font-medium text-[#1a2e23]"
                               : "border border-white/10 bg-white/[0.08] text-[#4a5e52]"
@@ -380,7 +380,7 @@ function AnimatedChatDemo() {
                           </span>
                         </div>
                       ))}
-                      <p className="mt-1 text-[9px] text-[#8a9a8e]">{convo.footer}</p>
+                      <p className="mt-1 text-[13px] text-[#8a9a8e]">{convo.footer}</p>
                     </motion.div>
                   )}
                 </div>
@@ -465,14 +465,14 @@ function EmailPipelineAnimation() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-[#1a2e23]">Leverandør AS</p>
-            <p className="text-[10px] text-[#8a9a8e]">Faktura #2024-0847</p>
+            <p className="text-[12px] text-[#8a9a8e]">Faktura #2024-0847</p>
           </div>
           <div className="rounded-lg bg-red-50 px-2 py-0.5">
-            <p className="text-[9px] font-medium text-red-500">PDF</p>
+            <p className="text-[13px] font-medium text-red-500">PDF</p>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between rounded-lg bg-white/[0.08] px-3 py-2 backdrop-blur-lg">
-          <span className="text-[10px] text-[#8a9a8e]">Beløp</span>
+          <span className="text-[12px] text-[#8a9a8e]">Beløp</span>
           <span className="text-xs font-medium text-[#1a2e23]">kr 24 500,00</span>
         </div>
       </motion.div>
@@ -533,7 +533,7 @@ function EmailPipelineAnimation() {
                     )}>
                     {step.label}
                   </p>
-                  <p className="text-[10px] text-[#8a9a8e]">{step.sublabel}</p>
+                  <p className="text-[12px] text-[#8a9a8e]">{step.sublabel}</p>
                 </div>
                 {isCurrent && (
                   <motion.div
@@ -673,12 +673,12 @@ function CiriMarketingBubble({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-[#1a2e23]">Ciri Demo</p>
-                <p className="text-[10px] text-[#5B906F]">Prov meg — klikk et sporsmal</p>
+                <p className="text-[12px] text-[#5B906F]">Prov meg — klikk et sporsmal</p>
               </div>
               {selectedQuery !== null && (
                 <button
                   onClick={handleBack}
-                  className="rounded-lg px-2 py-1 text-[10px] font-medium text-[#3E715C] transition-colors hover:bg-[#3E715C]/5">
+                  className="rounded-lg px-2 py-1 text-[12px] font-medium text-[#3E715C] transition-colors hover:bg-[#3E715C]/5">
                   Tilbake
                 </button>
               )}
@@ -800,7 +800,7 @@ function CiriMarketingBubble({
                                 <div
                                   key={row.label}
                                   className={cn(
-                                    "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px]",
+                                    "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[13px]",
                                     row.highlight
                                       ? "bg-[#3E715C]/10 font-medium text-[#1a2e23]"
                                       : "text-[#4a5e52]"
@@ -820,7 +820,7 @@ function CiriMarketingBubble({
                             <div className="mt-2 space-y-2">
                               {query.barData.map((d, i) => (
                                 <div key={d.label} className="space-y-0.5">
-                                  <div className="flex items-center justify-between text-[10px]">
+                                  <div className="flex items-center justify-between text-[12px]">
                                     <span className="text-[#4a5e52]">{d.label}</span>
                                     <span className="text-[#8a9a8e]">{d.amount}</span>
                                   </div>
@@ -844,7 +844,7 @@ function CiriMarketingBubble({
                                 <div
                                   key={d.label}
                                   className={cn(
-                                    "flex items-center justify-between rounded-lg px-2.5 py-2 text-[11px]",
+                                    "flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px]",
                                     d.bold ? "bg-[#3E715C]/10" : ""
                                   )}>
                                   <span
@@ -864,7 +864,7 @@ function CiriMarketingBubble({
                           )}
 
                           {/* Footer */}
-                          <p className="mt-2 text-[10px] text-[#8a9a8e]">{query.footer}</p>
+                          <p className="mt-2 text-[12px] text-[#8a9a8e]">{query.footer}</p>
                         </div>
                       </motion.div>
                     )}
@@ -1037,15 +1037,15 @@ function ShowcaseFaktura({ phase, mode }: { phase: number; mode: AutonomousMode 
               <ReceiptIcon className="h-3 w-3 text-[#5B906F]" />
             </div>
             <div>
-              <p className="text-[11px] font-medium text-[#1a2e23]">Faktura #2026-0134</p>
-              <p className="text-[9px] text-[#8a9a8e]">Berge Konsult AS</p>
+              <p className="text-[13px] font-medium text-[#1a2e23]">Faktura #2026-0134</p>
+              <p className="text-[13px] text-[#8a9a8e]">Berge Konsult AS</p>
             </div>
           </div>
           <motion.span
             initial={{ opacity: 0, scale: 0.8 }}
             animate={phase >= 1 ? { opacity: 1, scale: 1 } : {}}
             transition={{ delay: 0.3 }}
-            className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-medium text-amber-600">
+            className="rounded-full bg-amber-50 px-2 py-0.5 text-[13px] font-medium text-amber-600">
             {phase >= 3 ? "Betalt" : phase >= 2 ? "Sendt" : "Ny"}
           </motion.span>
         </div>
@@ -1062,12 +1062,12 @@ function ShowcaseFaktura({ phase, mode }: { phase: number; mode: AutonomousMode 
               animate={phase >= 1 ? { opacity: 1 } : {}}
               transition={{ delay: 0.15 + i * 0.08 }}
               className={cn(
-                "flex items-center justify-between rounded-lg px-3 py-1 text-[11px]",
+                "flex items-center justify-between rounded-lg px-3 py-1 text-[13px]",
                 row.bold
                   ? "bg-white/[0.1] font-medium text-[#1a2e23] backdrop-blur-lg"
                   : "text-[#4a5e52]"
               )}>
-              <span className="text-[9px] text-[#8a9a8e]">{row.label}</span>
+              <span className="text-[13px] text-[#8a9a8e]">{row.label}</span>
               <span className={row.bold ? "font-medium text-[#3E715C]" : ""}>{row.value}</span>
             </motion.div>
           ))}
@@ -1087,16 +1087,16 @@ function ShowcaseFaktura({ phase, mode }: { phase: number; mode: AutonomousMode 
               <MailIcon className="h-3.5 w-3.5 text-blue-500" />
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-[#1a2e23]">
+              <p className="text-[13px] font-medium text-[#1a2e23]">
                 {isAuto ? "Sendt automatisk" : "Sendt etter godkjenning"}
               </p>
-              <p className="text-[9px] text-[#8a9a8e]">E-post levert kl. 09:14</p>
+              <p className="text-[13px] text-[#8a9a8e]">E-post levert kl. 09:14</p>
             </div>
             {!isAuto && phase === 2 && (
               <motion.div
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
-                className="rounded-lg bg-[#3E715C] px-2.5 py-1 text-[9px] font-medium text-white">
+                className="rounded-lg bg-[#3E715C] px-2.5 py-1 text-[13px] font-medium text-white">
                 Godkjenn
               </motion.div>
             )}
@@ -1121,10 +1121,10 @@ function ShowcaseFaktura({ phase, mode }: { phase: number; mode: AutonomousMode 
               <CheckIcon className="h-3.5 w-3.5 text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-[#3E715C]">
+              <p className="text-[13px] font-medium text-[#3E715C]">
                 {isAuto ? "Betaling mottatt og matchet" : "Betaling registrert"}
               </p>
-              <p className="text-[9px] text-[#8a9a8e]">kr 23 125,00 fra Berge Konsult AS</p>
+              <p className="text-[13px] text-[#8a9a8e]">kr 23 125,00 fra Berge Konsult AS</p>
             </div>
           </motion.div>
         )}
@@ -1144,7 +1144,7 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
         className="rounded-xl border border-white/15 bg-white/[0.08] p-3 backdrop-blur-xl">
         <div className="mb-2 flex items-center gap-2">
           <CalculatorIcon className="h-3.5 w-3.5 text-[#5B906F]" />
-          <p className="text-[11px] font-medium text-[#1a2e23]">MVA-oppgave — 1. termin 2026</p>
+          <p className="text-[13px] font-medium text-[#1a2e23]">MVA-oppgave — 1. termin 2026</p>
         </div>
         <div className="space-y-1">
           {[
@@ -1157,8 +1157,8 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
               animate={phase >= 1 ? { opacity: 1, x: 0 } : {}}
               transition={{ delay: i * 0.15 }}
               className="flex items-center justify-between rounded-lg bg-white/[0.08] px-3 py-1.5 backdrop-blur-lg">
-              <span className="text-[10px] text-[#4a5e52]">{row.label}</span>
-              <span className="text-[11px] font-medium text-[#1a2e23]">{row.value}</span>
+              <span className="text-[12px] text-[#4a5e52]">{row.label}</span>
+              <span className="text-[13px] font-medium text-[#1a2e23]">{row.value}</span>
             </motion.div>
           ))}
           <motion.div
@@ -1166,7 +1166,7 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
             animate={phase >= 1 ? { opacity: 1 } : {}}
             transition={{ delay: 0.35 }}
             className="flex items-center justify-between rounded-lg bg-[#3E715C]/10 px-3 py-1.5">
-            <span className="text-[10px] font-medium text-[#1a2e23]">A betale</span>
+            <span className="text-[12px] font-medium text-[#1a2e23]">A betale</span>
             <span className="text-xs font-medium text-[#3E715C]">kr 32 400</span>
           </motion.div>
         </div>
@@ -1181,8 +1181,8 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
             exit={{ opacity: 0 }}
             className="rounded-xl border border-white/15 bg-white/[0.08] p-3 backdrop-blur-xl">
             <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[11px] font-medium text-[#1a2e23]">RF-0002 Skattemelding</p>
-              <span className="text-[9px] text-[#8a9a8e]">Frist: 10. april</span>
+              <p className="text-[13px] font-medium text-[#1a2e23]">RF-0002 Skattemelding</p>
+              <span className="text-[13px] text-[#8a9a8e]">Frist: 10. april</span>
             </div>
             <div className="space-y-1">
               {[
@@ -1203,7 +1203,7 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
                     className="flex h-3.5 w-3.5 items-center justify-center rounded bg-[#3E715C]/20">
                     <CheckIcon className="h-2.5 w-2.5 text-[#3E715C]" />
                   </motion.div>
-                  <span className="text-[10px] text-[#4a5e52]">{field}</span>
+                  <span className="text-[12px] text-[#4a5e52]">{field}</span>
                 </motion.div>
               ))}
             </div>
@@ -1211,7 +1211,7 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
               <motion.div
                 animate={{ scale: [1, 1.04, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-[#3E715C] py-1.5 text-[11px] font-medium text-white">
+                className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-[#3E715C] py-1.5 text-[13px] font-medium text-white">
                 <SendIcon className="h-3 w-3" />
                 Send til Altinn
               </motion.div>
@@ -1229,7 +1229,7 @@ function ShowcaseMva({ phase, mode }: { phase: number; mode: AutonomousMode }) {
             exit={{ opacity: 0 }}
             className="flex items-center justify-center gap-2 rounded-xl bg-[#3E715C]/10 py-2.5">
             <CheckIcon className="h-4 w-4 text-[#3E715C]" />
-            <span className="text-[11px] font-medium text-[#3E715C]">
+            <span className="text-[13px] font-medium text-[#3E715C]">
               {isAuto ? "Sendt og kvittert — automatisk" : "Sendt til Altinn — godkjent"}
             </span>
           </motion.div>
@@ -1257,22 +1257,22 @@ function ShowcaseLonn({ phase, mode }: { phase: number; mode: AutonomousMode }) 
             animate={phase >= 1 ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: i * 0.12, type: "spring", stiffness: 250, damping: 20 }}
             className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-2 backdrop-blur-xl">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.1] text-[9px] font-medium text-[#5B906F] backdrop-blur-lg">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.1] text-[13px] font-medium text-[#5B906F] backdrop-blur-lg">
               {emp.name
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium text-[#1a2e23]">{emp.name}</p>
-              <p className="text-[9px] text-[#8a9a8e]">Brutto: {emp.brutto}</p>
+              <p className="text-[13px] font-medium text-[#1a2e23]">{emp.name}</p>
+              <p className="text-[13px] text-[#8a9a8e]">Brutto: {emp.brutto}</p>
             </div>
             <motion.div
               initial={{ opacity: 0 }}
               animate={phase >= 2 ? { opacity: 1 } : {}}
               transition={{ delay: 0.1 + i * 0.1 }}
               className="text-right">
-              <p className="text-[11px] font-medium text-[#3E715C]">kr {emp.netto}</p>
+              <p className="text-[13px] font-medium text-[#3E715C]">kr {emp.netto}</p>
               <p className="text-[8px] text-[#8a9a8e]">Netto</p>
             </motion.div>
           </motion.div>
@@ -1288,7 +1288,7 @@ function ShowcaseLonn({ phase, mode }: { phase: number; mode: AutonomousMode }) 
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="rounded-lg bg-[#3E715C] px-4 py-1.5 text-[11px] font-medium text-white">
+            className="rounded-lg bg-[#3E715C] px-4 py-1.5 text-[13px] font-medium text-white">
             Godkjenn lønnsslipp
           </motion.div>
         </motion.div>
@@ -1307,8 +1307,8 @@ function ShowcaseLonn({ phase, mode }: { phase: number; mode: AutonomousMode }) 
                 <FileCheckIcon className="h-3.5 w-3.5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-[11px] font-medium text-[#1a2e23]">A-melding sendt</p>
-                <p className="text-[9px] text-[#8a9a8e]">Rapportert til Skatteetaten for februar</p>
+                <p className="text-[13px] font-medium text-[#1a2e23]">A-melding sendt</p>
+                <p className="text-[13px] text-[#8a9a8e]">Rapportert til Skatteetaten for februar</p>
               </div>
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3E715C]">
                 <CheckIcon className="h-3 w-3 text-white" />
@@ -1320,7 +1320,7 @@ function ShowcaseLonn({ phase, mode }: { phase: number; mode: AutonomousMode }) 
               transition={{ delay: 0.4 }}
               className="mt-1.5 flex items-center gap-1.5 pl-10">
               <MailIcon className="h-3 w-3 text-[#8a9a8e]" />
-              <span className="text-[9px] text-[#8a9a8e]">3 lønnsslipper sendt på e-post</span>
+              <span className="text-[13px] text-[#8a9a8e]">3 lønnsslipper sendt på e-post</span>
             </motion.div>
           </motion.div>
         )}
@@ -1363,12 +1363,12 @@ function ShowcaseArsregnskap({ phase, mode }: { phase: number; mode: AutonomousM
               <FileSpreadsheetIcon className="h-3.5 w-3.5" />
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-[#1a2e23]">{doc.title}</p>
+              <p className="text-[13px] font-medium text-[#1a2e23]">{doc.title}</p>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={phase >= 2 ? { opacity: 1 } : {}}
                 transition={{ delay: 0.1 + i * 0.1 }}
-                className="text-[9px] text-[#8a9a8e]">
+                className="text-[13px] text-[#8a9a8e]">
                 {doc.detail}
               </motion.p>
             </div>
@@ -1402,7 +1402,7 @@ function ShowcaseArsregnskap({ phase, mode }: { phase: number; mode: AutonomousM
           <motion.div
             animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="rounded-lg bg-[#3E715C] px-4 py-1.5 text-[11px] font-medium text-white">
+            className="rounded-lg bg-[#3E715C] px-4 py-1.5 text-[13px] font-medium text-white">
             Godkjenn og signer
           </motion.div>
         </motion.div>
@@ -1417,7 +1417,7 @@ function ShowcaseArsregnskap({ phase, mode }: { phase: number; mode: AutonomousM
             exit={{ opacity: 0 }}
             className="flex items-center justify-center gap-2 rounded-xl bg-[#3E715C]/10 py-2.5">
             <ShieldCheckIcon className="h-4 w-4 text-[#3E715C]" />
-            <span className="text-[11px] font-medium text-[#3E715C]">
+            <span className="text-[13px] font-medium text-[#3E715C]">
               Levert til Bronnysundregistrene
             </span>
           </motion.div>
@@ -1441,8 +1441,8 @@ function ShowcaseBokforing({ phase, mode }: { phase: number; mode: AutonomousMod
             <ReceiptIcon className="h-3 w-3 text-red-400" />
           </div>
           <div>
-            <p className="text-[11px] font-medium text-[#1a2e23]">Faktura #2024-0847</p>
-            <p className="text-[9px] text-[#8a9a8e]">Leverandør AS — faktura.pdf</p>
+            <p className="text-[13px] font-medium text-[#1a2e23]">Faktura #2024-0847</p>
+            <p className="text-[13px] text-[#8a9a8e]">Leverandør AS — faktura.pdf</p>
           </div>
         </div>
         {/* Scan line */}
@@ -1468,9 +1468,9 @@ function ShowcaseBokforing({ phase, mode }: { phase: number; mode: AutonomousMod
               animate={phase >= 2 ? { opacity: 1 } : { opacity: 0.2 }}
               transition={{ delay: phase >= 2 ? i * 0.1 : 0 }}
               className="flex items-center justify-between rounded-lg bg-white/[0.08] px-3 py-1 backdrop-blur-lg">
-              <span className="text-[9px] text-[#8a9a8e]">{field.label}</span>
+              <span className="text-[13px] text-[#8a9a8e]">{field.label}</span>
               <motion.span
-                className="text-[11px] font-medium text-[#1a2e23]"
+                className="text-[13px] font-medium text-[#1a2e23]"
                 initial={{ opacity: 0, x: -5 }}
                 animate={phase >= 2 ? { opacity: 1, x: 0 } : {}}
                 transition={{ delay: phase >= 2 ? 0.1 + i * 0.1 : 0 }}>
@@ -1489,13 +1489,13 @@ function ShowcaseBokforing({ phase, mode }: { phase: number; mode: AutonomousMod
           className="flex items-center gap-3 rounded-xl border border-amber-200/60 bg-amber-50/80 px-3 py-2.5">
           <HandIcon className="h-3.5 w-3.5 shrink-0 text-amber-600" />
           <div className="flex-1">
-            <p className="text-[11px] font-medium text-[#1a2e23]">Forslag: Konto 6300?</p>
-            <p className="text-[9px] text-[#8a9a8e]">Kontorrekvisita — bekreft eller endre</p>
+            <p className="text-[13px] font-medium text-[#1a2e23]">Forslag: Konto 6300?</p>
+            <p className="text-[13px] text-[#8a9a8e]">Kontorrekvisita — bekreft eller endre</p>
           </div>
           <motion.div
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 1.2, repeat: Infinity }}
-            className="rounded-lg bg-[#3E715C] px-2.5 py-1 text-[9px] font-medium text-white">
+            className="rounded-lg bg-[#3E715C] px-2.5 py-1 text-[13px] font-medium text-white">
             Bekreft
           </motion.div>
         </motion.div>
@@ -1510,8 +1510,8 @@ function ShowcaseBokforing({ phase, mode }: { phase: number; mode: AutonomousMod
             exit={{ opacity: 0 }}
             className="rounded-xl border border-white/15 bg-white/[0.08] p-3 backdrop-blur-xl">
             <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[11px] font-medium text-[#1a2e23]">Bilagsjournal</p>
-              <span className="rounded-full bg-[#3E715C]/10 px-2 py-0.5 text-[9px] font-medium text-[#3E715C]">
+              <p className="text-[13px] font-medium text-[#1a2e23]">Bilagsjournal</p>
+              <span className="rounded-full bg-[#3E715C]/10 px-2 py-0.5 text-[13px] font-medium text-[#3E715C]">
                 {isAuto ? "Automatisk" : "Bekreftet"}
               </span>
             </div>
@@ -1538,10 +1538,10 @@ function ShowcaseBokforing({ phase, mode }: { phase: number; mode: AutonomousMod
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.15 }}
                 className="mb-0.5 grid grid-cols-4 gap-1 rounded-lg bg-white/[0.08] px-2 py-1 backdrop-blur-lg">
-                <span className="text-[10px] text-[#4a5e52]">{row.date}</span>
-                <span className="text-[10px] font-medium text-[#1a2e23]">{row.account}</span>
-                <span className="text-right text-[10px] text-[#1a2e23]">{row.debet}</span>
-                <span className="text-right text-[10px] text-[#1a2e23]">{row.kredit}</span>
+                <span className="text-[12px] text-[#4a5e52]">{row.date}</span>
+                <span className="text-[12px] font-medium text-[#1a2e23]">{row.account}</span>
+                <span className="text-right text-[12px] text-[#1a2e23]">{row.debet}</span>
+                <span className="text-right text-[12px] text-[#1a2e23]">{row.kredit}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -1567,8 +1567,8 @@ function ShowcaseBank({ phase, mode }: { phase: number; mode: AutonomousMode }) 
         className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-2.5 backdrop-blur-xl">
         <LandmarkIcon className="h-3.5 w-3.5 text-[#5B906F]" />
         <div className="flex-1">
-          <p className="text-[11px] font-medium text-[#1a2e23]">DNB — Driftskonto</p>
-          <p className="text-[9px] text-[#8a9a8e]">47 nye transaksjoner via PSD2</p>
+          <p className="text-[13px] font-medium text-[#1a2e23]">DNB — Driftskonto</p>
+          <p className="text-[13px] text-[#8a9a8e]">47 nye transaksjoner via PSD2</p>
         </div>
         {phase >= 1 && (
           <motion.div
@@ -1593,8 +1593,8 @@ function ShowcaseBank({ phase, mode }: { phase: number; mode: AutonomousMode }) 
             transition={{ delay: i * 0.12, type: "spring", stiffness: 250, damping: 20 }}
             className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-2 backdrop-blur-xl">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium text-[#1a2e23]">{tx.desc}</p>
-              <p className="text-[10px] text-[#8a9a8e]">{tx.amount}</p>
+              <p className="text-[13px] font-medium text-[#1a2e23]">{tx.desc}</p>
+              <p className="text-[12px] text-[#8a9a8e]">{tx.amount}</p>
             </div>
             {phase >= 2 && tx.matched && (
               <motion.div
@@ -1631,7 +1631,7 @@ function ShowcaseBank({ phase, mode }: { phase: number; mode: AutonomousMode }) 
           <motion.div
             animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="rounded-lg bg-[#3E715C] px-4 py-1.5 text-[11px] font-medium text-white">
+            className="rounded-lg bg-[#3E715C] px-4 py-1.5 text-[13px] font-medium text-white">
             Bekreft alle matcher
           </motion.div>
         </motion.div>
@@ -1647,9 +1647,9 @@ function ShowcaseBank({ phase, mode }: { phase: number; mode: AutonomousMode }) 
             className="flex items-center justify-between rounded-xl border border-[#3E715C]/15 bg-[#3E715C]/10 px-3 py-2.5">
             <div className="flex items-center gap-2">
               <CheckIcon className="h-4 w-4 text-[#3E715C]" />
-              <span className="text-[11px] font-medium text-[#3E715C]">Avstemming fullfort</span>
+              <span className="text-[13px] font-medium text-[#3E715C]">Avstemming fullfort</span>
             </div>
-            <span className="text-[11px] font-medium text-[#3E715C]">kr 284 320</span>
+            <span className="text-[13px] font-medium text-[#3E715C]">kr 284 320</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1743,7 +1743,7 @@ function AutonomousShowcase() {
             key={cap.key}
             onClick={() => setCapability(cap.key)}
             className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-medium transition-all duration-200",
+              "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all duration-200",
               capability === cap.key
                 ? "border-[#3E715C]/25 bg-[#3E715C]/15 text-[#3E715C] backdrop-blur-xl"
                 : "border-white/15 bg-white/[0.1] text-[#8a9a8e] backdrop-blur-xl hover:border-white/25 hover:text-[#4a5e52]"
@@ -1777,13 +1777,13 @@ function AutonomousShowcase() {
               <p className="text-xs font-medium text-[#1a2e23]">
                 {CAPABILITIES.find((c) => c.key === capability)?.label}
               </p>
-              <p className="text-[10px] text-[#8a9a8e]">
+              <p className="text-[12px] text-[#8a9a8e]">
                 {mode === "autonom" ? "Autonom modus" : "Assistent-modus"}
               </p>
             </div>
             <span
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[9px] font-bold tracking-[0.08em] uppercase backdrop-blur-xl",
+                "rounded-full border px-2.5 py-1 text-[13px] font-bold tracking-[0.08em] uppercase backdrop-blur-xl",
                 mode === "autonom"
                   ? "border-[#3E715C]/20 bg-[#3E715C]/10 text-[#3E715C]"
                   : "border-white/15 bg-white/[0.1] text-[#8a9a8e]"
@@ -1818,7 +1818,7 @@ function AutonomousShowcase() {
 
 function SectionLabel({ children }: { children: React.ReactNode; variant?: "dark" | "light" }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-[#3E715C]/20 bg-[#3E715C]/10 px-4 py-1.5 text-[11px] font-bold tracking-[0.15em] text-[#3E715C] uppercase">
+    <span className="inline-flex items-center gap-2 rounded-full border border-[#3E715C]/20 bg-[#3E715C]/10 px-4 py-1.5 text-[13px] font-bold tracking-[0.15em] text-[#3E715C] uppercase">
       {children}
     </span>
   );

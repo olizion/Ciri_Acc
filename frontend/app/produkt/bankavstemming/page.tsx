@@ -151,7 +151,7 @@ function MatchingRadarAnimation() {
           <div className="grid grid-cols-[1fr_64px_1fr] items-start gap-2 sm:gap-4">
             {/* Bank transactions */}
             <div>
-              <p className="mb-3 text-[10px] font-bold tracking-[0.15em] text-[#8a9a8e] uppercase">
+              <p className="mb-3 text-[12px] font-bold tracking-[0.15em] text-[#8a9a8e] uppercase">
                 Banktransaksjoner
               </p>
               <div className="space-y-2">
@@ -168,10 +168,10 @@ function MatchingRadarAnimation() {
                         : "border-white/10 bg-white/[0.06]"
                     )}
                   >
-                    <p className="truncate text-[11px] font-medium text-[#1a2e23]">{tx.description}</p>
+                    <p className="truncate text-[13px] font-medium text-[#1a2e23]">{tx.description}</p>
                     <div className="mt-0.5 flex items-center justify-between">
-                      <span className="text-[10px] text-[#8a9a8e]">{tx.date}</span>
-                      <span className="text-[11px] font-medium tabular-nums text-[#4a5e52]">{tx.amount}</span>
+                      <span className="text-[12px] text-[#8a9a8e]">{tx.date}</span>
+                      <span className="text-[13px] font-medium tabular-nums text-[#4a5e52]">{tx.amount}</span>
                     </div>
                   </motion.div>
                 ))}
@@ -233,7 +233,7 @@ function MatchingRadarAnimation() {
 
             {/* Bilag column */}
             <div>
-              <p className="mb-3 text-[10px] font-bold tracking-[0.15em] text-[#8a9a8e] uppercase">Bilag</p>
+              <p className="mb-3 text-[12px] font-bold tracking-[0.15em] text-[#8a9a8e] uppercase">Bilag</p>
               <div className="space-y-2">
                 {bilagCards.map((bilag, i) => (
                   <motion.div
@@ -248,10 +248,10 @@ function MatchingRadarAnimation() {
                         : "border-white/10 bg-white/[0.06]"
                     )}
                   >
-                    <p className="truncate text-[11px] font-medium text-[#1a2e23]">{bilag.description}</p>
+                    <p className="truncate text-[13px] font-medium text-[#1a2e23]">{bilag.description}</p>
                     <div className="mt-0.5 flex items-center justify-between">
-                      <span className="text-[10px] text-[#8a9a8e]">{bilag.date}</span>
-                      <span className="text-[11px] font-medium tabular-nums text-[#4a5e52]">{bilag.amount}</span>
+                      <span className="text-[12px] text-[#8a9a8e]">{bilag.date}</span>
+                      <span className="text-[13px] font-medium tabular-nums text-[#4a5e52]">{bilag.amount}</span>
                     </div>
                   </motion.div>
                 ))}
@@ -280,7 +280,7 @@ function MatchingRadarAnimation() {
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
                         className={cn(
-                          "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium",
+                          "flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-medium",
                           isAmber ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
                         )}
                       >
@@ -371,7 +371,7 @@ function TrainingScoreAnimation() {
             </div>
             <div>
               <p className="text-xs font-medium text-[#1a2e23]">Matching-poeng</p>
-              <p className="text-[10px] text-[#8a9a8e]">Kontorpartner AS vs Banktransaksjon</p>
+              <p className="text-[12px] text-[#8a9a8e]">Kontorpartner AS vs Banktransaksjon</p>
             </div>
           </div>
         </div>
@@ -390,9 +390,9 @@ function TrainingScoreAnimation() {
                 transition={{ duration: 0.4, ease: MARKETING_EASING }}
               >
                 <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-[#4a5e52]">{factor.label}</span>
+                  <span className="text-[13px] font-medium text-[#4a5e52]">{factor.label}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-[#8a9a8e]">{factor.weight}</span>
+                    <span className="text-[13px] text-[#8a9a8e]">{factor.weight}</span>
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={isVisible ? { opacity: 1 } : { opacity: 0 }}

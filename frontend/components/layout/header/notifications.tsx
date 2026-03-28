@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { BellIcon, ClockIcon } from "lucide-react";
 import Link from "next/link";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -40,6 +41,7 @@ function timeAgo(dateStr: string): string {
 
 const Notifications = () => {
   const isMobile = useIsMobile();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [timelineInvoiceId, setTimelineInvoiceId] = useState<string | null>(null);
@@ -170,7 +172,11 @@ const Notifications = () => {
                 className="group flex cursor-pointer items-start gap-3 rounded-none border-b px-4 py-3"
                 onClick={() => {
                   if (!item.is_read) markRead(item.id);
-                  if (
+                  if (item.type === "periodisering_suggestion" && item.reference_id) {
+                    router.push(`/dashboard/periodisering?highlight=${item.reference_id}`);
+                  } else if (item.type === "periodisering_accepted" && item.reference_id) {
+                    router.push(`/dashboard/periodisering?tab=godkjent`);
+                  } else if (
                     item.reference_id &&
                     (item.type === "invoice_viewed" || item.type === "invoice_paid")
                   ) {

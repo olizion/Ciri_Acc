@@ -428,7 +428,7 @@ export function TabInnsikt() {
                   <p className="text-2xl font-display font-bold tabular-nums tracking-tight">
                     {kpi.value}
                   </p>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                  <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                     {kpi.label}
                   </p>
                 </div>
@@ -491,13 +491,13 @@ export function TabInnsikt() {
           <div className="px-4 py-3">
             {/* Header row */}
             <div className="grid grid-cols-[1fr_60px_60px] gap-2 mb-2 px-3">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+              <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                 Konto
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
+              <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
                 Noyakt.
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
+              <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
                 Totalt
               </span>
             </div>
@@ -528,7 +528,7 @@ export function TabInnsikt() {
                     <div className="grid grid-cols-[1fr_60px_60px] gap-2 items-center">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-mono text-muted-foreground/70">
+                          <span className="text-[13px] font-mono text-muted-foreground/70">
                             {cat.account}
                           </span>
                           <span className="text-[12px] font-medium truncate">
@@ -565,7 +565,7 @@ export function TabInnsikt() {
                           {cat.total}
                         </span>
                         {cat.overridden > 0 && (
-                          <span className="ml-1 inline-flex bg-amber-500/10 text-amber-600 rounded-full px-2 py-0.5 text-[10px] font-medium tabular-nums">
+                          <span className="ml-1 inline-flex bg-amber-500/10 text-amber-600 rounded-full px-2 py-0.5 text-[12px] font-medium tabular-nums">
                             {cat.overridden}
                           </span>
                         )}
@@ -598,7 +598,7 @@ export function TabInnsikt() {
             <span className="text-sm font-semibold">
               Automatiseringsgrad over tid
             </span>
-            <span className="text-[11px] text-muted-foreground/60">
+            <span className="text-[13px] text-muted-foreground/60">
               Automatiseringsgraden har okt fra 28% til 42% over 7 uker
             </span>
           </div>
@@ -632,7 +632,7 @@ export function TabInnsikt() {
           </div>
           <div className="flex gap-3 px-5 pb-4">
             <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+              <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                 P50
               </span>
               <p className="text-sm font-display font-bold text-emerald-600">
@@ -640,7 +640,7 @@ export function TabInnsikt() {
               </p>
             </div>
             <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+              <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                 P95
               </span>
               <p className="text-sm font-display font-bold text-amber-600">

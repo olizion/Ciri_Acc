@@ -68,7 +68,15 @@ class ClusterDataPoint(Base):
 
     # Lifecycle
     confirmed_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow
+        DateTime(timezone=True), default=datetime.utcnow
     )
     was_overridden: Mapped[bool] = mapped_column(Boolean, default=False)
-    overridden_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    overridden_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Actor tracking
+    confirmed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who confirmed, or null for Ciri
+    overridden_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )  # User who overrode the prediction

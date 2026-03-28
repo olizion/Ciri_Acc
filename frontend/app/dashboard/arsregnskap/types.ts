@@ -17,6 +17,11 @@ export interface MissingBilag {
   status: "missing" | "needs_review" | "matched";
 }
 
+export type BilagAction =
+  | { type: "none" }
+  | { type: "uploaded"; fileName: string }
+  | { type: "approved" };
+
 export interface CiriActivity {
   id: string;
   task: string;

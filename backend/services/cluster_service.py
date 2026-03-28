@@ -6,7 +6,7 @@ Used to assess per-transaction readiness for autonomous posting.
 
 import uuid
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from typing import Optional
 from difflib import SequenceMatcher
@@ -160,6 +160,7 @@ async def record_data_point(
 async def mark_data_point_overridden(
     db: AsyncSession,
     transaction_id: uuid.UUID,
+    overridden_by: Optional[uuid.UUID] = None,
 ) -> int:
     """Mark all data points for a transaction as overridden. Returns count."""
     result = await db.execute(
@@ -175,6 +176,7 @@ async def mark_data_point_overridden(
     for point in points:
         point.was_overridden = True
         point.overridden_at = now
+        point.overridden_by = overridden_by
     return len(points)
 
 
@@ -210,6 +212,8 @@ async def get_cluster_summaries(
 
     now = datetime.utcnow()
     cutoff = now - timedelta(days=RECENCY_WINDOW_DAYS)
+    # Handle mixed naive/aware datetimes during migration
+    cutoff_aware = cutoff.replace(tzinfo=timezone.utc) if cutoff.tzinfo is None else cutoff
     summaries = []
 
     for (account, category), points in groups.items():
@@ -230,8 +234,11 @@ async def get_cluster_summaries(
                 desc_keys.append(p.description_key.upper())
             if p.was_overridden:
                 overridden += 1
-            if p.confirmed_at and p.confirmed_at > cutoff:
-                recent += 1
+            if p.confirmed_at:
+                # Handle mixed naive/aware timestamps during migration
+                ca = p.confirmed_at.replace(tzinfo=timezone.utc) if p.confirmed_at.tzinfo is None else p.confirmed_at
+                if ca > cutoff_aware:
+                    recent += 1
             d = p.direction or "debit"
             directions[d] = directions.get(d, 0) + 1
 

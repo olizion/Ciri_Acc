@@ -93,13 +93,13 @@ export default function LearnMoreDocs({
           "rounded-2xl border p-6",
           variant === "marketing"
             ? "border-[#3E715C]/15 bg-[#3E715C]/[0.03]"
-            : "border-[#d4dbd6] bg-[#f5f7f2]/50"
+            : "border-border bg-muted/50"
         )}>
         <div className="flex items-center gap-2.5">
-          <BookOpenIcon className="h-4 w-4 text-[#5B906F]" />
-          <p className="text-[12px] font-bold tracking-[0.1em] text-[#5B906F] uppercase">Lær mer</p>
+          <BookOpenIcon className="h-4 w-4 text-primary" />
+          <p className="text-[12px] font-bold tracking-[0.1em] text-primary uppercase">Lær mer</p>
         </div>
-        <p className="mt-1.5 text-[13px] text-[#4a5e52]">
+        <p className="mt-1.5 text-[13px] text-muted-foreground">
           Utforsk relaterte emner i dokumentasjonen.
         </p>
 
@@ -122,17 +122,17 @@ export default function LearnMoreDocs({
                   "group flex items-start gap-3 rounded-xl border px-4 py-3 transition-all",
                   variant === "marketing"
                     ? "border-[#3E715C]/10 bg-white/60 hover:border-[#3E715C]/30 hover:bg-white hover:shadow-sm"
-                    : "border-[#d4dbd6] bg-white hover:border-[#3E715C]/30 hover:shadow-sm hover:shadow-[#3E715C]/5"
+                    : "border-border bg-card hover:border-primary/30 hover:shadow-sm hover:shadow-primary/5"
                 )}>
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#3E715C]/10 transition-colors group-hover:bg-[#3E715C]/15">
-                  <Icon className="h-4 w-4 text-[#5B906F]" />
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[12px] font-semibold text-[#1a2e23]">{item.title}</p>
-                    <ArrowRightIcon className="h-3 w-3 text-[#8a9a8e] transition-transform group-hover:translate-x-0.5 group-hover:text-[#3E715C]" />
+                    <p className="text-[12px] font-semibold text-foreground">{item.title}</p>
+                    <ArrowRightIcon className="h-3 w-3 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                   </div>
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-[#8a9a8e]">
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
                     {item.description}
                   </p>
                 </div>

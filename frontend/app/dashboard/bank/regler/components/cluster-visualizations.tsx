@@ -599,7 +599,7 @@ export function RadialNodeMap({
       </div>
 
       {/* Zoom level indicator */}
-      <div className="absolute bottom-3 left-3 z-10 text-[10px] font-mono text-muted-foreground/40 tabular-nums">
+      <div className="absolute bottom-3 left-3 z-10 text-[12px] font-mono text-muted-foreground/40 tabular-nums">
         {Math.round(zoom * 100)}%
       </div>
 
@@ -700,7 +700,7 @@ export function GlobalHealthRing({ clusters }: GlobalHealthRingProps) {
             <span className="text-3xl font-display font-bold leading-none tabular-nums">
               <AnimatedNumber value={total} duration={0.8} />
             </span>
-            <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 mt-1 font-semibold">
+            <span className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground/50 mt-1 font-semibold">
               klynger
             </span>
           </div>
@@ -710,7 +710,7 @@ export function GlobalHealthRing({ clusters }: GlobalHealthRingProps) {
         <div className="flex-1 min-w-0 space-y-3">
           {/* Average strength */}
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/40 mb-1 truncate">
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-muted-foreground/40 mb-1 truncate">
               Snitt-styrke
             </p>
             <div className="flex items-baseline gap-2 flex-wrap">
@@ -721,7 +721,7 @@ export function GlobalHealthRing({ clusters }: GlobalHealthRingProps) {
                 <AnimatedNumber value={avg} suffix="%" />
               </span>
               <span
-                className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                className="text-[12px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap"
                 style={{
                   backgroundColor: strengthLevelConfig[avgLevel].color + "15",
                   color: strengthLevelConfig[avgLevel].color,
@@ -802,7 +802,7 @@ export function AutonomyPathway({
     {
       icon: NetworkIcon,
       title: "Bygg 1 sterk klynge",
-      description: "Minst en klynge ma na <<sterk>> niva gjennom nok datapunkter",
+      description: "Krever alle: 75+ styrke, 8+ bekreftede posteringer, og 3+ ulike leverandorer",
       progress: growingProgressLabel,
       met: stepsCompleted[1],
     },
@@ -828,10 +828,10 @@ export function AutonomyPathway({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/40">
+        <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground/40">
           Krav for autonom bokforing
         </p>
-        <span className="text-[11px] font-bold tabular-nums text-muted-foreground/30">
+        <span className="text-[13px] font-bold tabular-nums text-muted-foreground/30">
           {completedCount}/3
         </span>
       </div>
@@ -905,12 +905,12 @@ export function AutonomyPathway({
               >
                 {step.title}
               </p>
-              <p className="text-[11px] text-muted-foreground/40 mt-0.5 leading-relaxed">
+              <p className="text-[13px] text-muted-foreground/40 mt-0.5 leading-relaxed">
                 {step.description}
               </p>
               <span
                 className={cn(
-                  "inline-block text-[10px] font-bold uppercase tracking-[0.08em] mt-1.5 px-1.5 py-[2px] rounded-md",
+                  "inline-block text-[12px] font-bold uppercase tracking-[0.08em] mt-1.5 px-1.5 py-[2px] rounded-md",
                   step.met
                     ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
                     : "bg-muted/50 text-muted-foreground/40"

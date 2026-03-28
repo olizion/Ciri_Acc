@@ -124,7 +124,7 @@ export function ClusterVisualization({
               >
                 <AnimatedNumber value={m.value} duration={0.9} />
               </p>
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/50 mt-1.5 font-semibold">
+              <p className="text-[12px] uppercase tracking-[0.12em] text-muted-foreground/50 mt-1.5 font-semibold">
                 {m.label}
               </p>
             </motion.div>
@@ -164,7 +164,7 @@ export function ClusterVisualization({
       >
         <h3 className="text-sm font-display font-semibold">Alle klynger</h3>
         <div className="flex-1 h-px bg-border" />
-        <span className="text-[10px] text-muted-foreground/35 tabular-nums font-medium">
+        <span className="text-[12px] text-muted-foreground/35 tabular-nums font-medium">
           {clusters.length} totalt
         </span>
       </motion.div>

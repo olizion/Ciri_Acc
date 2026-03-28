@@ -431,7 +431,7 @@ function MultiReportAnimation() {
                   className="h-2 w-2 rounded-sm"
                   style={{ backgroundColor: block.color }}
                 />
-                <span className="text-[9px] font-medium text-[#4a5e52]">{block.label}</span>
+                <span className="text-[13px] font-medium text-[#4a5e52]">{block.label}</span>
               </motion.div>
             ))}
           </div>
@@ -532,7 +532,7 @@ function MultiReportAnimation() {
                       style={{ backgroundColor: report.color }}
                     />
                     <span
-                      className="text-[10px] font-bold tracking-wider uppercase"
+                      className="text-[12px] font-bold tracking-wider uppercase"
                       style={{ color: report.color }}
                     >
                       {report.title}
@@ -686,7 +686,7 @@ function TimeComparisonAnimation() {
           {/* Breakdown */}
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
             {MANUAL_TASKS.map((task) => (
-              <span key={task.label} className="text-[10px] text-[#8a9a8e]">
+              <span key={task.label} className="text-[12px] text-[#8a9a8e]">
                 {task.label} {task.hours}t
               </span>
             ))}
@@ -722,7 +722,7 @@ function TimeComparisonAnimation() {
           {/* Breakdown */}
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
             {CIRI_TASKS.map((task) => (
-              <span key={task.label} className="text-[10px] text-[#8a9a8e]">
+              <span key={task.label} className="text-[12px] text-[#8a9a8e]">
                 {task.label} {task.hours}t
               </span>
             ))}

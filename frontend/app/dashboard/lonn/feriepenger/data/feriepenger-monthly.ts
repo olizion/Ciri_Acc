@@ -1,34 +1,44 @@
+import { employees } from "../../data/employees";
 import type { MonthlyAccrual } from "../types";
-
-const MONTHLY_GROSS = 220_000; // Total gross salary all employees
-const FERIEPENGER_RATE = 0.12;
-const MONTHLY_ACCRUAL = Math.round(MONTHLY_GROSS * FERIEPENGER_RATE); // 26 400
-const MONTHLY_SET_ASIDE = 22_000; // What Ciri sets aside each month
 
 const months = [
   "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
   "Jul", "Aug", "Sep", "Okt", "Nov", "Des",
 ];
 
-export const monthlyAccrualData: MonthlyAccrual[] = months.map((month, i) => {
-  const accrued = MONTHLY_ACCRUAL;
-  const cumulative = MONTHLY_ACCRUAL * (i + 1);
-  const setAside = MONTHLY_SET_ASIDE;
-  const cumulativeSetAside = MONTHLY_SET_ASIDE * (i + 1);
+/**
+ * Build monthly accrual data using the weighted-average rate from the config.
+ * `averageRate` is computed by the useFeriepengerConfig hook.
+ */
+export function buildMonthlyAccrualData(averageRate: number) {
+  const MONTHLY_GROSS = employees.reduce((s, e) => s + e.salary, 0);
+  const MONTHLY_ACCRUAL = Math.round(MONTHLY_GROSS * averageRate);
+  const MONTHLY_SET_ASIDE = MONTHLY_ACCRUAL; // Ciri sets aside the exact accrual amount
 
-  return {
+  const monthlyData: MonthlyAccrual[] = months.map((month, i) => ({
     month,
     monthIndex: i,
-    accrued,
-    cumulative,
-    setAside,
-    cumulativeSetAside,
-    isPayoutMonth: i === 5, // June
-  };
-});
+    accrued: MONTHLY_ACCRUAL,
+    cumulative: MONTHLY_ACCRUAL * (i + 1),
+    setAside: MONTHLY_SET_ASIDE,
+    cumulativeSetAside: MONTHLY_SET_ASIDE * (i + 1),
+    isPayoutMonth: i === 5,
+  }));
 
-export const TOTAL_FERIEPENGER_PAYOUT = 264_000; // Based on 2025 gross
-export const FERIEPENGER_GRUNNLAG = 2_640_000; // 2025 full year gross
-export const ACCRUED_YTD = MONTHLY_ACCRUAL * 2; // Jan + Feb 2026
-export const SET_ASIDE_YTD = MONTHLY_SET_ASIDE * 2; // Jan + Feb
-export const MONTHS_ELAPSED = 2;
+  const TOTAL_FERIEPENGER_PAYOUT = MONTHLY_ACCRUAL * 12;
+  const FERIEPENGER_GRUNNLAG = MONTHLY_GROSS * 12;
+  const MONTHS_ELAPSED = 2; // Jan + Feb 2026
+  const ACCRUED_YTD = MONTHLY_ACCRUAL * MONTHS_ELAPSED;
+  const SET_ASIDE_YTD = MONTHLY_SET_ASIDE * MONTHS_ELAPSED;
+
+  return {
+    monthlyData,
+    TOTAL_FERIEPENGER_PAYOUT,
+    FERIEPENGER_GRUNNLAG,
+    ACCRUED_YTD,
+    SET_ASIDE_YTD,
+    MONTHS_ELAPSED,
+    MONTHLY_ACCRUAL,
+    MONTHLY_SET_ASIDE,
+  };
+}

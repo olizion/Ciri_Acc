@@ -27,7 +27,7 @@ export const ResultatGruppeHeader = React.memo<ResultatGruppeHeaderProps>(({
           {gruppe.navn}
         </span>
         {gruppe.subtotal.bilagCount && gruppe.subtotal.bilagCount > 0 && (
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+          <Badge variant="secondary" className="text-[12px] px-1.5 py-0 h-4">
             {gruppe.subtotal.bilagCount} bilag
           </Badge>
         )}

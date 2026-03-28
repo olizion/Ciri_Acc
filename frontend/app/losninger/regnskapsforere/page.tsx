@@ -250,7 +250,7 @@ function MultiClientDashboardAnimation() {
                     {client.name}
                   </span>
                 </div>
-                <span className="text-[11px] text-[#4a5e52]">
+                <span className="text-[13px] text-[#4a5e52]">
                   {client.detail}
                 </span>
 
@@ -275,26 +275,26 @@ function MultiClientDashboardAnimation() {
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#8a9a8e]">
+                          <span className="text-[12px] text-[#8a9a8e]">
                             MVA-frist
                           </span>
-                          <span className="text-[10px] font-semibold text-[#d4a017]">
+                          <span className="text-[12px] font-semibold text-[#d4a017]">
                             3 dager
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#8a9a8e]">
+                          <span className="text-[12px] text-[#8a9a8e]">
                             Bilag
                           </span>
-                          <span className="text-[10px] font-semibold text-[#1a2e23]">
+                          <span className="text-[12px] font-semibold text-[#1a2e23]">
                             7 ubehandlede
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#8a9a8e]">
+                          <span className="text-[12px] text-[#8a9a8e]">
                             Status
                           </span>
-                          <span className="text-[10px] font-semibold text-[#d4a017]">
+                          <span className="text-[12px] font-semibold text-[#d4a017]">
                             Krever handling
                           </span>
                         </div>
@@ -477,14 +477,14 @@ function EfficiencyMultiplierAnimation() {
         <div className="flex-1 rounded-xl border border-[#d4dbd6] bg-white/40 p-4">
           <div className="mb-3 flex items-center gap-2">
             <ClockIcon className="h-3.5 w-3.5 text-[#8a9a8e]" />
-            <span className="text-[11px] font-bold tracking-wider text-[#8a9a8e] uppercase">
+            <span className="text-[13px] font-bold tracking-wider text-[#8a9a8e] uppercase">
               For
             </span>
           </div>
           <div className="space-y-2.5 opacity-60">
             {TASK_LABELS.map((label, i) => (
               <div key={`seq-${label}`} className="space-y-1">
-                <span className="text-[10px] text-[#4a5e52]">{label}</span>
+                <span className="text-[12px] text-[#4a5e52]">{label}</span>
                 <div className="h-2 overflow-hidden rounded-full bg-[#e8ede9]">
                   <div
                     className="h-full rounded-full bg-[#8a9a8e] transition-[width] duration-100 ease-linear"
@@ -495,7 +495,7 @@ function EfficiencyMultiplierAnimation() {
             ))}
           </div>
           <div className="mt-3 text-right">
-            <span className="text-[10px] font-medium text-[#8a9a8e]">
+            <span className="text-[12px] font-medium text-[#8a9a8e]">
               ~4 sek
             </span>
           </div>
@@ -505,14 +505,14 @@ function EfficiencyMultiplierAnimation() {
         <div className="flex-1 rounded-xl border border-[#3E715C]/30 bg-white/70 p-4">
           <div className="mb-3 flex items-center gap-2">
             <ZapIcon className="h-3.5 w-3.5 text-[#3E715C]" />
-            <span className="text-[11px] font-bold tracking-wider text-[#3E715C] uppercase">
+            <span className="text-[13px] font-bold tracking-wider text-[#3E715C] uppercase">
               Etter
             </span>
           </div>
           <div className="space-y-2.5">
             {TASK_LABELS.map((label, i) => (
               <div key={`par-${label}`} className="space-y-1">
-                <span className="text-[10px] text-[#4a5e52]">{label}</span>
+                <span className="text-[12px] text-[#4a5e52]">{label}</span>
                 <div className="h-2 overflow-hidden rounded-full bg-[#e8ede9]">
                   <div
                     className="h-full rounded-full bg-[#3E715C] transition-[width] duration-100 ease-linear"
@@ -523,7 +523,7 @@ function EfficiencyMultiplierAnimation() {
             ))}
           </div>
           <div className="mt-3 text-right">
-            <span className="text-[10px] font-medium text-[#3E715C]">
+            <span className="text-[12px] font-medium text-[#3E715C]">
               ~1 sek
             </span>
           </div>

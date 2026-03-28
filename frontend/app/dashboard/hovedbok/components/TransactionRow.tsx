@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronRightIcon } from "lucide-react";
 import { formatNumber } from "../utils";
 import { Transaksjon } from "../types";
+import { CiriPostedBadge } from "@/components/ui/ciri-posted-badge";
 
 interface TransactionRowProps {
   trans: Transaksjon;
@@ -39,8 +40,9 @@ export const TransactionRow = React.memo(function TransactionRow({ trans }: Tran
           {trans.bilagsnummer}
         </Badge>
       </div>
-      <div className="hidden sm:block truncate group-hover:text-[var(--primary)] transition-colors">
-        {trans.beskrivelse}
+      <div className="hidden sm:flex items-center gap-1.5 truncate group-hover:text-[var(--primary)] transition-colors">
+        <span className="truncate">{trans.beskrivelse}</span>
+        {trans.createdByCiri && <CiriPostedBadge bilagId={trans.bilagId} showOverrideLink={false} />}
       </div>
       <div className="hidden sm:block text-right font-mono text-emerald-600">
         {trans.debet > 0 ? formatNumber(trans.debet) : "-"}

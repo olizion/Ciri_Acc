@@ -109,9 +109,9 @@ export function SearchFilterBar({
                 </Button>
               )}
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground">
-                <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono">*</kbd>
-                <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono">=</kbd>
-                <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono">#</kbd>
+                <kbd className="bg-muted px-1.5 py-0.5 rounded text-[12px] font-mono">*</kbd>
+                <kbd className="bg-muted px-1.5 py-0.5 rounded text-[12px] font-mono">=</kbd>
+                <kbd className="bg-muted px-1.5 py-0.5 rounded text-[12px] font-mono">#</kbd>
               </div>
             </div>
 

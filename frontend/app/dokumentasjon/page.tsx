@@ -99,7 +99,7 @@ function KeyboardShortcut({ keys }: { keys: string }) {
       {keys.split("+").map((key, i) => (
         <span key={i}>
           {i > 0 && <span className="mx-0.5 text-[#8a9a8e]">+</span>}
-          <kbd className="inline-flex h-5 min-w-[20px] items-center justify-center rounded border border-[#d4dbd6] bg-[#f5f7f2] px-1.5 font-mono text-[10px] font-medium text-[#4a5e52]">
+          <kbd className="inline-flex h-5 min-w-[20px] items-center justify-center rounded border border-[#d4dbd6] bg-[#f5f7f2] px-1.5 font-mono text-[12px] font-medium text-[#4a5e52]">
             {key}
           </kbd>
         </span>
@@ -110,7 +110,7 @@ function KeyboardShortcut({ keys }: { keys: string }) {
 
 function PathBreadcrumb({ path }: { path: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-[#f5f7f2] px-2 py-0.5 font-mono text-[11px] text-[#3E715C]">
+    <span className="inline-flex items-center gap-1 rounded-md bg-[#f5f7f2] px-2 py-0.5 font-mono text-[13px] text-[#3E715C]">
       {path}
     </span>
   );
@@ -135,7 +135,7 @@ function FlowStep({
     <div className="flex flex-col items-center">
       <div
         className={cn(
-          "flex min-h-[52px] w-full items-center justify-center rounded-xl border px-3 py-2.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:text-[12px]",
+          "flex min-h-[52px] w-full items-center justify-center rounded-xl border px-3 py-2.5 text-center text-[13px] font-semibold leading-tight transition-colors sm:text-[12px]",
           active
             ? "border-[#3E715C]/30 bg-[#3E715C]/10 text-[#3E715C]"
             : "border-[#d4dbd6] bg-[#f5f7f2]/60 text-[#1a2e23]"
@@ -144,7 +144,7 @@ function FlowStep({
         <div>
           {label}
           {detail && (
-            <p className="mt-0.5 text-[10px] font-normal text-[#8a9a8e]">
+            <p className="mt-0.5 text-[12px] font-normal text-[#8a9a8e]">
               {detail}
             </p>
           )}
@@ -174,7 +174,7 @@ function WeightBar({
           <span className="text-[12px] font-semibold text-[#1a2e23]">
             {label}
           </span>
-          <span className="shrink-0 text-[11px] font-bold tabular-nums text-[#3E715C]">
+          <span className="shrink-0 text-[13px] font-bold tabular-nums text-[#3E715C]">
             {pct}%
           </span>
         </div>
@@ -184,7 +184,7 @@ function WeightBar({
             style={{ width: `${Math.min(pct * 2.85, 100)}%` }}
           />
         </div>
-        <p className="mt-1 text-[10px] text-[#8a9a8e]">{description}</p>
+        <p className="mt-1 text-[12px] text-[#8a9a8e]">{description}</p>
       </div>
     </div>
   );
@@ -214,7 +214,7 @@ function ScoreExample({
         {items.map((item) => (
           <div
             key={item.label}
-            className="flex items-center justify-between text-[11px]"
+            className="flex items-center justify-between text-[13px]"
           >
             <span className="flex items-center gap-1.5 text-[#4a5e52]">
               <span
@@ -237,7 +237,7 @@ function ScoreExample({
         ))}
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-[#d4dbd6] pt-2.5">
-        <span className="text-[11px] font-semibold text-[#1a2e23]">
+        <span className="text-[13px] font-semibold text-[#1a2e23]">
           Total
         </span>
         <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ function ScoreExample({
           </span>
           <span
             className={cn(
-              "rounded-md px-2 py-0.5 text-[10px] font-bold",
+              "rounded-md px-2 py-0.5 text-[12px] font-bold",
               levelColors[level]
             )}
           >
@@ -268,7 +268,7 @@ function AutonomyCell({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-lg px-2 py-1.5 text-[10px] font-bold",
+        "flex items-center justify-center rounded-lg px-2 py-1.5 text-[12px] font-bold",
         mode === "auto"
           ? "bg-[#3E715C]/10 text-[#3E715C]"
           : "bg-[#f5f7f2] text-[#8a9a8e]"
@@ -419,7 +419,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -496,7 +496,7 @@ const DOC_SECTIONS: DocSection[] = [
                   <p className="text-[12px] font-semibold text-[#1a2e23]">
                     {item.type}
                   </p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.desc}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -594,7 +594,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -723,7 +723,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.type} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.type}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.desc}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -763,7 +763,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -848,7 +848,7 @@ const DOC_SECTIONS: DocSection[] = [
             <div className="my-4 flex items-center gap-2">
               {["Opprettet", "Sendt", "Sett", "Betalt"].map((step, i) => (
                 <div key={step} className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 rounded-full bg-[#3E715C]/10 px-2.5 py-1 text-[10px] font-medium text-[#3E715C]">
+                  <div className="flex items-center gap-1.5 rounded-full bg-[#3E715C]/10 px-2.5 py-1 text-[12px] font-medium text-[#3E715C]">
                     <div className="h-1.5 w-1.5 rounded-full bg-[#3E715C]" />
                     {step}
                   </div>
@@ -898,7 +898,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -912,8 +912,8 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.rate} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2 text-center">
                   <p className="text-lg font-bold text-[#3E715C]">{item.rate}</p>
-                  <p className="text-[11px] font-semibold text-[#1a2e23]">{item.label}</p>
-                  <p className="mt-0.5 text-[10px] text-[#8a9a8e]">{item.examples}</p>
+                  <p className="text-[13px] font-semibold text-[#1a2e23]">{item.label}</p>
+                  <p className="mt-0.5 text-[12px] text-[#8a9a8e]">{item.examples}</p>
                 </div>
               ))}
             </div>
@@ -1067,7 +1067,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -1217,7 +1217,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -1367,13 +1367,13 @@ const DOC_SECTIONS: DocSection[] = [
               kjeden.
             </p>
             <div className="my-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-4">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
+              <p className="text-[13px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
                 Automatiseringskjeden
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {["E-post mottas", "Vedlegg identifisert", "OCR-analyse", "Bilag opprettet", "Kontoforslag", "Bokfort"].map((step, i) => (
                   <div key={step} className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5 rounded-full bg-[#3E715C]/10 px-2.5 py-1 text-[10px] font-medium text-[#3E715C]">
+                    <div className="flex items-center gap-1.5 rounded-full bg-[#3E715C]/10 px-2.5 py-1 text-[12px] font-medium text-[#3E715C]">
                       <div className="h-1.5 w-1.5 rounded-full bg-[#3E715C]" />
                       {step}
                     </div>
@@ -1479,7 +1479,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.term} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.term}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.def}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.def}</p>
                 </div>
               ))}
             </div>
@@ -1495,15 +1495,15 @@ const DOC_SECTIONS: DocSection[] = [
             <div className="my-3 space-y-2">
               <div className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                 <p className="text-[12px] font-semibold text-[#1a2e23]">AES-256 i hvile</p>
-                <p className="text-[11px] text-[#8a9a8e]">Alle dokumenter og sensitive data krypteres for lagring.</p>
+                <p className="text-[13px] text-[#8a9a8e]">Alle dokumenter og sensitive data krypteres for lagring.</p>
               </div>
               <div className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                 <p className="text-[12px] font-semibold text-[#1a2e23]">TLS 1.3 i transit</p>
-                <p className="text-[11px] text-[#8a9a8e]">All kommunikasjon mellom nettleseren og serverne vare.</p>
+                <p className="text-[13px] text-[#8a9a8e]">All kommunikasjon mellom nettleseren og serverne vare.</p>
               </div>
               <div className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                 <p className="text-[12px] font-semibold text-[#1a2e23]">Norsk datalagring</p>
-                <p className="text-[11px] text-[#8a9a8e]">Servere i Norge med kryptert backup til EOS-datasentre.</p>
+                <p className="text-[13px] text-[#8a9a8e]">Servere i Norge med kryptert backup til EOS-datasentre.</p>
               </div>
             </div>
           </>
@@ -1527,7 +1527,7 @@ const DOC_SECTIONS: DocSection[] = [
                   <div className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", item.color)} />
                   <div>
                     <p className="text-[12px] font-semibold text-[#1a2e23]">{item.role}</p>
-                    <p className="text-[11px] text-[#8a9a8e]">{item.desc}</p>
+                    <p className="text-[13px] text-[#8a9a8e]">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -1554,7 +1554,7 @@ const DOC_SECTIONS: DocSection[] = [
               ].map((item) => (
                 <div key={item.right} className="rounded-lg border border-[#d4dbd6] bg-[#f5f7f2]/50 px-3 py-2">
                   <p className="text-[12px] font-semibold text-[#1a2e23]">{item.right}</p>
-                  <p className="text-[11px] text-[#8a9a8e]">{item.desc}</p>
+                  <p className="text-[13px] text-[#8a9a8e]">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -1589,41 +1589,41 @@ const DOC_SECTIONS: DocSection[] = [
             <div className="my-6 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4 text-center">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-[#3E715C]">
                     Fase 1
                   </p>
                   <p className="mt-1.5 text-[12px] font-semibold text-[#1a2e23]">
                     Regler + scoring
                   </p>
-                  <p className="mt-1 text-[10px] text-[#8a9a8e]">
+                  <p className="mt-1 text-[12px] text-[#8a9a8e]">
                     Regelmotor matcher kjente monstre. Multi-faktor scorer ukjente par.
                   </p>
                 </div>
                 <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-center">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-amber-700">
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-amber-700">
                     Fase 2
                   </p>
                   <p className="mt-1.5 text-[12px] font-semibold text-[#1a2e23]">
                     Klyngevalidering
                   </p>
-                  <p className="mt-1 text-[10px] text-[#8a9a8e]">
+                  <p className="mt-1 text-[12px] text-[#8a9a8e]">
                     Matcher sjekkes mot historiske suksessmonstre for a verifisere troverdighet.
                   </p>
                 </div>
                 <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-center">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-blue-600">
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-blue-600">
                     Fase 3
                   </p>
                   <p className="mt-1.5 text-[12px] font-semibold text-[#1a2e23]">
                     AI-inspeksjon
                   </p>
-                  <p className="mt-1 text-[10px] text-[#8a9a8e]">
+                  <p className="mt-1 text-[12px] text-[#8a9a8e]">
                     Claude validerer utvalgte matcher ukentlig for endelig godkjenning.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#8a9a8e]">
+              <div className="mt-4 flex items-center justify-center gap-2 text-[13px] text-[#8a9a8e]">
                 <span className="rounded-lg bg-white px-2.5 py-1 border border-[#d4dbd6]">
                   Ny transaksjon
                 </span>
@@ -1705,13 +1705,13 @@ const DOC_SECTIONS: DocSection[] = [
                     item.color
                   )}
                 >
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">
                     {item.type}
                   </p>
                   <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">
                     {item.label}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-[#4a5e52]">
+                  <p className="mt-0.5 text-[13px] text-[#4a5e52]">
                     {item.desc}
                   </p>
                 </div>
@@ -1761,14 +1761,14 @@ const DOC_SECTIONS: DocSection[] = [
                     className="rounded-lg bg-white px-3 py-2"
                   >
                     <div className="flex items-baseline gap-2">
-                      <code className="text-[11px] font-bold text-[#3E715C]">
+                      <code className="text-[13px] font-bold text-[#3E715C]">
                         {item.field}
                       </code>
-                      <span className="text-[10px] text-[#8a9a8e]">
+                      <span className="text-[12px] text-[#8a9a8e]">
                         f.eks. {item.example}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-[#4a5e52]">
+                    <p className="mt-0.5 text-[13px] text-[#4a5e52]">
                       {item.desc}
                     </p>
                   </div>
@@ -1801,10 +1801,10 @@ const DOC_SECTIONS: DocSection[] = [
                 <p className="text-[12px] font-semibold text-[#3E715C]">
                   Effektiv regel
                 </p>
-                <p className="mt-1 text-[11px] text-[#4a5e52]">
+                <p className="mt-1 text-[13px] text-[#4a5e52]">
                   Overstyring &lt; 30%
                 </p>
-                <div className="mt-3 flex items-center gap-3 text-[11px]">
+                <div className="mt-3 flex items-center gap-3 text-[13px]">
                   <span className="text-[#8a9a8e]">Brukt: 50</span>
                   <span className="text-[#8a9a8e]">Overstyrt: 3</span>
                   <span className="font-bold text-[#3E715C]">Rate: 6%</span>
@@ -1817,10 +1817,10 @@ const DOC_SECTIONS: DocSection[] = [
                 <p className="text-[12px] font-semibold text-red-600">
                   Ineffektiv regel (deaktivert)
                 </p>
-                <p className="mt-1 text-[11px] text-[#4a5e52]">
+                <p className="mt-1 text-[13px] text-[#4a5e52]">
                   Overstyring ≥ 30%
                 </p>
-                <div className="mt-3 flex items-center gap-3 text-[11px]">
+                <div className="mt-3 flex items-center gap-3 text-[13px]">
                   <span className="text-[#8a9a8e]">Brukt: 20</span>
                   <span className="text-[#8a9a8e]">Overstyrt: 8</span>
                   <span className="font-bold text-red-600">Rate: 40%</span>
@@ -1848,7 +1848,7 @@ const DOC_SECTIONS: DocSection[] = [
 
             {/* Weight bars */}
             <div className="my-6 space-y-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
+              <p className="text-[13px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
                 Faktorvekter
               </p>
               <WeightBar
@@ -1923,7 +1923,7 @@ const DOC_SECTIONS: DocSection[] = [
                       HOY — score ≥ 0.90
                     </span>
                   </div>
-                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                  <p className="mt-1.5 text-[13px] text-[#4a5e52]">
                     Nesten sikker match. Kan auto-bekreftes i Assistent- og
                     Autonom-modus.
                   </p>
@@ -1935,7 +1935,7 @@ const DOC_SECTIONS: DocSection[] = [
                       MEDIUM — score 0.70–0.89
                     </span>
                   </div>
-                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                  <p className="mt-1.5 text-[13px] text-[#4a5e52]">
                     Sannsynlig match. Auto-bekreftes kun i Autonom-modus,
                     ellers foreslatt.
                   </p>
@@ -1947,7 +1947,7 @@ const DOC_SECTIONS: DocSection[] = [
                       LAV — score &lt; 0.70
                     </span>
                   </div>
-                  <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                  <p className="mt-1.5 text-[13px] text-[#4a5e52]">
                     Usikker match. Vises alltid som forslag — krever manuell
                     gjennomgang.
                   </p>
@@ -2022,10 +2022,10 @@ const DOC_SECTIONS: DocSection[] = [
             </p>
 
             <div className="my-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-4">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-3">
+              <p className="text-[13px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-3">
                 Eksempel: Klyngen &ldquo;Kontorrekvisita&rdquo; (konto 6540)
               </p>
-              <div className="space-y-1.5 text-[11px] text-[#4a5e52]">
+              <div className="space-y-1.5 text-[13px] text-[#4a5e52]">
                 <div className="flex items-center gap-2">
                   <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
                   <span>Elkjop — kr 4 299 (skjerm) → bekreftet 28. jan</span>
@@ -2043,7 +2043,7 @@ const DOC_SECTIONS: DocSection[] = [
                   <span>Dustin — kr 2 150 (headset) → bekreftet 15. feb</span>
                 </div>
               </div>
-              <p className="mt-3 text-[11px] text-[#8a9a8e]">
+              <p className="mt-3 text-[13px] text-[#8a9a8e]">
                 Fire datapunkter, fire leverandorer — alle bekreftet til konto
                 6540.
               </p>
@@ -2101,7 +2101,7 @@ const DOC_SECTIONS: DocSection[] = [
             </p>
 
             <div className="my-4 space-y-4 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
+              <p className="text-[13px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
                 Styrkeberegning
               </p>
               <WeightBar
@@ -2149,11 +2149,11 @@ const DOC_SECTIONS: DocSection[] = [
                     <span className="flex items-center gap-2 text-[#1a2e23]">
                       <CheckIcon className="h-3.5 w-3.5 text-[#3E715C]" />
                       {item.field}
-                      <span className="text-[10px] text-[#8a9a8e]">
+                      <span className="text-[12px] text-[#8a9a8e]">
                         — {item.desc}
                       </span>
                     </span>
-                    <span className="font-mono text-[11px] font-medium text-[#3E715C]">
+                    <span className="font-mono text-[13px] font-medium text-[#3E715C]">
                       {item.req}
                     </span>
                   </div>
@@ -2173,7 +2173,7 @@ const DOC_SECTIONS: DocSection[] = [
                     Svak — styrke &lt; 0.4
                   </span>
                 </div>
-                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                <p className="mt-1.5 text-[13px] text-[#4a5e52]">
                   Faerre enn 8 datapunkter, eller lav diversitet. Klyngen gir
                   ingen autonom autoritet — fungerer kun som statistikk.
                 </p>
@@ -2185,7 +2185,7 @@ const DOC_SECTIONS: DocSection[] = [
                     Voksende — styrke 0.4–0.7
                   </span>
                 </div>
-                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                <p className="mt-1.5 text-[13px] text-[#4a5e52]">
                   Minimum 8 datapunkter og 3 leverandorer. Klyngen brukes til
                   forbedret matching, men gir ikke autonom bokforing alene.
                 </p>
@@ -2197,7 +2197,7 @@ const DOC_SECTIONS: DocSection[] = [
                     Sterk — styrke &gt; 0.7
                   </span>
                 </div>
-                <p className="mt-1.5 text-[11px] text-[#4a5e52]">
+                <p className="mt-1.5 text-[13px] text-[#4a5e52]">
                   Hoy diversitet, lav feilrate, jevnlig aktivitet. Denne
                   klyngen kvalifiserer for autonom bokforing nar globale krav er
                   oppfylt.
@@ -2229,7 +2229,7 @@ const DOC_SECTIONS: DocSection[] = [
                 <tbody>
                   <tr className="border-t border-[#d4dbd6]">
                     <td className="px-4 py-3">
-                      <span className="rounded-md bg-[#3E715C]/10 px-2 py-0.5 text-[10px] font-bold text-[#3E715C]">Sterk</span>
+                      <span className="rounded-md bg-[#3E715C]/10 px-2 py-0.5 text-[12px] font-bold text-[#3E715C]">Sterk</span>
                     </td>
                     <td className="px-3 py-3 text-[#4a5e52]">Hoy</td>
                     <td className="px-3 py-3 text-[#4a5e52]">MEDIUM eller HOY</td>
@@ -2237,7 +2237,7 @@ const DOC_SECTIONS: DocSection[] = [
                   </tr>
                   <tr className="border-t border-[#d4dbd6]">
                     <td className="px-4 py-3">
-                      <span className="rounded-md bg-[#3E715C]/10 px-2 py-0.5 text-[10px] font-bold text-[#3E715C]">Sterk</span>
+                      <span className="rounded-md bg-[#3E715C]/10 px-2 py-0.5 text-[12px] font-bold text-[#3E715C]">Sterk</span>
                     </td>
                     <td className="px-3 py-3 text-[#4a5e52]">Delvis</td>
                     <td className="px-3 py-3 text-[#4a5e52]">Kun HOY</td>
@@ -2245,7 +2245,7 @@ const DOC_SECTIONS: DocSection[] = [
                   </tr>
                   <tr className="border-t border-[#d4dbd6]">
                     <td className="px-4 py-3">
-                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">Voksende</span>
+                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[12px] font-bold text-amber-700">Voksende</span>
                     </td>
                     <td className="px-3 py-3 text-[#4a5e52]">Hoy / Delvis</td>
                     <td className="px-3 py-3 text-[#4a5e52]">Kun HOY</td>
@@ -2253,7 +2253,7 @@ const DOC_SECTIONS: DocSection[] = [
                   </tr>
                   <tr className="border-t border-[#d4dbd6]">
                     <td className="px-4 py-3">
-                      <span className="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">Svak / Ingen</span>
+                      <span className="rounded-md bg-red-50 px-2 py-0.5 text-[12px] font-bold text-red-600">Svak / Ingen</span>
                     </td>
                     <td className="px-3 py-3 text-[#4a5e52]">—</td>
                     <td className="px-3 py-3 text-[#4a5e52]">—</td>
@@ -2328,7 +2328,7 @@ const DOC_SECTIONS: DocSection[] = [
                     <span className="text-[12px] font-semibold text-[#1a2e23]">
                       {item.period}
                     </span>
-                    <div className="flex items-center gap-3 text-[11px]">
+                    <div className="flex items-center gap-3 text-[13px]">
                       <span className="text-[#8a9a8e]">
                         {item.points} pkt · {item.merchants} lev.
                       </span>
@@ -2343,7 +2343,7 @@ const DOC_SECTIONS: DocSection[] = [
                       style={{ width: `${Math.max(item.strength * 100, 2)}%` }}
                     />
                   </div>
-                  <p className="mt-2 text-[11px] text-[#4a5e52]">
+                  <p className="mt-2 text-[13px] text-[#4a5e52]">
                     {item.desc}
                   </p>
                 </div>
@@ -2358,10 +2358,10 @@ const DOC_SECTIONS: DocSection[] = [
             <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
               {/* Confirm path */}
               <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-[#3E715C]">
                   Bekreftelse
                 </p>
-                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                <div className="mt-3 space-y-1.5 text-[13px] text-[#4a5e52]">
                   <div className="flex items-center gap-2">
                     <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
                     Transaksjon matches med bilaget
@@ -2387,24 +2387,24 @@ const DOC_SECTIONS: DocSection[] = [
 
               {/* Reject path */}
               <div className="rounded-xl border border-red-200 bg-red-50/50 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-red-600">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-red-600">
                   Avvisning / overstyring
                 </p>
-                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                <div className="mt-3 space-y-1.5 text-[13px] text-[#4a5e52]">
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[12px] font-bold">&times;</span>
                     Matchen forkastes
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[12px] font-bold">&times;</span>
                     Konfidens for lignende treff senkes
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[12px] font-bold">&times;</span>
                     Overstyringsrate i klyngen okes
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[10px] font-bold">&times;</span>
+                    <span className="h-3 w-3 flex items-center justify-center text-red-500 shrink-0 text-[12px] font-bold">&times;</span>
                     Hvis rate &gt; 20% → klyngestyrke faller til 0
                   </div>
                 </div>
@@ -2425,7 +2425,7 @@ const DOC_SECTIONS: DocSection[] = [
                 <p className="text-[12px] font-semibold text-[#3E715C]">
                   5+ paalitelige regler
                 </p>
-                <p className="mt-1 text-[11px] text-[#4a5e52]">
+                <p className="mt-1 text-[13px] text-[#4a5e52]">
                   Regler med ≥ 80% treffsikkerhet og ≥ 5 bruk.
                 </p>
               </div>
@@ -2433,7 +2433,7 @@ const DOC_SECTIONS: DocSection[] = [
                 <p className="text-[12px] font-semibold text-[#3E715C]">
                   1+ sterk klynge
                 </p>
-                <p className="mt-1 text-[11px] text-[#4a5e52]">
+                <p className="mt-1 text-[13px] text-[#4a5e52]">
                   Minst en klynge med styrke &gt; 0.7.
                 </p>
               </div>
@@ -2462,20 +2462,20 @@ const DOC_SECTIONS: DocSection[] = [
             </p>
 
             <div className="my-6 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
-              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-4">
+              <p className="text-[13px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e] mb-4">
                 Batchdetaljer
               </p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-white px-3 py-2.5 border border-[#d4dbd6]">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">Tidsplan</p>
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">Tidsplan</p>
                   <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">Man + Fre kl. 06:00</p>
                 </div>
                 <div className="rounded-lg bg-white px-3 py-2.5 border border-[#d4dbd6]">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">Modell</p>
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">Modell</p>
                   <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">Claude Opus</p>
                 </div>
                 <div className="rounded-lg bg-white px-3 py-2.5 border border-[#d4dbd6]">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">Typisk batch</p>
+                  <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">Typisk batch</p>
                   <p className="mt-1 text-[12px] font-semibold text-[#1a2e23]">5-15 matcher/uke</p>
                 </div>
               </div>
@@ -2500,10 +2500,10 @@ const DOC_SECTIONS: DocSection[] = [
 
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-[#3E715C]">
                   Godkjent av AI
                 </p>
-                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                <div className="mt-3 space-y-1.5 text-[13px] text-[#4a5e52]">
                   <div className="flex items-center gap-2">
                     <CheckIcon className="h-3 w-3 text-[#3E715C] shrink-0" />
                     Auto-bokfor (opprett posteringer, merk POSTERT)
@@ -2519,16 +2519,16 @@ const DOC_SECTIONS: DocSection[] = [
                 </div>
               </div>
               <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-amber-700">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-amber-700">
                   Flagget av AI
                 </p>
-                <div className="mt-3 space-y-1.5 text-[11px] text-[#4a5e52]">
+                <div className="mt-3 space-y-1.5 text-[13px] text-[#4a5e52]">
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-amber-500 shrink-0 text-[10px] font-bold">!</span>
+                    <span className="h-3 w-3 flex items-center justify-center text-amber-500 shrink-0 text-[12px] font-bold">!</span>
                     Flytt til FORESLATT (brukergjennomgang)
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 flex items-center justify-center text-amber-500 shrink-0 text-[10px] font-bold">!</span>
+                    <span className="h-3 w-3 flex items-center justify-center text-amber-500 shrink-0 text-[12px] font-bold">!</span>
                     Inkluder Claudes bekymring i forklaring
                   </div>
                 </div>
@@ -2541,13 +2541,13 @@ const DOC_SECTIONS: DocSection[] = [
             <div className="rounded-xl border border-amber-200 bg-amber-50/30 p-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                  <span className="text-[11px] font-bold text-amber-700">!</span>
+                  <span className="text-[13px] font-bold text-amber-700">!</span>
                 </div>
                 <div>
                   <p className="text-[12px] font-semibold text-amber-800">
                     Match #3 flagget
                   </p>
-                  <p className="mt-1 text-[11px] text-[#4a5e52] italic">
+                  <p className="mt-1 text-[13px] text-[#4a5e52] italic">
                     &ldquo;Belopet kr 12 990 er uvanlig hoyt for IT-abonnement (konto 6540).
                     Gjennomsnitt i klyngen er kr 49-2 890. Kan dette vaere maskinvare
                     (konto 1200)?&rdquo;
@@ -2569,7 +2569,7 @@ const DOC_SECTIONS: DocSection[] = [
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center justify-between rounded-lg bg-[#f5f7f2]/80 px-3 py-2 text-[11px]"
+                    className="flex items-center justify-between rounded-lg bg-[#f5f7f2]/80 px-3 py-2 text-[13px]"
                   >
                     <span className="font-semibold text-[#1a2e23]">{item.label}</span>
                     <span className="text-[#8a9a8e]">{item.detail}</span>
@@ -2608,24 +2608,24 @@ const DOC_SECTIONS: DocSection[] = [
             <div className="rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-5">
               {/* Step 1: Ciri suggests */}
               <div className="rounded-xl border border-[#d4dbd6] bg-white p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">
                   Steg 1 — Ciri foreslar
                 </p>
                 <div className="mt-3 flex items-center gap-3">
                   <div className="flex-1 rounded-lg bg-[#f5f7f2] px-3 py-2">
-                    <p className="text-[11px] font-semibold text-[#1a2e23]">
+                    <p className="text-[13px] font-semibold text-[#1a2e23]">
                       Transaksjon
                     </p>
-                    <p className="text-[10px] text-[#8a9a8e]">
+                    <p className="text-[12px] text-[#8a9a8e]">
                       REMA 1000 TORSHOV — kr 189,00
                     </p>
                   </div>
                   <ArrowRightIcon className="h-3.5 w-3.5 shrink-0 text-[#8a9a8e]" />
                   <div className="flex-1 rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2">
-                    <p className="text-[11px] font-semibold text-amber-700">
+                    <p className="text-[13px] font-semibold text-amber-700">
                       Foreslatt: Bilag F-2025-10
                     </p>
-                    <p className="text-[10px] text-[#8a9a8e]">
+                    <p className="text-[12px] text-[#8a9a8e]">
                       Konfidens: 72% (MEDIUM)
                     </p>
                   </div>
@@ -2638,17 +2638,17 @@ const DOC_SECTIONS: DocSection[] = [
 
               {/* Step 2: User feedback */}
               <div className="rounded-xl border border-[#d4dbd6] bg-white p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">
                   Steg 2 — Bruker korrigerer
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <div className="flex-1 rounded-lg bg-[#f5f7f2] px-3 py-2 text-center text-[11px] text-[#8a9a8e]">
+                  <div className="flex-1 rounded-lg bg-[#f5f7f2] px-3 py-2 text-center text-[13px] text-[#8a9a8e]">
                     Bekreft
                   </div>
-                  <div className="flex-1 rounded-lg border-2 border-red-300 bg-red-50 px-3 py-2 text-center text-[11px] font-semibold text-red-600">
+                  <div className="flex-1 rounded-lg border-2 border-red-300 bg-red-50 px-3 py-2 text-center text-[13px] font-semibold text-red-600">
                     Avvis: &ldquo;dette er privat&rdquo;
                   </div>
-                  <div className="flex-1 rounded-lg bg-[#f5f7f2] px-3 py-2 text-center text-[11px] text-[#8a9a8e]">
+                  <div className="flex-1 rounded-lg bg-[#f5f7f2] px-3 py-2 text-center text-[13px] text-[#8a9a8e]">
                     Korriger bilag
                   </div>
                 </div>
@@ -2660,10 +2660,10 @@ const DOC_SECTIONS: DocSection[] = [
 
               {/* Step 3: Pattern extraction */}
               <div className="rounded-xl border border-[#d4dbd6] bg-white p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#8a9a8e]">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-[#8a9a8e]">
                   Steg 3 — Monsterekstraksjon
                 </p>
-                <div className="mt-3 space-y-1.5 text-[11px]">
+                <div className="mt-3 space-y-1.5 text-[13px]">
                   <div className="flex items-center gap-2">
                     <span className="text-[#8a9a8e]">Input:</span>
                     <code className="rounded bg-[#f5f7f2] px-2 py-0.5 text-[#1a2e23]">
@@ -2681,7 +2681,7 @@ const DOC_SECTIONS: DocSection[] = [
                     <code className="rounded bg-[#3E715C]/10 px-2 py-0.5 font-bold text-[#3E715C]">
                       REMA
                     </code>
-                    <span className="text-[10px] text-[#8a9a8e]">
+                    <span className="text-[12px] text-[#8a9a8e]">
                       (forste ord &gt; 2 tegn, ikke tall)
                     </span>
                   </div>
@@ -2694,10 +2694,10 @@ const DOC_SECTIONS: DocSection[] = [
 
               {/* Step 4: Rule created */}
               <div className="rounded-xl border border-[#3E715C]/20 bg-[#3E715C]/5 p-4">
-                <p className="text-[10px] font-bold tracking-wider uppercase text-[#3E715C]">
+                <p className="text-[12px] font-bold tracking-wider uppercase text-[#3E715C]">
                   Steg 4 — Ny regel opprettet
                 </p>
-                <div className="mt-3 space-y-1 text-[11px]">
+                <div className="mt-3 space-y-1 text-[13px]">
                   <div className="flex gap-2">
                     <span className="text-[#8a9a8e] w-16 shrink-0">Navn:</span>
                     <span className="font-semibold text-[#1a2e23]">
@@ -2733,7 +2733,7 @@ const DOC_SECTIONS: DocSection[] = [
                   Neste &ldquo;REMA 1000&rdquo;-transaksjon → automatisk
                   ignorert
                 </p>
-                <p className="mt-1 text-[10px] text-[#4a5e52]">
+                <p className="mt-1 text-[12px] text-[#4a5e52]">
                   Ingen brukerinteraksjon nodvendig
                 </p>
               </div>
@@ -2779,7 +2779,7 @@ const DOC_SECTIONS: DocSection[] = [
                     <span className="text-[12px] font-semibold text-[#1a2e23]">
                       {item.period}
                     </span>
-                    <span className="text-[11px] font-bold tabular-nums text-[#3E715C]">
+                    <span className="text-[13px] font-bold tabular-nums text-[#3E715C]">
                       ~{item.pct}% automatisert
                     </span>
                   </div>
@@ -2789,7 +2789,7 @@ const DOC_SECTIONS: DocSection[] = [
                       style={{ width: `${item.pct || 2}%` }}
                     />
                   </div>
-                  <p className="mt-2 text-[11px] text-[#4a5e52]">
+                  <p className="mt-2 text-[13px] text-[#4a5e52]">
                     {item.desc}
                   </p>
                 </div>
@@ -2850,7 +2850,7 @@ const DOC_SECTIONS: DocSection[] = [
                   <tr className="border-t border-[#d4dbd6]">
                     <td className="px-4 py-3 font-medium text-[#1a2e23]">
                       Assistent
-                      <p className="text-[10px] font-normal text-[#8a9a8e]">
+                      <p className="text-[12px] font-normal text-[#8a9a8e]">
                         Auto ved hoy konfidens
                       </p>
                     </td>
@@ -2867,7 +2867,7 @@ const DOC_SECTIONS: DocSection[] = [
                   <tr className="border-t border-[#d4dbd6]">
                     <td className="px-4 py-3 font-medium text-[#1a2e23]">
                       Autonom
-                      <p className="text-[10px] font-normal text-[#8a9a8e]">
+                      <p className="text-[12px] font-normal text-[#8a9a8e]">
                         Auto ved hoy + medium
                       </p>
                     </td>
@@ -2913,13 +2913,13 @@ const DOC_SECTIONS: DocSection[] = [
                       <CheckIcon className="h-3.5 w-3.5 text-[#3E715C]" />
                       {item.field}
                     </span>
-                    <span className="font-mono text-[11px] font-medium text-[#3E715C]">
+                    <span className="font-mono text-[13px] font-medium text-[#3E715C]">
                       {item.req}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex gap-2 text-[11px]">
+              <div className="mt-4 flex gap-2 text-[13px]">
                 <div className="flex-1 rounded-lg bg-[#3E715C]/10 px-3 py-2 text-center font-semibold text-[#3E715C]">
                   Alle oppfylt → POSTERT
                 </div>
@@ -3115,7 +3115,7 @@ function DokumentasjonContent() {
                         <p className="text-[13px] font-medium text-[#1a2e23]">
                           {result.title}
                         </p>
-                        <p className="text-[11px] text-[#8a9a8e]">
+                        <p className="text-[13px] text-[#8a9a8e]">
                           {result.sectionTitle}
                         </p>
                       </div>
@@ -3294,7 +3294,7 @@ function DokumentasjonContent() {
                         <nextSection.icon className="h-5 w-5 text-[#5B906F]" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
+                        <p className="text-[13px] font-bold tracking-[0.1em] uppercase text-[#8a9a8e]">
                           Neste
                         </p>
                         <p className="text-[15px] font-medium text-[#1a2e23]">
@@ -3315,7 +3315,7 @@ function DokumentasjonContent() {
           <div className="sticky top-24 py-8 pl-6">
             {activeSectionData && (
               <>
-                <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#8a9a8e]">
+                <p className="text-[12px] font-bold tracking-[0.15em] uppercase text-[#8a9a8e]">
                   Pa denne siden
                 </p>
                 <div className="mt-3 space-y-1">
@@ -3325,7 +3325,7 @@ function DokumentasjonContent() {
                       onClick={() =>
                         navigateTo(activeSectionData.id, sub.id)
                       }
-                      className="block w-full rounded-md px-2 py-1 text-left text-[11px] text-[#8a9a8e] transition-colors hover:text-[#3E715C]"
+                      className="block w-full rounded-md px-2 py-1 text-left text-[13px] text-[#8a9a8e] transition-colors hover:text-[#3E715C]"
                     >
                       {sub.title}
                     </button>
@@ -3336,15 +3336,15 @@ function DokumentasjonContent() {
 
             {/* Help link */}
             <div className="mt-8 rounded-xl border border-[#d4dbd6] bg-[#f5f7f2]/50 p-4">
-              <p className="text-[11px] font-semibold text-[#1a2e23]">
+              <p className="text-[13px] font-semibold text-[#1a2e23]">
                 Trenger du hjelp?
               </p>
-              <p className="mt-1 text-[10px] text-[#8a9a8e]">
+              <p className="mt-1 text-[12px] text-[#8a9a8e]">
                 Spor Ciri direkte i appen eller ta kontakt med support.
               </p>
               <Link
                 href="/dashboard/chat"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#3E715C] px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-[#5B906F]"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#3E715C] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-[#5B906F]"
               >
                 <Image
                   src="/ciribakgrunn.png"

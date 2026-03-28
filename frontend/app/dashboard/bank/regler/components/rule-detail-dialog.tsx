@@ -199,7 +199,7 @@ export function RuleDetailDialog({
                 <RuleTypeBadge type={rule.rule_type} />
                 <PriorityBadge priority={rule.priority} />
                 {rule.learned_from_user && (
-                  <Badge className="text-[10px] gap-1 bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20 border-0">
+                  <Badge className="text-[12px] gap-1 bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20 border-0">
                     <SparklesIcon className="size-3" />
                     Laert av Ciri
                   </Badge>
@@ -239,7 +239,7 @@ export function RuleDetailDialog({
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-4 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 mt-4 text-[13px] text-muted-foreground">
             <div className="flex items-center gap-1.5 bg-muted/40 rounded-full px-3 py-1.5">
               <CalendarIcon className="size-3 shrink-0" />
               {rule.created_at
@@ -272,7 +272,7 @@ export function RuleDetailDialog({
 
           {/* Detailed pipeline schematic */}
           <div>
-            <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-muted-foreground/50 mb-4">
+            <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-muted-foreground/50 mb-4">
               Slik fungerer regelen -- steg for steg
             </p>
 
@@ -302,7 +302,7 @@ export function RuleDetailDialog({
                     {/* Step content */}
                     <div className={cn("flex-1 min-w-0 pb-6", i === detailedSteps.length - 1 && "pb-0")}>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold tabular-nums text-muted-foreground/40 uppercase">
+                        <span className="text-[12px] font-bold tabular-nums text-muted-foreground/40 uppercase">
                           Steg {i + 1}
                         </span>
                       </div>
@@ -319,7 +319,7 @@ export function RuleDetailDialog({
                           {step.chips.map((chip) => (
                             <span
                               key={chip}
-                              className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]"
+                              className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2.5 py-1 text-[13px] font-semibold text-[var(--primary)]"
                             >
                               {chip}
                             </span>
@@ -331,29 +331,29 @@ export function RuleDetailDialog({
                       {step.actions && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {rule.rule_type === "ignore" && (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-200/60 dark:bg-slate-800/60 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-200/60 dark:bg-slate-800/60 px-2.5 py-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                               <EyeOffIcon className="size-3" />
                               Privat
                             </span>
                           )}
                           {rule.rule_type === "auto_match" && (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 dark:bg-amber-900/40 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 dark:bg-amber-900/40 px-2.5 py-1 text-[13px] font-semibold text-amber-700 dark:text-amber-300">
                               <ZapIcon className="size-3" />
                               Auto-match
                             </span>
                           )}
                           {rule.action.category && (
-                            <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]">
+                            <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2.5 py-1 text-[13px] font-semibold text-[var(--primary)]">
                               {categoryLabels[rule.action.category] || rule.action.category}
                             </span>
                           )}
                           {rule.action.account && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-[11px] font-mono font-semibold text-foreground/70">
+                            <span className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-[13px] font-mono font-semibold text-foreground/70">
                               {accountOptions.find((a) => a.value === rule.action.account)?.label || `Konto ${rule.action.account}`}
                             </span>
                           )}
                           {rule.action.mva_code && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-[11px] font-mono font-semibold text-foreground/70">
+                            <span className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-[13px] font-mono font-semibold text-foreground/70">
                               MVA-kode {rule.action.mva_code}
                             </span>
                           )}
@@ -381,7 +381,7 @@ export function RuleDetailDialog({
               <div className="rounded-xl border bg-muted/20 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TargetIcon className="size-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Monstergjenkjenning</span>
+                  <span className="text-[13px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Monstergjenkjenning</span>
                 </div>
                 <p className="text-[12px] text-foreground/80 leading-relaxed">
                   {rule.criteria.description_contains
@@ -392,7 +392,7 @@ export function RuleDetailDialog({
               <div className="rounded-xl border bg-muted/20 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <NetworkIcon className="size-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Klyngepavirkning</span>
+                  <span className="text-[13px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Klyngepavirkning</span>
                 </div>
                 <p className="text-[12px] text-foreground/80 leading-relaxed">
                   {rule.action.category
@@ -403,7 +403,7 @@ export function RuleDetailDialog({
               <div className="rounded-xl border bg-muted/20 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldCheckIcon className="size-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Selvkorrigering</span>
+                  <span className="text-[13px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Selvkorrigering</span>
                 </div>
                 <p className="text-[12px] text-foreground/80 leading-relaxed">
                   {rule.times_overridden > 0
@@ -414,7 +414,7 @@ export function RuleDetailDialog({
               <div className="rounded-xl border bg-muted/20 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUpIcon className="size-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Autonomi</span>
+                  <span className="text-[13px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Autonomi</span>
                 </div>
                 <p className="text-[12px] text-foreground/80 leading-relaxed">
                   {effectiveRate >= 80 && rule.times_applied >= 5
@@ -452,7 +452,7 @@ export function RuleDetailDialog({
                       {ex.result}
                     </p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground/60 mt-1.5 leading-relaxed">
+                  <p className="text-[13px] text-muted-foreground/60 mt-1.5 leading-relaxed">
                     {ex.detail}
                   </p>
                 </div>
@@ -464,7 +464,7 @@ export function RuleDetailDialog({
 
           {/* Stats */}
           <div>
-            <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-muted-foreground/50 mb-3">
+            <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-muted-foreground/50 mb-3">
               Statistikk
             </p>
             <div className="grid grid-cols-3 gap-3">
@@ -472,7 +472,7 @@ export function RuleDetailDialog({
                 <p className="text-2xl font-display font-bold tabular-nums leading-none">
                   {rule.times_applied}
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-[12px] text-muted-foreground mt-1">
                   ganger brukt
                 </p>
               </div>
@@ -480,7 +480,7 @@ export function RuleDetailDialog({
                 <p className="text-2xl font-display font-bold tabular-nums leading-none">
                   {rule.times_overridden}
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-[12px] text-muted-foreground mt-1">
                   ganger korrigert
                 </p>
               </div>
@@ -497,7 +497,7 @@ export function RuleDetailDialog({
                 >
                   {effectiveRate}%
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-[12px] text-muted-foreground mt-1">
                   treffsikkerhet
                 </p>
               </div>
@@ -519,7 +519,7 @@ export function RuleDetailDialog({
                   />
                 </div>
                 {rule.last_applied_at && (
-                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                  <p className="text-[12px] text-muted-foreground mt-1.5">
                     Sist brukt{" "}
                     {new Date(rule.last_applied_at).toLocaleDateString("nb-NO", {
                       year: "numeric",

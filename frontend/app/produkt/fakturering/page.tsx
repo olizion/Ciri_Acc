@@ -234,7 +234,7 @@ function InvoiceLifecycleAnimation() {
                 className="absolute top-3 right-6 flex items-center gap-1.5 rounded-full border border-[#5B906F]/20 bg-white/90 px-3 py-1.5 shadow-lg backdrop-blur-md"
               >
                 <EyeIcon className="h-3 w-3 text-[#5B906F]" />
-                <span className="text-[10px] font-medium text-[#1a2e23]">
+                <span className="text-[12px] font-medium text-[#1a2e23]">
                   Åpnet kl 14:32
                 </span>
               </motion.div>
@@ -274,7 +274,7 @@ function InvoiceLifecycleAnimation() {
               />
               <span
                 className={cn(
-                  "text-[10px] font-medium",
+                  "text-[12px] font-medium",
                   isActive ? "text-[#1a2e23]" : "text-[#8a9a8e]"
                 )}
               >
@@ -404,7 +404,7 @@ function InvoiceBuilderAnimation() {
         {/* Invoice header */}
         <div className="mb-6 flex items-start justify-between border-b border-[#f0f2ed] pb-4">
           <div>
-            <p className="text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">
+            <p className="text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">
               Fra
             </p>
             <p className="mt-1 h-5 font-mono text-sm font-medium text-[#1a2e23]">
@@ -419,7 +419,7 @@ function InvoiceBuilderAnimation() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">
+            <p className="text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">
               Til
             </p>
             <p className="mt-1 h-5 font-mono text-sm font-medium text-[#1a2e23]">
@@ -437,7 +437,7 @@ function InvoiceBuilderAnimation() {
 
         {/* Line items */}
         <div className="space-y-2">
-          <div className="grid grid-cols-3 gap-2 px-3 text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">
+          <div className="grid grid-cols-3 gap-2 px-3 text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">
             <span className="col-span-2">Beskrivelse</span>
             <span className="text-right">Beløp</span>
           </div>
@@ -456,7 +456,7 @@ function InvoiceBuilderAnimation() {
               <p className="text-xs font-medium text-[#1a2e23]">
                 Konsulenttjenester
               </p>
-              <p className="text-[10px] text-[#8a9a8e]">
+              <p className="text-[12px] text-[#8a9a8e]">
                 10 timer × kr 1 850
               </p>
             </div>

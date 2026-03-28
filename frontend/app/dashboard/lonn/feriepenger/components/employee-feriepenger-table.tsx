@@ -1,29 +1,34 @@
 "use client";
 
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { employeeFeriepenger, totalJunePayout } from "../data/feriepenger-employees";
+import type { EmployeeFeriepenger } from "../types";
+
+interface EmployeeFeriepengerTableProps {
+  data: EmployeeFeriepenger[];
+}
 
 function krFmt(n: number) {
   return Math.abs(n).toLocaleString("nb-NO");
 }
 
-export default function EmployeeFeriepengerTable() {
+export default function EmployeeFeriepengerTable({ data }: EmployeeFeriepengerTableProps) {
+  const totalJunePayout = data.reduce((s, e) => s + e.junePayoutAmount, 0);
+
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
       <div className="px-5 py-3 border-b bg-muted/20">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">
-            Feriepenger per ansatt ({employeeFeriepenger.length})
+            Feriepenger per ansatt ({data.length})
           </h3>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground">
             Basert på 2025-grunnlag
           </span>
         </div>
       </div>
 
       {/* Table header */}
-      <div className="hidden sm:grid grid-cols-[1fr_110px_70px_110px_120px_100px] gap-4 px-5 py-2 border-b bg-muted/10 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+      <div className="hidden sm:grid grid-cols-[1fr_110px_70px_110px_120px_100px] gap-4 px-5 py-2 border-b bg-muted/10 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
         <span>Ansatt</span>
         <span className="text-right">Grunnlag</span>
         <span className="text-right">Sats</span>
@@ -34,7 +39,7 @@ export default function EmployeeFeriepengerTable() {
 
       {/* Rows */}
       <div className="divide-y divide-border/50">
-        {employeeFeriepenger.map((emp) => {
+        {data.map((emp) => {
           const daysProgress = Math.round(
             (emp.vacationDays.used / emp.vacationDays.total) * 100
           );
@@ -56,7 +61,7 @@ export default function EmployeeFeriepengerTable() {
                     <p className="text-[13px] font-medium truncate">
                       {emp.name}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate">
+                    <p className="text-[13px] text-muted-foreground truncate">
                       {emp.position}
                     </p>
                   </div>
@@ -79,7 +84,7 @@ export default function EmployeeFeriepengerTable() {
 
                 {/* Feriedager with mini progress */}
                 <div className="hidden sm:block px-2">
-                  <div className="flex items-center justify-between text-[11px] mb-0.5">
+                  <div className="flex items-center justify-between text-[13px] mb-0.5">
                     <span className="text-muted-foreground">
                       {emp.vacationDays.used}/{emp.vacationDays.total}
                     </span>
@@ -102,11 +107,11 @@ export default function EmployeeFeriepengerTable() {
       <div className="hidden sm:grid grid-cols-[1fr_110px_70px_110px_120px_100px] gap-4 px-5 py-3 border-t bg-muted/10">
         <span className="text-[13px] font-semibold">Totalt</span>
         <span className="text-[13px] font-semibold tabular-nums text-right">
-          kr {krFmt(employeeFeriepenger.reduce((s, e) => s + e.previousYearGross, 0))}
+          kr {krFmt(data.reduce((s, e) => s + e.previousYearGross, 0))}
         </span>
         <span />
         <span className="text-[13px] font-semibold tabular-nums text-right">
-          kr {krFmt(employeeFeriepenger.reduce((s, e) => s + e.accruedTotal, 0))}
+          kr {krFmt(data.reduce((s, e) => s + e.accruedTotal, 0))}
         </span>
         <span />
         <span className="text-[13px] font-display font-bold tabular-nums text-right text-sky-600 dark:text-sky-400">

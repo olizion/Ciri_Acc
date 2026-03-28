@@ -4,7 +4,7 @@ Balance sheet, income statement, and other reports
 """
 
 from fastapi import APIRouter, Query, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from datetime import date
 from decimal import Decimal
@@ -15,6 +15,8 @@ from sqlalchemy import select, func, extract, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.database import get_db
+from services.saft_export import SAFTExporter
+from services.saft_validation import SAFTValidator
 from config.cache import cache_key, get_cached, set_cached, CACHE_TTLS
 from models.bilag import Bilag, BilagStatus
 from models.postering import Postering
@@ -524,38 +526,65 @@ async def get_trial_balance(as_of: date | None = None):
     return {"message": "Trial balance"}
 
 
+@router.get("/saft/validate")
+async def validate_saft(
+    period_start: date,
+    period_end: date,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Validate data for SAF-T compliance.
+    Returns list of errors/warnings to fix before export.
+    """
+    company_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
+    validator = SAFTValidator(db, company_id)
+    return await validator.validate(period_start, period_end)
+
+
 @router.get("/saft/export")
 async def export_saft(
     period_start: date,
     period_end: date,
+    db: AsyncSession = Depends(get_db),
 ):
     """
-    Export SAF-T v1.30 file.
+    Export SAF-T Financial v1.30 XML file.
 
-    1. Validate data completeness
-    2. Map to næringsspesifikasjon
-    3. Generate XML
-    4. Validate against schema
-    5. Return file
+    1. Validates data completeness
+    2. Maps accounts to næringsspesifikasjon (StandardAccountID)
+    3. Generates XML with all posteringer in the period
+    4. Returns downloadable XML file
     """
-    # TODO: Implement SAF-T export
-    return {"message": "SAF-T export", "download_url": "/api/reports/saft/download/abc123"}
+    company_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
+    # Run validation first
+    validator = SAFTValidator(db, company_id)
+    validation = await validator.validate(period_start, period_end)
 
-@router.get("/saft/validate")
-async def validate_saft(period_start: date, period_end: date):
-    """
-    Validate data for SAF-T compliance.
+    if validation["error_count"] > 0:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "saft_validation_failed",
+                "message": f"SAF-T-eksporten har {validation['error_count']} feil som må rettes først.",
+                "validation": validation,
+            }
+        )
 
-    Returns list of issues to fix before export.
-    """
-    return {
-        "valid": True,
-        "issues": [],
-        "warnings": [
-            "3 bilag mangler motkonto-organisasjonsnummer"
-        ]
-    }
+    # Generate XML
+    exporter = SAFTExporter(db, company_id)
+    xml_bytes = await exporter.export(period_start, period_end)
+
+    filename = f"SAF-T_{period_start.isoformat()}_{period_end.isoformat()}.xml"
+
+    return Response(
+        content=xml_bytes,
+        media_type="application/xml",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(xml_bytes)),
+        },
+    )
 
 
 # =============================================================================
@@ -954,6 +983,7 @@ class HovedboTransaksjon(BaseModel):
     debet: float
     kredit: float
     motpart: str  # Counter-account
+    created_by_ciri: bool = False
 
 
 class HovedboKonto(BaseModel):
@@ -1090,6 +1120,7 @@ async def get_hovedbok(
             "debet": float(postering.debit_amount),
             "kredit": float(postering.credit_amount),
             "motpart": motpart,
+            "created_by_ciri": postering.created_by_ciri,
         })
 
     # Calculate utgående balanse
@@ -1146,6 +1177,7 @@ class BilagDetail(BaseModel):
     gross_amount: float
     net_amount: float
     mva_amount: float
+    created_by_ciri: bool = False
 
 
 class AccountBilagResponse(BaseModel):
@@ -1210,6 +1242,7 @@ async def get_account_bilags(
             gross_amount=float(b.gross_amount),
             net_amount=float(b.net_amount),
             mva_amount=float(b.mva_amount),
+            created_by_ciri=b.created_by_ciri,
         )
         for b in bilags
     ]
@@ -1222,4 +1255,91 @@ async def get_account_bilags(
         year=year,
         bilags=bilag_details,
         total_amount=total,
+    )
+
+
+# =============================================================================
+# Periodisering Summary
+# =============================================================================
+
+
+class PeriodiseringSummaryItem(BaseModel):
+    bilag_id: str
+    bilag_number: str
+    description: str
+    category: str
+    total_amount: float
+    period_count: int
+    status: str  # "pending" | "accepted" | "dismissed"
+
+
+class PeriodiseringSummaryResponse(BaseModel):
+    total_candidates: int
+    accepted: int
+    dismissed: int
+    pending: int
+    total_amount_pending: float
+    items: list[PeriodiseringSummaryItem]
+
+
+@router.get("/periodisering/summary", response_model=PeriodiseringSummaryResponse)
+async def get_periodisering_summary(
+    company_id: str = Query(...),
+    year: int = Query(default=2025),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get summary of periodisering suggestions for årsregnskap checklist."""
+    from sqlalchemy import text
+
+    cid = uuid.UUID(company_id)
+
+    # Query bilags with periodisering suggestions for this year
+    result = await db.execute(
+        select(Bilag).where(
+            Bilag.company_id == cid,
+            Bilag.periodisering_suggestion.isnot(None),
+            extract("year", Bilag.document_date) == year,
+        )
+    )
+    bilags = result.scalars().all()
+
+    items = []
+    accepted_count = 0
+    dismissed_count = 0
+    pending_count = 0
+    total_pending_amount = 0.0
+
+    for b in bilags:
+        s = b.periodisering_suggestion
+        if not s or not s.get("is_candidate"):
+            continue
+
+        if s.get("accepted"):
+            status = "accepted"
+            accepted_count += 1
+        elif s.get("dismissed"):
+            status = "dismissed"
+            dismissed_count += 1
+        else:
+            status = "pending"
+            pending_count += 1
+            total_pending_amount += s.get("total_amount", 0)
+
+        items.append(PeriodiseringSummaryItem(
+            bilag_id=str(b.id),
+            bilag_number=b.bilag_number,
+            description=b.description,
+            category=s.get("category", "annet"),
+            total_amount=s.get("total_amount", 0),
+            period_count=s.get("period_count", 1),
+            status=status,
+        ))
+
+    return PeriodiseringSummaryResponse(
+        total_candidates=len(items),
+        accepted=accepted_count,
+        dismissed=dismissed_count,
+        pending=pending_count,
+        total_amount_pending=total_pending_amount,
+        items=items,
     )

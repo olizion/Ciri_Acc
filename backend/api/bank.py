@@ -43,6 +43,7 @@ from models import (
     Konto,
 )
 from services.rule_cascade import cascade_ignore_rule
+from services.audit_trail import log_domain_event
 # Bank integrations
 from services.bank_integration import (
     bank_manager,
@@ -1667,6 +1668,11 @@ async def confirm_match(
                 import logging
                 logging.getLogger(__name__).warning(f"Could not post bilag {bilag.bilag_number}: {e}")
 
+    await log_domain_event(
+        db=db, action="reconciliation:confirmed", resource_type="reconciliation_match",
+        resource_id=str(match.id), company_id=match.company_id,
+        details={"confidence_score": float(match.confidence_score) if match.confidence_score else None},
+    )
     await db.commit()
     await invalidate_event("reconciliation:confirm")
 
@@ -1712,6 +1718,32 @@ async def reject_match(
         # Mark old cluster data points as overridden (Ciri got it wrong)
         if transaction:
             await mark_data_point_overridden(db, transaction.id)
+
+        # Record rule override if a rule drove this match
+        driving_rule_id = getattr(match, 'source_rule_id', None)
+        if not driving_rule_id:
+            # Fallback: check cluster data points for rule_id
+            from models.cluster_data_point import ClusterDataPoint as _CDP
+            cdp_result = await db.execute(
+                select(_CDP.rule_id).where(
+                    and_(
+                        _CDP.transaction_id == match.bank_transaction_id,
+                        _CDP.rule_id.isnot(None),
+                    )
+                ).limit(1)
+            )
+            driving_rule_id = cdp_result.scalar_one_or_none()
+
+        if driving_rule_id:
+            driving_rule = (await db.execute(
+                select(ReconciliationRule).where(ReconciliationRule.id == driving_rule_id)
+            )).scalar_one_or_none()
+            if driving_rule:
+                driving_rule.record_override()
+                logger.info(
+                    f"Rule '{driving_rule.name}' override recorded "
+                    f"({driving_rule.times_overridden}/{driving_rule.times_applied})"
+                )
 
         new_match = ReconciliationMatch(
             company_id=company_id,
@@ -1780,6 +1812,11 @@ async def reject_match(
             reject_reason=request.reject_reason.value if request.reject_reason else None,
         )
 
+    await log_domain_event(
+        db=db, action="reconciliation:rejected", resource_type="reconciliation_match",
+        resource_id=str(match.id), company_id=match.company_id,
+        details={"reason": request.reason if hasattr(request, 'reason') else None},
+    )
     await db.commit()
     await invalidate_event("reconciliation:reject")
 
@@ -2718,16 +2755,48 @@ async def sync_kontoutskrift_from_bank(
                 reference=tx_data.get("creditorReference"),
                 reconciliation_status=ReconciliationStatus.UNMATCHED,
             )
+            new_tx.set_retention(fiscal_year=new_tx.booking_date.year if new_tx.booking_date else datetime.now(timezone.utc).year, category="regnskap")
             db.add(new_tx)
             imported_count += 1
 
         # Update account sync timestamp
         account.last_sync_at = datetime.now(timezone.utc)
+        await db.flush()
+
+        # Auto-reconcile newly imported transactions so rule+cluster matches
+        # go straight to booking instead of sitting in the avstemming table
+        auto_matched = 0
+        if imported_count > 0:
+            company_result = await db.execute(
+                select(Company).where(Company.id == company_id)
+            )
+            company = company_result.scalar_one_or_none()
+            if company:
+                new_tx_result = await db.execute(
+                    select(BankTransaction).where(
+                        and_(
+                            BankTransaction.company_id == company_id,
+                            BankTransaction.bank_account_id == account_id,
+                            BankTransaction.reconciliation_status == ReconciliationStatus.UNMATCHED,
+                            BankTransaction.is_private == False,
+                        )
+                    )
+                )
+                matcher = create_matcher(db)
+                for tx in new_tx_result.scalars().all():
+                    try:
+                        match = await matcher.auto_reconcile(tx, company.autonomy_level)
+                        if match:
+                            auto_matched += 1
+                    except Exception as e:
+                        logger.warning(f"Auto-reconcile failed for tx {tx.id}: {e}")
+
         await db.commit()
 
         return {
             "message": f"Kontoutskrift synkronisert",
             "imported_transactions": imported_count,
+            "auto_matched": auto_matched,
             "period": f"{from_date} - {to_date}",
         }
 

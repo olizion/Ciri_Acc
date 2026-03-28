@@ -132,18 +132,19 @@ class MaskinportenService:
 
         # Include Altinn system user authorization_details if configured
         # Required by Skatteetaten APIs for system user authentication
+        # Note: only type, systemuser_org, and externalRef go in the request JWT.
+        # Maskinporten returns systemuser_id and system_id in the response token.
         if settings.altinn_systemuser_id and settings.altinn_system_id:
-            payload["authorization_details"] = [
-                {
-                    "type": "urn:altinn:systemuser",
-                    "systemuser_org": {
-                        "authority": "iso6523-actorid-upis",
-                        "ID": f"0192:{self.issuer}",
-                    },
-                    "systemuser_id": [settings.altinn_systemuser_id],
-                    "system_id": settings.altinn_system_id,
-                }
-            ]
+            auth_detail = {
+                "type": "urn:altinn:systemuser",
+                "systemuser_org": {
+                    "authority": "iso6523-actorid-upis",
+                    "ID": f"0192:{self.issuer}",
+                },
+            }
+            if settings.altinn_external_ref:
+                auth_detail["externalRef"] = settings.altinn_external_ref
+            payload["authorization_details"] = [auth_detail]
 
         private_key = self._load_private_key()
 

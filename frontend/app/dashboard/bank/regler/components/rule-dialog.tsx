@@ -243,7 +243,7 @@ export function RuleDialog({
                     >
                       {opt.label}
                     </span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">
+                    <span className="text-[12px] text-muted-foreground leading-tight">
                       {opt.desc}
                     </span>
                   </button>

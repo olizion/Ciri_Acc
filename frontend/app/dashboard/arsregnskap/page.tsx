@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { API_BASE_URL, COMPANY_ID } from "@/lib/api";
@@ -34,12 +34,13 @@ import {
   MissingBilagList,
   ChecklistItemRow,
   FinancialPreviewCard,
-  ArsregnskapFullView
+  ArsregnskapFullView,
+  ManglendeBilagDialog
 } from "./components";
-import { checklistItems } from "./data/checklist";
+import { checklistItems, TOTAL_BILAG_COUNT } from "./data/checklist";
 import { missingBilagData } from "./data/missing-bilag";
 import { ciriActivities } from "./data/activities";
-import type { ApiResultatResponse, ApiBalanseResponse } from "./types";
+import type { ApiResultatResponse, ApiBalanseResponse, BilagAction } from "./types";
 import {
   transformResultatToGroups,
   transformBalanseToGroups,
@@ -51,7 +52,65 @@ import {
 
 export default function ArsregnskapPage() {
   const [view, setView] = useState<"summary" | "full">("summary");
+  const [bilagDialogOpen, setBilagDialogOpen] = useState(false);
+  const [bilagActions, setBilagActions] = useState<Record<string, BilagAction>>({});
   const year = "2025";
+
+  // ── Bilag action handler (lifted state) ─────────────────────
+  const handleBilagAction = useCallback((id: string, action: BilagAction) => {
+    setBilagActions((prev) => ({ ...prev, [id]: action }));
+  }, []);
+
+  // ── Derived bilag counts ────────────────────────────────────
+  const resolvedBilagCount = useMemo(
+    () => Object.values(bilagActions).filter((a) => a.type !== "none").length,
+    [bilagActions]
+  );
+  const missingBilagCount = missingBilagData.length;
+  const unresolvedBilagCount = missingBilagCount - resolvedBilagCount;
+  const matchedBilagCount = TOTAL_BILAG_COUNT - missingBilagCount + resolvedBilagCount;
+
+  // ── Fetch periodisering summary ──────────────────────────────
+  const { data: periodiseringSummary } = useQuery({
+    queryKey: ["periodisering-summary", year, COMPANY_ID],
+    queryFn: async () => {
+      const res = await fetch(
+        `${API_BASE_URL}/api/reports/periodisering/summary?company_id=${COMPANY_ID}&year=${year}`
+      );
+      if (!res.ok) return null;
+      return res.json() as Promise<{ total_candidates: number; accepted: number; dismissed: number; pending: number; total_amount_pending: number }>;
+    },
+  });
+
+  // ── Build dynamic checklist ─────────────────────────────────
+  const dynamicChecklist = useMemo(() => {
+    return checklistItems.map((item) => {
+      if (item.id === "bilag") {
+        const allResolved = unresolvedBilagCount === 0;
+        return {
+          ...item,
+          status: allResolved ? "complete" as const : "warning" as const,
+          detail: `${matchedBilagCount} av ${TOTAL_BILAG_COUNT} bilag matchet`,
+          subItems: item.subItems?.map((sub) =>
+            sub.name === "Bilag fra banktransaksjoner" ? { ...sub, complete: allResolved } : sub
+          ),
+        };
+      }
+      if (item.id === "periodisering" && periodiseringSummary) {
+        const { pending, accepted, total_candidates } = periodiseringSummary;
+        if (total_candidates === 0) return item;
+        const allDone = pending === 0;
+        return {
+          ...item,
+          status: allDone ? "complete" as const : "warning" as const,
+          detail: allDone
+            ? `${accepted} periodiseringer bokført`
+            : `${pending} periodiseringsforslag venter`,
+        };
+      }
+      return item;
+    });
+  }, [unresolvedBilagCount, matchedBilagCount, periodiseringSummary]);
 
   // ── Fetch real data ───────────────────────────────────────
   const { data: resultatApi, isLoading: resultatLoading } = useQuery({
@@ -95,16 +154,16 @@ export default function ArsregnskapPage() {
   const omsetning = getOmsetning(resultatData);
   const egenkapital = getEgenkapital(balansePassivaData);
 
-  // ── Checklist (stays static for now) ──────────────────────
-  const completedItems = checklistItems.filter(i => i.status === "complete").length;
-  const totalItems = checklistItems.length;
+  // ── Checklist progress ──────────────────────────────────────
+  const completedItems = dynamicChecklist.filter(i => i.status === "complete").length;
+  const totalItems = dynamicChecklist.length;
   const progressPercent = Math.round((completedItems / totalItems) * 100);
 
   const deadline = new Date("2026-06-30");
   const today = new Date();
   const daysUntilDeadline = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-  const currentPhase = checklistItems.find(i => i.status === "in_progress")?.name || "Forberedelse";
+  const currentPhase = dynamicChecklist.find(i => i.status === "in_progress")?.name || "Forberedelse";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
@@ -214,8 +273,13 @@ export default function ArsregnskapPage() {
                   </span>
                 </div>
                 <div className="space-y-3">
-                  {checklistItems.map((item, index) => (
-                    <ChecklistItemRow key={item.id} item={item} index={index} />
+                  {dynamicChecklist.map((item, index) => (
+                    <ChecklistItemRow
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      onAction={item.id === "bilag" ? () => setBilagDialogOpen(true) : undefined}
+                    />
                   ))}
                 </div>
               </div>
@@ -228,11 +292,11 @@ export default function ArsregnskapPage() {
                       Manglende bilag
                     </CardTitle>
                     <CardDescription>
-                      Transaksjoner som trenger dokumentasjon
+                      {unresolvedBilagCount} av {missingBilagCount} transaksjoner mangler bilag
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <MissingBilagList items={missingBilagData} />
+                    <MissingBilagList items={missingBilagData} onResolveAll={() => setBilagDialogOpen(true)} />
                   </CardContent>
                 </Card>
               </div>
@@ -339,6 +403,14 @@ export default function ArsregnskapPage() {
       </AnimatePresence>
 
       <LearnMoreDocs sections={["rapporter", "bokforing"]} />
+
+      <ManglendeBilagDialog
+        open={bilagDialogOpen}
+        onOpenChange={setBilagDialogOpen}
+        items={missingBilagData}
+        actions={bilagActions}
+        onAction={handleBilagAction}
+      />
     </div>
   );
 }

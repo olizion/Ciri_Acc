@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
@@ -14,18 +14,19 @@ import {
   UsersIcon,
   TargetIcon,
   ClockIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CiriLogo from "@/components/layout/ciri-logo";
+import { useFeriepengerConfig } from "./hooks/use-feriepenger-config";
 import {
-  TOTAL_FERIEPENGER_PAYOUT,
-  FERIEPENGER_GRUNNLAG,
-  ACCRUED_YTD,
-  SET_ASIDE_YTD,
-  MONTHS_ELAPSED,
-} from "./data/feriepenger-monthly";
-import { employeeFeriepenger, totalVacationDaysUsed, totalVacationDaysTotal } from "./data/feriepenger-employees";
-import { feriepengerTimeline } from "./data/feriepenger-timeline";
+  buildEmployeeFeriepenger,
+  totalVacationDaysUsedFrom,
+  totalVacationDaysTotalFrom,
+} from "./data/feriepenger-employees";
+import { buildMonthlyAccrualData } from "./data/feriepenger-monthly";
+import { buildScenarios } from "./data/feriepenger-scenarios";
+import { buildTimeline } from "./data/feriepenger-timeline";
 
 // Dynamic imports for chart components (Recharts ~100KB)
 const AccrualAreaChart = dynamic(
@@ -37,9 +38,12 @@ const SetAsideBarChart = dynamic(
   { ssr: false }
 );
 
-// Non-chart components can be imported normally
-import { LiquidityImpactCard } from "./components";
-import { EmployeeFeriepengerTable } from "./components";
+// Non-chart components
+import {
+  LiquidityImpactCard,
+  EmployeeFeriepengerTable,
+  FeriepengerSetup,
+} from "./components";
 
 // ============================================================================
 // HELPERS
@@ -57,13 +61,65 @@ type TabId = "oversikt" | "per-ansatt" | "planlegging";
 
 export default function FeriepengerPage() {
   const [activeTab, setActiveTab] = useState<TabId>("oversikt");
+  const {
+    isConfigured,
+    saveConfig,
+    resetConfig,
+    computedRates,
+    averageRate,
+  } = useFeriepengerConfig();
 
-  const setAsideProgress = Math.round((MONTHS_ELAPSED / 12) * 100);
+  // ── Derived data (recomputed when config changes) ──
 
-  const completedSteps = feriepengerTimeline.filter(
-    (e) => e.type === "completed"
-  ).length;
-  const totalSteps = feriepengerTimeline.length;
+  const employeeData = useMemo(
+    () => buildEmployeeFeriepenger(computedRates),
+    [computedRates]
+  );
+
+  const monthly = useMemo(
+    () => buildMonthlyAccrualData(averageRate),
+    [averageRate]
+  );
+
+  const scenarios = useMemo(
+    () => buildScenarios(monthly.TOTAL_FERIEPENGER_PAYOUT),
+    [monthly.TOTAL_FERIEPENGER_PAYOUT]
+  );
+
+  const timeline = useMemo(
+    () =>
+      buildTimeline(
+        monthly.TOTAL_FERIEPENGER_PAYOUT,
+        monthly.MONTHLY_SET_ASIDE,
+        employeeData.length
+      ),
+    [monthly.TOTAL_FERIEPENGER_PAYOUT, monthly.MONTHLY_SET_ASIDE, employeeData.length]
+  );
+
+  const totalVacationDaysUsed = totalVacationDaysUsedFrom(employeeData);
+  const totalVacationDaysTotal = totalVacationDaysTotalFrom(employeeData);
+  const setAsideProgress = Math.round((monthly.MONTHS_ELAPSED / 12) * 100);
+  const completedSteps = timeline.filter((e) => e.type === "completed").length;
+  const totalSteps = timeline.length;
+
+  // Rate label for Ciri banner
+  const rateLabel = useMemo(() => {
+    const rates = new Set(computedRates.map((r) => r.rateLabel));
+    if (rates.size === 1) return computedRates[0]?.rateLabel ?? "12 %";
+    return "10,2\u201312 %";
+  }, [computedRates]);
+
+  // ── Show setup wizard if not configured ──
+
+  if (!isConfigured) {
+    return (
+      <div className="mx-auto max-w-[1200px] pb-12">
+        <FeriepengerSetup onComplete={saveConfig} />
+      </div>
+    );
+  }
+
+  // ── Configured: show full dashboard ──
 
   const tabs: { id: TabId; label: string; icon: typeof EyeIcon }[] = [
     { id: "oversikt", label: "Oversikt", icon: EyeIcon },
@@ -84,9 +140,18 @@ export default function FeriepengerPage() {
             Feriepenger
           </h1>
           <p className="text-[13px] text-muted-foreground mt-0.5">
-            {employeeFeriepenger.length} ansatte · kr {krFmt(TOTAL_FERIEPENGER_PAYOUT)} utbetales juni 2026
+            {employeeData.length} ansatte &middot; kr{" "}
+            {krFmt(monthly.TOTAL_FERIEPENGER_PAYOUT)} utbetales juni 2026
           </p>
         </div>
+        <button
+          onClick={resetConfig}
+          className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors rounded-md px-2 py-1 hover:bg-muted/50"
+          title="Kj\u00f8r oppsett p\u00e5 nytt"
+        >
+          <SettingsIcon className="size-3" />
+          Endre oppsett
+        </button>
       </motion.div>
 
       {/* Stats strip */}
@@ -96,19 +161,19 @@ export default function FeriepengerPage() {
         transition={{ delay: 0.04 }}
         className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px rounded-xl border bg-border overflow-hidden"
       >
-        {/* Cell 1: Opptjent i år */}
+        {/* Cell 1: Opptjent i \u00e5r */}
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <UmbrellaIcon className="size-3 text-[var(--primary)]" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
-              Opptjent i år
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+              Opptjent i \u00e5r
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
-            kr {krFmt(ACCRUED_YTD)}
+            kr {krFmt(monthly.ACCRUED_YTD)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
-            2026 (jan–feb)
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            2026 (jan\u2013feb)
           </p>
         </div>
 
@@ -116,14 +181,14 @@ export default function FeriepengerPage() {
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <WalletIcon className="size-3" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Feriepengegrunnlag
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
-            kr {krFmt(FERIEPENGER_GRUNNLAG)}
+            kr {krFmt(monthly.FERIEPENGER_GRUNNLAG)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             2025-grunnlag
           </p>
         </div>
@@ -132,14 +197,14 @@ export default function FeriepengerPage() {
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <BanknoteIcon className="size-3 text-sky-500" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Utbetales juni
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none text-sky-600 dark:text-sky-400">
-            kr {krFmt(TOTAL_FERIEPENGER_PAYOUT)}
+            kr {krFmt(monthly.TOTAL_FERIEPENGER_PAYOUT)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             15. juni 2026
           </p>
         </div>
@@ -148,16 +213,16 @@ export default function FeriepengerPage() {
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <PiggyBankIcon className="size-3 text-emerald-500" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Satt av hittil
             </p>
           </div>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
-            kr {krFmt(SET_ASIDE_YTD)}
+            kr {krFmt(monthly.SET_ASIDE_YTD)}
           </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-muted-foreground">
-              {MONTHS_ELAPSED} av 12 mnd
+            <span className="text-[12px] text-muted-foreground">
+              {monthly.MONTHS_ELAPSED} av 12 mnd
             </span>
             <Progress value={setAsideProgress} className="h-1 flex-1" />
           </div>
@@ -167,7 +232,7 @@ export default function FeriepengerPage() {
         <div className="bg-card px-4 py-3">
           <div className="flex items-center gap-1.5">
             <CalendarDaysIcon className="size-3" />
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               Feriedager brukt
             </p>
           </div>
@@ -175,11 +240,11 @@ export default function FeriepengerPage() {
             <p className="text-lg font-display font-bold tabular-nums leading-none">
               {totalVacationDaysUsed}
             </p>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-[12px] text-muted-foreground">
               / {totalVacationDaysTotal}
             </span>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             alle ansatte
           </p>
         </div>
@@ -202,9 +267,11 @@ export default function FeriepengerPage() {
         <div className="flex-1 min-w-0">
           <p className="text-[13px] leading-snug">
             <span className="font-medium">
-              Ciri setter automatisk av 12 % av brutto hver måned til konto 2780.
+              Ciri setter automatisk av {rateLabel} av brutto hver m\u00e5ned til
+              konto 2780.
             </span>{" "}
-            kr {krFmt(SET_ASIDE_YTD)} av kr {krFmt(TOTAL_FERIEPENGER_PAYOUT)} er avsatt.{" "}
+            kr {krFmt(monthly.SET_ASIDE_YTD)} av kr{" "}
+            {krFmt(monthly.TOTAL_FERIEPENGER_PAYOUT)} er avsatt.{" "}
             <span className="text-[var(--primary)] font-medium">
               Alt under kontroll.
             </span>
@@ -244,7 +311,7 @@ export default function FeriepengerPage() {
 
       {/* Tab content */}
       <div className="min-h-[400px]">
-        {/* ─── Oversikt tab ─── */}
+        {/* Oversikt tab */}
         {activeTab === "oversikt" && (
           <motion.div
             key="oversikt"
@@ -263,7 +330,7 @@ export default function FeriepengerPage() {
                         Opptjening og avsetning 2026
                       </h3>
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         <div className="size-2 rounded-full bg-[var(--primary)]" />
                         Opptjent
@@ -276,19 +343,24 @@ export default function FeriepengerPage() {
                   </div>
                 </div>
                 <div className="p-5">
-                  <AccrualAreaChart />
+                  <AccrualAreaChart data={monthly.monthlyData} />
                 </div>
               </div>
 
-              {/* Right: Trippelsmellen card */}
+              {/* Right: June liquidity card */}
               <div className="lg:self-start">
-                <LiquidityImpactCard />
+                <LiquidityImpactCard
+                  totalFeriepengerPayout={monthly.TOTAL_FERIEPENGER_PAYOUT}
+                  monthlyGross={monthly.FERIEPENGER_GRUNNLAG / 12}
+                  setAsideYtd={monthly.SET_ASIDE_YTD}
+                  monthsElapsed={monthly.MONTHS_ELAPSED}
+                />
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ─── Per ansatt tab ─── */}
+        {/* Per ansatt tab */}
         {activeTab === "per-ansatt" && (
           <motion.div
             key="per-ansatt"
@@ -296,11 +368,11 @@ export default function FeriepengerPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <EmployeeFeriepengerTable />
+            <EmployeeFeriepengerTable data={employeeData} />
           </motion.div>
         )}
 
-        {/* ─── Planlegging tab ─── */}
+        {/* Planlegging tab */}
         {activeTab === "planlegging" && (
           <motion.div
             key="planlegging"
@@ -320,7 +392,7 @@ export default function FeriepengerPage() {
                   </div>
                 </div>
                 <div className="p-5">
-                  <SetAsideBarChart />
+                  <SetAsideBarChart scenarios={scenarios} />
                 </div>
               </div>
 
@@ -332,8 +404,8 @@ export default function FeriepengerPage() {
                     <h3 className="text-[13px] font-semibold">
                       Ciri-aktivitet
                     </h3>
-                    <span className="text-[10px] text-muted-foreground ml-auto">
-                      {completedSteps}/{totalSteps} fullført
+                    <span className="text-[12px] text-muted-foreground ml-auto">
+                      {completedSteps}/{totalSteps} fullf\u00f8rt
                     </span>
                   </div>
                 </div>
@@ -341,7 +413,7 @@ export default function FeriepengerPage() {
                   <div className="relative">
                     <div className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-emerald-400/60 via-[var(--primary)]/30 to-[var(--primary)]/15" />
                     <div className="space-y-0.5">
-                      {feriepengerTimeline.map((event) => {
+                      {timeline.map((event) => {
                         const Icon = event.icon;
                         const isScheduled = event.type === "scheduled";
                         return (
@@ -369,14 +441,14 @@ export default function FeriepengerPage() {
                             <div className="flex-1 min-w-0 pt-0.5">
                               <p
                                 className={cn(
-                                  "text-[11px] leading-snug",
+                                  "text-[13px] leading-snug",
                                   isScheduled && "text-muted-foreground"
                                 )}
                               >
                                 {event.action}
                               </p>
                             </div>
-                            <span className="text-[9px] text-muted-foreground tabular-nums shrink-0 pt-1">
+                            <span className="text-[13px] text-muted-foreground tabular-nums shrink-0 pt-1">
                               {isScheduled
                                 ? new Date(
                                     event.timestamp.replace(" ", "T")

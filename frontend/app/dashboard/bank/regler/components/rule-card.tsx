@@ -104,7 +104,7 @@ export const RuleCard = memo(function RuleCard({
               <RuleTypeBadge type={rule.rule_type} />
             </div>
             {rule.description && (
-              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
+              <p className="text-[13px] text-muted-foreground mt-1 line-clamp-1">
                 {rule.description}
               </p>
             )}
@@ -146,35 +146,35 @@ export const RuleCard = memo(function RuleCard({
           <div className="flex-1 rounded-lg bg-muted/40 p-3 border border-border/50">
             <div className="flex items-center gap-1.5 mb-2">
               <SearchIcon className="size-3 text-muted-foreground/60" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Nar
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {rule.criteria.description_contains && (
-                <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-[11px] font-semibold text-[var(--primary)]">
+                <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-[13px] font-semibold text-[var(--primary)]">
                   &quot;{rule.criteria.description_contains}&quot;
                 </span>
               )}
               {rule.criteria.merchant_name && (
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/70">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[13px] font-medium text-foreground/70">
                   {rule.criteria.merchant_name}
                 </span>
               )}
               {rule.criteria.amount_exact != null && (
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono text-foreground/70">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[13px] font-mono text-foreground/70">
                   = kr {rule.criteria.amount_exact}
                 </span>
               )}
               {(rule.criteria.amount_min != null || rule.criteria.amount_max != null) && (
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono text-foreground/70">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[13px] font-mono text-foreground/70">
                   {rule.criteria.amount_min != null && `>=${rule.criteria.amount_min}`}
                   {rule.criteria.amount_min != null && rule.criteria.amount_max != null && "--"}
                   {rule.criteria.amount_max != null && `<=${rule.criteria.amount_max}`}
                 </span>
               )}
               {rule.criteria.direction && (
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/70">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[13px] font-medium text-foreground/70">
                   {rule.criteria.direction === "debit" ? "Utbetaling" : "Innbetaling"}
                 </span>
               )}
@@ -201,29 +201,29 @@ export const RuleCard = memo(function RuleCard({
           )}>
             <div className="flex items-center gap-1.5 mb-2">
               <ZapIcon className="size-3 text-muted-foreground/60" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Gjor
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {rule.rule_type === "ignore" && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-slate-200/60 dark:bg-slate-800/60 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1 rounded-md bg-slate-200/60 dark:bg-slate-800/60 px-2 py-0.5 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                   <EyeOffIcon className="size-3" />
                   Marker privat
                 </span>
               )}
               {rule.action.category && (
-                <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-[11px] font-semibold text-[var(--primary)]">
+                <span className="inline-flex items-center rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-[13px] font-semibold text-[var(--primary)]">
                   {categoryLabels[rule.action.category] || rule.action.category}
                 </span>
               )}
               {rule.action.account && (
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono font-semibold text-foreground/70">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[13px] font-mono font-semibold text-foreground/70">
                   Konto {rule.action.account}
                 </span>
               )}
               {rule.action.mva_code && (
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono text-foreground/70">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[13px] font-mono text-foreground/70">
                   MVA {rule.action.mva_code}
                 </span>
               )}
@@ -233,7 +233,7 @@ export const RuleCard = memo(function RuleCard({
 
         {/* Footer stats row */}
         <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-border/50">
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <TrendingUpIcon className="size-3" />
               <span>Brukt {rule.times_applied}x</span>
@@ -265,7 +265,7 @@ export const RuleCard = memo(function RuleCard({
                 />
               </div>
               <span className={cn(
-                "text-[10px] font-bold tabular-nums",
+                "text-[12px] font-bold tabular-nums",
                 effectiveRate >= 80 ? "text-emerald-600 dark:text-emerald-400" : effectiveRate >= 50 ? "text-amber-600" : "text-red-600"
               )}>
                 {effectiveRate}%

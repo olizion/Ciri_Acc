@@ -78,7 +78,7 @@ export function BatchInspector() {
                   {b.totalItems} stk
                 </span>
                 {b.flagged > 0 && (
-                  <span className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-[9px] text-amber-600">
+                  <span className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-[13px] text-amber-600">
                     {b.flagged}
                   </span>
                 )}
@@ -172,7 +172,7 @@ export function BatchInspector() {
                       <p className="max-w-[80px] truncate text-xs font-medium mx-auto">
                         {item.merchantName}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[12px] text-muted-foreground">
                         kr{" "}
                         {Math.abs(item.amount).toLocaleString("nb-NO")}
                       </p>
@@ -234,7 +234,7 @@ export function BatchInspector() {
                   {/* Metrics grid */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-[10px] font-medium text-muted-foreground">
+                      <p className="text-[12px] font-medium text-muted-foreground">
                         Beløp
                       </p>
                       <p className="font-display text-base font-bold">
@@ -245,7 +245,7 @@ export function BatchInspector() {
                       </p>
                     </div>
                     <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-[10px] font-medium text-muted-foreground">
+                      <p className="text-[12px] font-medium text-muted-foreground">
                         Konfidens
                       </p>
                       <p className="font-display text-base font-bold">
@@ -253,7 +253,7 @@ export function BatchInspector() {
                       </p>
                     </div>
                     <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-[10px] font-medium text-muted-foreground">
+                      <p className="text-[12px] font-medium text-muted-foreground">
                         Klynge
                       </p>
                       <p className="text-sm font-medium">
@@ -261,7 +261,7 @@ export function BatchInspector() {
                       </p>
                     </div>
                     <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-[10px] font-medium text-muted-foreground">
+                      <p className="text-[12px] font-medium text-muted-foreground">
                         Klynge-fit
                       </p>
                       <Badge
@@ -272,7 +272,7 @@ export function BatchInspector() {
                               ? "secondary"
                               : "outline"
                         }
-                        className="mt-0.5 text-[10px]"
+                        className="mt-0.5 text-[12px]"
                       >
                         {selectedItem.clusterFit}
                       </Badge>

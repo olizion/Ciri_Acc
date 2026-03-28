@@ -14,7 +14,11 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { monthlyAccrualData } from "../data/feriepenger-monthly";
+import type { MonthlyAccrual } from "../types";
+
+interface AccrualAreaChartProps {
+  data: MonthlyAccrual[];
+}
 
 const chartConfig = {
   cumulative: {
@@ -31,11 +35,11 @@ function krFmt(n: number) {
   return `kr ${Math.abs(n).toLocaleString("nb-NO")}`;
 }
 
-export default function AccrualAreaChart() {
+export default function AccrualAreaChart({ data }: AccrualAreaChartProps) {
   return (
     <ChartContainer config={chartConfig} className="h-[320px] w-full">
       <AreaChart
-        data={monthlyAccrualData}
+        data={data}
         margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
       >
         <defs>

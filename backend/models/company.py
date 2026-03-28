@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 from sqlalchemy import String, Boolean, DateTime, Integer, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from config.database import Base
 
@@ -73,6 +73,17 @@ class Company(Base):
     # Relationships
     users: Mapped[list["User"]] = relationship(back_populates="company")
     email_connections: Mapped[list["EmailConnection"]] = relationship(back_populates="company")
+
+    # ── Audit hold (Skatteforvaltningsloven §11-3) ──
+    # When active, prevents ALL retention purge for this company's data.
+    # Activated when Skatteetaten orders extended retention (bokettersyn).
+    audit_hold_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    audit_hold_reason: Mapped[str | None] = mapped_column(String(500))
+    audit_hold_activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    audit_hold_activated_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+
+    # Rejection context summaries (compacted by Haiku when sectors exceed 20 entries)
+    rejection_summaries: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

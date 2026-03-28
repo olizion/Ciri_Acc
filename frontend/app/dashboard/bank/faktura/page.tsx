@@ -148,7 +148,7 @@ function InvoiceCreateForm({
       exit={{ opacity: 0, height: 0 }}
       className="overflow-hidden"
     >
-      <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-purple-100 dark:border-purple-900/40 bg-card p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between">
           <h3 className="font-display text-lg font-semibold tracking-tight">
             Ny faktura
@@ -246,12 +246,12 @@ function InvoiceCreateForm({
 
         {/* Summary */}
         {numAmount > 0 && (
-          <div className="mt-5 flex items-center gap-6 rounded-xl bg-purple-50/60 px-5 py-3 text-sm">
+          <div className="mt-5 flex items-center gap-6 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 px-5 py-3 text-sm">
             <span className="text-muted-foreground">
               MVA: <strong className="text-foreground">kr {numMva.toLocaleString("nb-NO", { minimumFractionDigits: 2 })}</strong>
             </span>
             <span className="text-muted-foreground">
-              Totalt: <strong className="text-lg text-purple-700">kr {numTotal.toLocaleString("nb-NO", { minimumFractionDigits: 2 })}</strong>
+              Totalt: <strong className="text-lg text-purple-700 dark:text-purple-300">kr {numTotal.toLocaleString("nb-NO", { minimumFractionDigits: 2 })}</strong>
             </span>
           </div>
         )}
@@ -437,7 +437,7 @@ export default function FakturaPage() {
       </Tabs>
 
       {/* Table */}
-      <div className={`rounded-2xl border bg-white shadow-sm dark:bg-card ${crystallize(3)}`}>
+      <div className={`rounded-2xl border bg-card shadow-sm ${crystallize(3)} p-4`}>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

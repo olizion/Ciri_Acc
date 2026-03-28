@@ -106,7 +106,7 @@ export const MatchCard = memo(function MatchCard({
                 />
               </svg>
               <span className={cn(
-                "absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums",
+                "absolute inset-0 flex items-center justify-center text-[13px] font-bold tabular-nums",
                 conf.color
               )}>
                 {scorePercent}
@@ -120,20 +120,20 @@ export const MatchCard = memo(function MatchCard({
             <div className="flex-1 rounded-lg bg-muted/40 p-3 border border-border/50">
               <div className="flex items-center gap-1.5 mb-2">
                 <CreditCardIcon className="size-3 text-muted-foreground/60" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                   Banktransaksjon
                 </span>
               </div>
               <p className="text-sm font-semibold text-foreground truncate">
                 {transaction.merchant_name || transaction.description}
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+              <p className="text-[13px] text-muted-foreground mt-0.5 truncate">
                 {transaction.description !== (transaction.merchant_name || transaction.description)
                   ? transaction.description
                   : ""}
               </p>
               <div className="flex items-baseline justify-between mt-2">
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground">
                   {dateFull(transaction.date)}
                 </span>
                 <span className={cn(
@@ -166,11 +166,11 @@ export const MatchCard = memo(function MatchCard({
             )}>
               <div className="flex items-center gap-1.5 mb-2">
                 <ReceiptIcon className="size-3 text-muted-foreground/60" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                   Bilag
                 </span>
                 <span className={cn(
-                  "ml-auto text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-card/80",
+                  "ml-auto text-[12px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-card/80",
                   "text-muted-foreground border border-border/50"
                 )}>
                   {suggestion.bilag.bilag_number}
@@ -179,24 +179,24 @@ export const MatchCard = memo(function MatchCard({
               <p className="text-sm font-semibold text-foreground truncate">
                 {suggestion.bilag.supplier || suggestion.bilag.description}
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+              <p className="text-[13px] text-muted-foreground mt-0.5 truncate">
                 {suggestion.bilag.description}
               </p>
               {suggestion.bilag.suggested_account && (
                 <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20">
+                  <span className="inline-flex items-center gap-1 text-[12px] font-mono tabular-nums px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20">
                     <ChevronRightIcon className="size-2.5" />
                     Konto {suggestion.bilag.suggested_account}
                   </span>
                   {suggestion.bilag.category && (
-                    <span className="text-[10px] text-muted-foreground/70">
+                    <span className="text-[12px] text-muted-foreground/70">
                       {suggestion.bilag.category}
                     </span>
                   )}
                 </div>
               )}
               <div className="flex items-baseline justify-between mt-2">
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground">
                   {dateFull(suggestion.bilag.date)}
                 </span>
                 <span className="text-base font-bold font-display tabular-nums text-foreground">
@@ -274,7 +274,7 @@ export const MatchCard = memo(function MatchCard({
                 className="overflow-hidden"
               >
                 <div className="mt-3 pt-3 border-t border-border/50">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <p className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                     Hvorfor avviser du?
                   </p>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -303,7 +303,7 @@ export const MatchCard = memo(function MatchCard({
                           <Icon className="size-3.5 text-muted-foreground shrink-0" />
                           <div className="min-w-0">
                             <p className="text-xs font-medium leading-tight">{reason.label}</p>
-                            <p className="text-[10px] text-muted-foreground leading-tight">{reason.desc}</p>
+                            <p className="text-[12px] text-muted-foreground leading-tight">{reason.desc}</p>
                           </div>
                         </button>
                       );
@@ -311,7 +311,7 @@ export const MatchCard = memo(function MatchCard({
                   </div>
                   <button
                     onClick={() => setRejectMode(false)}
-                    className="mt-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    className="mt-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Avbryt
                   </button>
@@ -343,14 +343,14 @@ export const MatchCard = memo(function MatchCard({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-[11px]"
+                      className="h-6 px-2 text-[13px]"
                       onClick={() => { setOtherRejectMode(false); setFeedbackText(""); }}
                     >
                       Avbryt
                     </Button>
                     <Button
                       size="sm"
-                      className="h-6 px-3 text-[11px] bg-red-600 hover:bg-red-700 text-white"
+                      className="h-6 px-3 text-[13px] bg-red-600 hover:bg-red-700 text-white"
                       onClick={() => onReject("other", feedbackText || undefined)}
                       disabled={!feedbackText.trim()}
                     >
@@ -368,7 +368,7 @@ export const MatchCard = memo(function MatchCard({
               <button
                 onClick={() => setShowFeedback(!showFeedback)}
                 className={cn(
-                  "flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors",
+                  "flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors",
                   showFeedback && "text-foreground"
                 )}
               >

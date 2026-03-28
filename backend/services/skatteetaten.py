@@ -253,11 +253,11 @@ class SkatteetatenService:
             )
 
         melding = arbeidstakere[0]
-        result_status = melding.get("resultatstatus", "")
+        result_status = melding.get("resultatForSkattekort", "")
         skattekort = melding.get("skattekort", {})
-        trekkode_liste = skattekort.get("trekkode", [])
+        forskuddstrekk = skattekort.get("forskuddstrekk", [])
 
-        # Build TaxCard from first trekkode
+        # Build TaxCard
         tax_card = TaxCard(
             personnummer=personnummer,
             tax_card_type="ukjent",
@@ -269,28 +269,32 @@ class SkatteetatenService:
             tax_card.tax_card_type = "ingen"
             return tax_card
 
-        if not trekkode_liste:
+        if not forskuddstrekk:
             tax_card.tax_card_type = "ukjent"
             return tax_card
 
-        # Parse the withholding info from the first trekkode
-        for trekkode in trekkode_liste:
-            frikort = trekkode.get("frikort")
-            trekktabell = trekkode.get("trekktabell")
-            trekkprosent = trekkode.get("trekkprosent")
+        # Prioritize loennFraHovedarbeidsgiver, fall back to first entry
+        hovedarbeidsgiver = None
+        for entry in forskuddstrekk:
+            if entry.get("trekkode") == "loennFraHovedarbeidsgiver":
+                hovedarbeidsgiver = entry
+                break
+        target = hovedarbeidsgiver or forskuddstrekk[0]
 
-            if frikort:
-                tax_card.tax_card_type = "frikort"
-                tax_card.frikort_amount = frikort.get("frikortbeloep")
-            elif trekktabell:
-                tax_card.tax_card_type = "tabelltrekk"
-                tax_card.tax_table = trekktabell.get("tabellnummer")
-            elif trekkprosent:
-                tax_card.tax_card_type = "prosenttrekk"
-                tax_card.tax_percentage = trekkprosent.get("prosent")
+        frikort = target.get("frikort")
+        trekktabell = target.get("trekktabell")
+        trekkprosent = target.get("trekkprosent")
 
-            # Use the first relevant entry
-            break
+        if frikort:
+            tax_card.tax_card_type = "frikort"
+            tax_card.frikort_amount = frikort.get("frikortbeloep")
+        elif trekktabell:
+            tax_card.tax_card_type = "tabelltrekk"
+            tax_card.tax_table = trekktabell.get("tabellnummer")
+            tax_card.tax_percentage = trekktabell.get("prosentsats")
+        elif trekkprosent:
+            tax_card.tax_card_type = "prosenttrekk"
+            tax_card.tax_percentage = trekkprosent.get("prosentsats")
 
         return tax_card
 

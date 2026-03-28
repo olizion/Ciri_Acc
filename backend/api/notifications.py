@@ -12,30 +12,10 @@ from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.database import get_db
+from dependencies.company import get_company_id
 from models.notification import Notification
 
 router = APIRouter()
-
-
-async def _resolve_company_id(db: AsyncSession, raw_id: str | None) -> uuid.UUID:
-    """Resolve company_id: use provided if valid, else fall back to first company."""
-    from models.company import Company
-
-    if raw_id:
-        try:
-            cid = uuid.UUID(raw_id)
-        except ValueError:
-            cid = None
-        if cid:
-            result = await db.execute(select(Company.id).where(Company.id == cid))
-            if result.scalar_one_or_none():
-                return cid
-
-    result = await db.execute(select(Company.id).limit(1))
-    company_id = result.scalar_one_or_none()
-    if not company_id:
-        raise HTTPException(status_code=400, detail="Ingen bedrift funnet")
-    return company_id
 
 
 class NotificationResponse(BaseModel):
@@ -73,16 +53,15 @@ def _to_response(n: Notification) -> NotificationResponse:
 
 @router.get("", response_model=NotificationListResponse)
 async def list_notifications(
-    company_id: str | None = Query(None),
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
     limit: int = Query(20, ge=1, le=100),
     unread_only: bool = False,
     db: AsyncSession = Depends(get_db),
 ):
     """List notifications."""
-    resolved_id = await _resolve_company_id(db, company_id)
     query = (
         select(Notification)
-        .where(Notification.company_id == resolved_id)
+        .where(Notification.company_id == resolved_company_id)
         .order_by(Notification.created_at.desc())
         .limit(limit)
     )
@@ -98,16 +77,15 @@ async def list_notifications(
 
 @router.get("/unread-count", response_model=UnreadCountResponse)
 async def unread_count(
-    company_id: str | None = Query(None),
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Get unread notification count."""
-    resolved_id = await _resolve_company_id(db, company_id)
     result = await db.execute(
         select(func.count())
         .select_from(Notification)
         .where(
-            Notification.company_id == resolved_id,
+            Notification.company_id == resolved_company_id,
             Notification.is_read == False,
         )
     )
@@ -117,14 +95,14 @@ async def unread_count(
 @router.post("/{notification_id}/read", response_model=NotificationResponse)
 async def mark_read(
     notification_id: str,
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Mark a single notification as read."""
-    company_id = await _resolve_company_id(db)
     result = await db.execute(
         select(Notification).where(
             Notification.id == uuid.UUID(notification_id),
-            Notification.company_id == company_id,
+            Notification.company_id == resolved_company_id,
         )
     )
     notification = result.scalar_one_or_none()
@@ -139,15 +117,14 @@ async def mark_read(
 
 @router.post("/read-all")
 async def mark_all_read(
-    company_id: str | None = Query(None),
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Mark all notifications as read."""
-    resolved_id = await _resolve_company_id(db, company_id)
     await db.execute(
         update(Notification)
         .where(
-            Notification.company_id == resolved_id,
+            Notification.company_id == resolved_company_id,
             Notification.is_read == False,
         )
         .values(is_read=True)

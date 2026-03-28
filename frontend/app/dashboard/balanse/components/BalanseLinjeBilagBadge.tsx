@@ -9,7 +9,7 @@ export const BalanseLinjeBilagBadge = React.memo<BalanseLinjeBilagBadgeProps>(({
   if (count <= 0) return null;
 
   return (
-    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+    <Badge variant="secondary" className="text-[12px] px-1.5 py-0 h-4">
       {count} bilag
     </Badge>
   );

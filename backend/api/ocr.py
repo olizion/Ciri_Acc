@@ -30,7 +30,7 @@ router = APIRouter()
 
 # Claude configuration
 ANTHROPIC_API_KEY = settings.anthropic_api_key
-DEFAULT_MODEL = "claude-sonnet-4-5-20250929"  # Good balance of speed/cost/quality
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"  # Fast + cheap, handles invoice OCR well
 
 # Available Claude models for OCR
 CLAUDE_MODELS = {

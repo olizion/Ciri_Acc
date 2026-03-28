@@ -47,7 +47,7 @@ export function BubbleChatMessage({ message }: { message: Message }) {
                   "prose-table:rounded-lg prose-table:overflow-hidden",
                   "[&_table]:w-full [&_table]:border-collapse",
                   "[&_thead]:bg-muted/60",
-                  "[&_th]:px-2.5 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:text-foreground/80 [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider",
+                  "[&_th]:px-2.5 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:text-foreground/80 [&_th]:text-[13px] [&_th]:uppercase [&_th]:tracking-wider",
                   "[&_td]:px-2.5 [&_td]:py-1.5 [&_td]:border-t [&_td]:border-border/40",
                   "[&_tr:hover_td]:bg-muted/30",
                   "[&_td:last-child]:text-right [&_th:last-child]:text-right",

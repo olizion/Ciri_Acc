@@ -101,7 +101,7 @@ def render_invoice_email(
                     <td style="padding: 0;">
                         <div style="background: linear-gradient(180deg, #f4f7f2 0%, #eef3eb 100%); border-radius: 12px; padding: 28px 24px; text-align: center; border: 1px solid #e2e8dd;">
                             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7a8a7c; margin-bottom: 8px;">Totalt &aring; betale</div>
-                            <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 42px; font-weight: 400; color: #3E715C; letter-spacing: -0.03em; line-height: 1;">kr {total_amount}</div>
+                            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 42px; font-weight: 600; color: #3E715C; letter-spacing: -0.03em; line-height: 1;">kr {total_amount}</div>
                             <div style="margin-top: 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 13px; font-style: italic; color: #96AFA8;">
                                 Forfaller {due_date}
                             </div>
@@ -136,15 +136,15 @@ def render_invoice_email(
                 </tr>
                 <tr>
                     <td style="padding: 14px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #96AFA8; border-bottom: 1px solid #eef1eb;">Bel&oslash;p eks. MVA</td>
-                    <td style="padding: 14px 20px; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: #2d3a2e; text-align: right; border-bottom: 1px solid #eef1eb;">kr {amount}</td>
+                    <td style="padding: 14px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 14px; color: #2d3a2e; text-align: right; border-bottom: 1px solid #eef1eb;">kr {amount}</td>
                 </tr>
                 <tr>
                     <td style="padding: 14px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #96AFA8; border-bottom: 1px solid #eef1eb;">MVA</td>
-                    <td style="padding: 14px 20px; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: #2d3a2e; text-align: right; border-bottom: 1px solid #eef1eb;">kr {mva_amount}</td>
+                    <td style="padding: 14px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 14px; color: #2d3a2e; text-align: right; border-bottom: 1px solid #eef1eb;">kr {mva_amount}</td>
                 </tr>
                 <tr>
                     <td style="padding: 16px 20px; background: #3E715C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); border-bottom: 1px solid #eef1eb;">Totalt</td>
-                    <td style="padding: 16px 20px; background: #3E715C; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #ffffff; text-align: right; letter-spacing: -0.01em; border-bottom: 1px solid #eef1eb;">kr {total_amount}</td>
+                    <td style="padding: 16px 20px; background: #3E715C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 20px; font-weight: 600; color: #ffffff; text-align: right; letter-spacing: -0.01em; border-bottom: 1px solid #eef1eb;">kr {total_amount}</td>
                 </tr>
                 <tr>
                     <td style="padding: 14px 20px; background: #f8faf7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #96AFA8; border-bottom: 1px solid #eef1eb;">Forfallsdato</td>

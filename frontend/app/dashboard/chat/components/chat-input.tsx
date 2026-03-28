@@ -125,7 +125,7 @@ export function ChatInput({ onSend, disabled = false, showInlineSuggestions = fa
         </motion.div>
       </div>
 
-      <p className="text-muted-foreground/60 mt-2 text-center text-[11px]">
+      <p className="text-muted-foreground/60 mt-2 text-center text-[13px]">
         Ciri kan gjøre feil. Verifiser viktig informasjon.
       </p>
     </div>

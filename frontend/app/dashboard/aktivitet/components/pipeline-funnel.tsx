@@ -80,7 +80,7 @@ export function PipelineFunnel() {
                         style={{ color: config.color }}
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-[10px] font-medium text-muted-foreground">
+                        <p className="truncate text-[12px] font-medium text-muted-foreground">
                           {phase.phase}
                         </p>
                         <p className="font-display text-lg font-bold tracking-tight">

@@ -150,7 +150,15 @@ async def _reconcile_company(company: Company, db: AsyncSession):
         for b in bilags
     ]
 
-    batch_result = await batch_match(tx_dicts, bilag_dicts, company.id)
+    # Gather rejection context for relevant sectors
+    from services.rejection_context import gather_rejection_context, compact_if_needed, format_for_prompt
+    rejection_sectors = await gather_rejection_context(db, company.id)
+    relevant = {(b.suggested_account, b.category) for b in bilags if b.suggested_account}
+    await compact_if_needed(db, company.id, rejection_sectors)
+    company_summaries = company.rejection_summaries if hasattr(company, 'rejection_summaries') else None
+    rejection_text = format_for_prompt(rejection_sectors, relevant, compacted_summaries=company_summaries)
+
+    batch_result = await batch_match(tx_dicts, bilag_dicts, company.id, rejection_context=rejection_text)
 
     if not batch_result.matches:
         logger.info(f"Claude batch: no matches for {company.name}")

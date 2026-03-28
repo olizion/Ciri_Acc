@@ -142,13 +142,13 @@ function MVAAutopilotAnimation() {
                 <p className="text-sm font-medium text-[#1a2e23]">
                   {currentTermin.label}
                 </p>
-                <p className="text-[10px] text-[#8a9a8e]">
+                <p className="text-[12px] text-[#8a9a8e]">
                   {currentTermin.months}
                 </p>
               </div>
               <div
                 className={cn(
-                  "rounded-full px-3 py-1 text-[10px] font-semibold transition-colors",
+                  "rounded-full px-3 py-1 text-[12px] font-semibold transition-colors",
                   allDone
                     ? "bg-[#3E715C]/15 text-[#3E715C]"
                     : "bg-[#f5f7f2] text-[#8a9a8e]"
@@ -351,7 +351,7 @@ function FormFillerAnimation() {
             <p className="text-sm font-medium text-[#1a2e23]">
               RF-0002 MVA-melding
             </p>
-            <p className="text-[10px] text-[#8a9a8e]">Termin 1 / 2026</p>
+            <p className="text-[12px] text-[#8a9a8e]">Termin 1 / 2026</p>
           </div>
         </div>
 
@@ -661,7 +661,7 @@ function TaxCalendarAnimation() {
                           y={pos.y}
                           textAnchor="middle"
                           dominantBaseline="central"
-                          className="pointer-events-none select-none text-[9px] font-bold fill-white"
+                          className="pointer-events-none select-none text-[13px] font-bold fill-white"
                           initial={{ opacity: 0 }}
                           animate={hasEntered ? { opacity: 1 } : {}}
                           transition={{ delay: 0.5 + i * 0.1 }}
@@ -729,7 +729,7 @@ function TaxCalendarAnimation() {
                 height: innerRadius * 2 - 24,
               }}
             >
-              <span className="text-[10px] text-[#8a9a8e]">Neste frist</span>
+              <span className="text-[12px] text-[#8a9a8e]">Neste frist</span>
               <motion.span
                 key={countdown}
                 initial={{ scale: 1.15 }}
@@ -739,7 +739,7 @@ function TaxCalendarAnimation() {
               >
                 {countdown}
               </motion.span>
-              <span className="text-[10px] text-[#8a9a8e]">dager</span>
+              <span className="text-[12px] text-[#8a9a8e]">dager</span>
             </div>
           </motion.div>
 
@@ -763,7 +763,7 @@ function TaxCalendarAnimation() {
                 <div className="min-w-0">
                   <p
                     className={cn(
-                      "truncate text-[9px] font-medium",
+                      "truncate text-[13px] font-medium",
                       term.current ? "text-[#3E715C]" : "text-[#4a5e52]"
                     )}
                   >

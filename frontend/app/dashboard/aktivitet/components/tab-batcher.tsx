@@ -258,7 +258,7 @@ export function TabBatcher() {
               </div>
               <span className="text-sm font-semibold">Batch-historikk</span>
             </div>
-            <span className="inline-flex items-center rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground tabular-nums">
+            <span className="inline-flex items-center rounded-full bg-muted/60 px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground tabular-nums">
               {BATCH_CALLS.length} batcher
             </span>
           </div>
@@ -316,19 +316,19 @@ export function TabBatcher() {
                               <span className="text-sm font-semibold">
                                 {formatDate(batch.timestamp)}
                               </span>
-                              <span className="text-[10px] text-muted-foreground/50">
+                              <span className="text-[12px] text-muted-foreground/50">
                                 {formatTime(batch.timestamp)}
                               </span>
                             </div>
                             <span
                               className={cn(
-                                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
+                                "inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] font-semibold shrink-0",
                                 badge.cls
                               )}
                             >
                               {badge.label}
                             </span>
-                            <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums">
+                            <span className="text-[12px] text-muted-foreground/60 shrink-0 tabular-nums">
                               {batch.totalItems} elementer
                             </span>
                             <div className="flex-1" />
@@ -363,7 +363,7 @@ export function TabBatcher() {
 
                             {/* Mini progress bar */}
                             <div className="flex items-center gap-2 ml-auto">
-                              <span className="text-[10px] font-display font-bold tabular-nums text-muted-foreground/60">
+                              <span className="text-[12px] font-display font-bold tabular-nums text-muted-foreground/60">
                                 {approvalRate}%
                               </span>
                               <div className="w-20 h-1.5 rounded-full bg-muted/80 overflow-hidden">
@@ -425,13 +425,13 @@ export function TabBatcher() {
                                         </span>
 
                                         {/* Account */}
-                                        <span className="text-[11px] text-muted-foreground/60">
+                                        <span className="text-[13px] text-muted-foreground/60">
                                           {item.account}{" "}
                                           {item.accountLabel}
                                         </span>
 
                                         {/* Confidence */}
-                                        <span className="text-[11px] font-display tabular-nums text-muted-foreground/50">
+                                        <span className="text-[13px] font-display tabular-nums text-muted-foreground/50">
                                           {(
                                             item.confidenceScore * 100
                                           ).toFixed(0)}
@@ -441,7 +441,7 @@ export function TabBatcher() {
                                         {/* Cluster fit badge */}
                                         <span
                                           className={cn(
-                                            "inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold",
+                                            "inline-flex items-center rounded-full border px-1.5 py-0.5 text-[12px] font-semibold",
                                             clusterFitBadge(
                                               item.clusterFit
                                             )
@@ -453,7 +453,7 @@ export function TabBatcher() {
                                         {/* Outcome badge */}
                                         <span
                                           className={cn(
-                                            "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                            "inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-semibold",
                                             isApproved
                                               ? "bg-emerald-500/10 text-emerald-700"
                                               : "bg-amber-500/10 text-amber-700"
@@ -470,7 +470,7 @@ export function TabBatcher() {
                                         <div className="mt-2.5 rounded-xl bg-[var(--primary)]/5 border border-[var(--primary)]/10 px-3.5 py-2.5">
                                           <div className="flex items-center gap-1.5 mb-1">
                                             <SparklesIcon className="size-3 text-[var(--primary)]" />
-                                            <span className="text-[10px] font-semibold text-[var(--primary)]">
+                                            <span className="text-[12px] font-semibold text-[var(--primary)]">
                                               Ciris analyse
                                             </span>
                                           </div>
@@ -555,7 +555,7 @@ export function TabBatcher() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold">{m.model}</span>
                       <span
-                        className="text-[10px] font-semibold tabular-nums rounded-full px-2 py-0.5"
+                        className="text-[12px] font-semibold tabular-nums rounded-full px-2 py-0.5"
                         style={{
                           backgroundColor: `${color}14`,
                           color: color,
@@ -567,7 +567,7 @@ export function TabBatcher() {
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                        <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                           Kall
                         </p>
                         <p className="text-sm font-display font-bold tabular-nums">
@@ -575,7 +575,7 @@ export function TabBatcher() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                        <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                           Snittid
                         </p>
                         <p className="text-sm font-display font-bold tabular-nums">
@@ -585,7 +585,7 @@ export function TabBatcher() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                        <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                           Kostnad
                         </p>
                         <p className="text-sm font-display font-bold tabular-nums">
@@ -593,7 +593,7 @@ export function TabBatcher() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                        <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                           Presisjon
                         </p>
                         <p className="text-sm font-display font-bold tabular-nums">
@@ -690,7 +690,7 @@ export function TabBatcher() {
                 />
                 <div className="px-4 py-3.5">
                   <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                    <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                       {stat.label}
                     </p>
                     <div
@@ -715,7 +715,7 @@ export function TabBatcher() {
 
           {/* Per-model cost breakdown with gradient bars */}
           <div className="space-y-3.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
               Fordeling per modell
             </p>
             {CIRI_MODEL_USAGE.map((m, idx) => {
@@ -738,7 +738,7 @@ export function TabBatcher() {
                         ${m.totalCost.toFixed(3)}
                       </span>
                     </div>
-                    <span className="text-muted-foreground/50 text-[11px]">
+                    <span className="text-muted-foreground/50 text-[13px]">
                       {m.calls} kall,{" "}
                       {m.avgDurationMs >= 1000
                         ? `${(m.avgDurationMs / 1000).toFixed(1)}s`

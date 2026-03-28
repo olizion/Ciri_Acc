@@ -23,6 +23,7 @@ export interface BilagDetail {
   gross_amount: number;
   net_amount: number;
   mva_amount: number;
+  created_by_ciri?: boolean;
 }
 
 export interface AccountBilagResponse {

@@ -7,6 +7,7 @@ export interface Transaksjon {
   debet: number;
   kredit: number;
   motpart: string;
+  createdByCiri?: boolean;
 }
 
 export interface HovedboKonto {

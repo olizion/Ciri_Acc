@@ -38,6 +38,7 @@ from services.cluster_service import (
     check_global_minimums,
     record_data_point,
     ReadinessTier,
+    ReadinessResult,
 )
 from models.cluster_data_point import DataPointSource
 from services.reconciliation_matcher import ReconciliationMatcher, create_matcher
@@ -157,6 +158,7 @@ class PostingBundle:
     company_id: uuid.UUID
     scored_transactions: list[ScoredTransaction]
     cluster_context: str = ""
+    rejection_context: str = ""
     average_confidence: float = 0.0
     bundle_ready: bool = False
     claude_approved: bool = False
@@ -212,7 +214,7 @@ async def create_posting_bundle(
 
     Returns: (bundle, skipped_low_readiness, skipped_tier_3)
     """
-    # Get active rules
+    # Get active rules and filter out ineffective ones (>30% override rate)
     rule_query = select(ReconciliationRule).where(
         and_(
             ReconciliationRule.company_id == company_id,
@@ -220,7 +222,20 @@ async def create_posting_bundle(
         )
     )
     rule_result = await db.execute(rule_query)
-    rules = list(rule_result.scalars().all())
+    all_rules = list(rule_result.scalars().all())
+
+    # Enforce effectiveness threshold: auto-deactivate rules with >30% override rate
+    rules = []
+    for rule in all_rules:
+        if hasattr(rule, 'is_effective') and not rule.is_effective:
+            # Auto-deactivate the ineffective rule
+            rule.is_active = False
+            logger.warning(
+                f"Auto-deactivated rule {rule.id} ({rule.description or 'unnamed'}): "
+                f"override rate {rule.times_overridden}/{rule.times_applied} exceeds 30%"
+            )
+        else:
+            rules.append(rule)
 
     # Get cluster summaries
     clusters = await get_cluster_summaries(db, company_id)
@@ -294,10 +309,26 @@ async def create_posting_bundle(
         if eligible else 0.0
     )
 
+    # Gather rejection context for sectors relevant to this bundle
+    rejection_text = ""
+    if eligible:
+        try:
+            from services.rejection_context import gather_rejection_context, compact_if_needed, format_for_prompt
+            from models.company import Company
+            rejection_sectors = await gather_rejection_context(db, company_id)
+            relevant = {(st.suggested_account, st.suggested_category) for st in eligible if st.suggested_account}
+            await compact_if_needed(db, company_id, rejection_sectors)
+            co = (await db.execute(select(Company).where(Company.id == company_id))).scalar_one_or_none()
+            co_summaries = co.rejection_summaries if co else None
+            rejection_text = format_for_prompt(rejection_sectors, relevant, compacted_summaries=co_summaries)
+        except Exception as e:
+            logger.warning(f"Failed to gather rejection context: {e}")
+
     bundle = PostingBundle(
         company_id=company_id,
         scored_transactions=eligible,
         cluster_context=cluster_context,
+        rejection_context=rejection_text,
         average_confidence=round(avg_confidence, 4),
         bundle_ready=len(eligible) > 0,
     )
@@ -319,6 +350,11 @@ Din oppgave:
 2. Sjekk at MVA-kode stemmer med transaksjontype
 3. Flagg uvanlige beløp eller mistenkelige mønstre
 4. Godkjenn batchen kun hvis alle transaksjoner ser rimelige ut
+
+Avvisningshistorikk:
+Hvis oppgitt, vurder om foreslatte kontoer har gjentatte avvisninger. Et monster
+av avvisninger (f.eks. 3+ like) bor senke tilliten. Flagg slike transaksjoner,
+men godkjenn batchen hvis du mener forslagene er riktige tross historikken.
 
 Svar ALLTID i JSON-format:
 {
@@ -365,8 +401,10 @@ async def validate_bundle_with_claude(
             "rule_name": st.best_rule.name if st.best_rule else None,
         })
 
+    rejection_section = f"\n\n{bundle.rejection_context}" if bundle.rejection_context else ""
+
     user_content = f"""Suksessklynger for denne bedriften:
-{bundle.cluster_context}
+{bundle.cluster_context}{rejection_section}
 
 Transaksjoner til godkjenning ({len(tx_summaries)} stk):
 {json.dumps(tx_summaries, indent=2, ensure_ascii=False, default=str)}"""
@@ -524,9 +562,53 @@ async def execute_autonomous_posting(
             created_by_ciri=True,
             ciri_confidence=scored_tx.confidence_score,
             ciri_reasoning=reasoning,
+            source_rule_id=scored_tx.best_rule.id if scored_tx.best_rule else None,
         )
+        bilag.set_retention(
+            fiscal_year=tx.booking_date.year if tx.booking_date else now.year,
+            category="regnskap",
+        )
+
+        # Assess periodisering potential before flushing
+        try:
+            from services.periodisering_service import (
+                assess_periodisering,
+                build_suggestion_from_assessment,
+                create_periodisering_notification,
+            )
+            assessment = await assess_periodisering(
+                description=bilag.description,
+                amount=float(abs(tx.amount)),
+                account_number=scored_tx.suggested_account,
+                counterparty=tx.merchant_name,
+                document_date=str(tx.booking_date) if tx.booking_date else None,
+                category=scored_tx.suggested_category,
+            )
+            suggestion = build_suggestion_from_assessment(
+                assessment=assessment,
+                total_amount=float(abs(tx.amount)),
+                document_date=str(tx.booking_date) if tx.booking_date else None,
+                expense_account=scored_tx.suggested_account,
+            ) if assessment else None
+
+            if suggestion:
+                bilag.periodisering_suggestion = suggestion
+            bilag.periodisering_scanned_at = now
+        except Exception as e:
+            # Don't set periodisering_scanned_at on transient failures
+            # so the weekly scan can retry this bilag later
+            logger.warning(f"Periodisering assessment failed for auto-posted bilag: {e}")
+
         db.add(bilag)
         await db.flush()
+
+        # Create notification after flush (bilag.id now available)
+        if bilag.periodisering_suggestion and bilag.periodisering_suggestion.get("is_candidate"):
+            try:
+                create_periodisering_notification(db, bilag, bilag.periodisering_suggestion)
+            except Exception as e:
+                logger.warning(f"Failed to create periodisering notification: {e}")
+
         result.bilags_created += 1
 
         # Create posteringer (double-entry)
@@ -594,6 +676,7 @@ async def execute_autonomous_posting(
             amount=float(tx.amount),
             direction=tx_direction,
             source=DataPointSource.AUTO_CONFIRMED,
+            rule_id=scored_tx.best_rule.id if scored_tx.best_rule else None,
             transaction_id=tx.id,
         )
 

@@ -102,7 +102,7 @@ export function BatchTrendChart() {
             Batch-historikk & godkjenningsrate
           </CardTitle>
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[12px] text-muted-foreground">
           Stablede batcher med godkjenningsrate-trend (grønn linje)
         </p>
       </CardHeader>

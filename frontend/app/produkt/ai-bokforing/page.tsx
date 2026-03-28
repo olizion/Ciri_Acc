@@ -127,7 +127,7 @@ function DocumentScannerAnimation() {
                   className="ml-auto flex items-center gap-1 rounded-full bg-[#3E715C]/10 px-2 py-0.5"
                 >
                   <SparklesIcon className="h-2.5 w-2.5 text-[#3E715C]" />
-                  <span className="text-[9px] font-medium text-[#3E715C]">AI leser</span>
+                  <span className="text-[13px] font-medium text-[#3E715C]">AI leser</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -137,7 +137,7 @@ function DocumentScannerAnimation() {
           <div className="space-y-4">
             {INVOICE_FIELDS.map((field, i) => (
               <div key={field.label} className="space-y-1">
-                <span className="text-[10px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+                <span className="text-[12px] font-medium tracking-wider text-[#8a9a8e] uppercase">
                   {field.label}
                 </span>
                 <div className="flex items-center justify-between">
@@ -155,7 +155,7 @@ function DocumentScannerAnimation() {
                           damping: 20,
                           delay: i * 0.1,
                         }}
-                        className="flex items-center gap-1 rounded-full bg-[#3E715C]/10 px-2 py-0.5 text-[9px] font-bold text-[#3E715C]"
+                        className="flex items-center gap-1 rounded-full bg-[#3E715C]/10 px-2 py-0.5 text-[13px] font-bold text-[#3E715C]"
                       >
                         <CheckCircleIcon className="h-2.5 w-2.5" />
                         {field.confidence}
@@ -215,10 +215,10 @@ function DocumentScannerAnimation() {
                   {isActive ? (
                     <CheckCircleIcon className="h-3.5 w-3.5" />
                   ) : (
-                    <span className="text-[10px] font-medium">{i + 1}</span>
+                    <span className="text-[12px] font-medium">{i + 1}</span>
                   )}
                 </motion.div>
-                <span className="text-[10px] font-medium text-[#4a5e52]">
+                <span className="text-[12px] font-medium text-[#4a5e52]">
                   {step}
                 </span>
               </div>
@@ -331,7 +331,7 @@ function ConfidenceWheelAnimation() {
           <span className="text-3xl font-semibold tabular-nums text-[#1a2e23]">
             {animatedPct.toFixed(1)}%
           </span>
-          <span className="text-[10px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+          <span className="text-[12px] font-medium tracking-wider text-[#8a9a8e] uppercase">
             Konfidenspoeng
           </span>
         </div>
@@ -451,10 +451,10 @@ function JournalWaterfallAnimation() {
       {/* Journal Table */}
       <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.08] backdrop-blur-xl">
         <div className="grid grid-cols-4 gap-2 border-b border-[#d4dbd6]/30 px-5 py-3">
-          <span className="text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">Konto</span>
-          <span className="text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">Navn</span>
-          <span className="text-right text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">Debet</span>
-          <span className="text-right text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">Kredit</span>
+          <span className="text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">Konto</span>
+          <span className="text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">Navn</span>
+          <span className="text-right text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">Debet</span>
+          <span className="text-right text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">Kredit</span>
         </div>
         <div className="divide-y divide-[#d4dbd6]/20">
           {JOURNAL_ENTRIES.map((entry, i) => (
@@ -506,10 +506,10 @@ function JournalWaterfallAnimation() {
                 {i <= timelineStep ? (
                   <CheckCircleIcon className="h-3.5 w-3.5" />
                 ) : (
-                  <span className="text-[10px] font-medium">{i + 1}</span>
+                  <span className="text-[12px] font-medium">{i + 1}</span>
                 )}
               </motion.div>
-              <span className="text-[10px] font-medium text-[#4a5e52]">{step}</span>
+              <span className="text-[12px] font-medium text-[#4a5e52]">{step}</span>
             </div>
             {i < 3 && (
               <div className="mx-1 h-px w-8 overflow-hidden sm:mx-2 sm:w-12 md:w-16">

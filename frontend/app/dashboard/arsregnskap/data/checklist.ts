@@ -1,17 +1,20 @@
 import type { ChecklistItem } from "../types";
 
+/** Total bilag count (static for now — would come from API) */
+export const TOTAL_BILAG_COUNT = 259;
+
+/** Base checklist items. The "bilag" item's detail/status is overridden at the page level. */
 export const checklistItems: ChecklistItem[] = [
   {
     id: "bilag",
     name: "Bilag komplett",
-    description: "Alle kvitteringer og fakturaer lastet opp og matchet",
+    description: "Alle bilag lastet opp og matchet",
     status: "warning",
-    detail: "247 av 259 bilag matchet",
+    detail: "",
     subItems: [
       { name: "Inngående fakturaer", complete: true },
       { name: "Utgående fakturaer", complete: true },
-      { name: "Kvitteringer", complete: false },
-      { name: "Bankbilag", complete: true }
+      { name: "Bilag fra banktransaksjoner", complete: false },
     ],
     canAutoFix: false
   },
@@ -36,7 +39,7 @@ export const checklistItems: ChecklistItem[] = [
   {
     id: "lonn",
     name: "Lønn og A-meldinger",
-    description: "Alle lønnskjøringer og rapporter sendt",
+    description: "Alle lønnskjøringer og A-meldinger sendt til Skatteetaten",
     status: "complete",
     detail: "12 av 12 A-meldinger sendt"
   },
@@ -47,18 +50,23 @@ export const checklistItems: ChecklistItem[] = [
     status: "in_progress",
     detail: "Ciri beregner saldoavskrivninger",
     subItems: [
-      { name: "Driftsmidler gruppe A", complete: true },
-      { name: "Driftsmidler gruppe D", complete: false },
-      { name: "Immaterielle eiendeler", complete: false }
+      { name: "Kontormøbler og inventar", complete: true },
+      { name: "Kjøretøy og maskiner", complete: false },
+      { name: "Programvare og immaterielle eiendeler", complete: false }
     ],
     canAutoFix: true
   },
   {
     id: "periodisering",
     name: "Periodiseringer",
-    description: "Forskuddsbetalte kostnader og påløpte inntekter",
+    description: "Kostnader og inntekter ført i riktig periode",
     status: "pending",
     detail: "Venter på avskrivninger",
+    subItems: [
+      { name: "Forskuddsbetalte kostnader (f.eks. forsikring, husleie)", complete: false },
+      { name: "Påløpte kostnader (f.eks. renter, feriepenger)", complete: false },
+      { name: "Opptjent, ikke-fakturert inntekt", complete: false }
+    ],
     canAutoFix: true
   },
   {

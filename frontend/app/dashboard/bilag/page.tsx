@@ -29,6 +29,7 @@ import {
   ChevronRightIcon,
   Loader2Icon,
   AlertTriangleIcon,
+  CalendarRangeIcon,
 } from "lucide-react";
 import {
   Pagination,
@@ -56,6 +57,7 @@ import {
   UploadBilagDialog,
   EditBilagDialog,
 } from "./components";
+import { PeriodiseringDialog } from "./components/periodisering-dialog";
 
 // Transform API response to frontend Bilag format
 function transformApiBilag(apiItem: any): Bilag {
@@ -130,6 +132,7 @@ function transformApiBilag(apiItem: any): Bilag {
     ciriMessage: undefined,
     summary: apiItem.description,
     ciriExplanation: apiItem.ciri_reasoning,
+    periodiseringSuggestion: apiItem.periodisering_suggestion ?? undefined,
   };
 }
 
@@ -173,6 +176,7 @@ export default function BilagPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingBilag, setEditingBilag] = useState<Bilag | null>(null);
   const [manualPostBilag, setManualPostBilag] = useState<Bilag | null>(null);
+  const [periodiseringBilag, setPeriodiseringBilag] = useState<Bilag | null>(null);
 
   // Derive URL-targeted bilag synchronously (no useEffect delay → no jitter)
   const urlBilag = useMemo(() => {
@@ -302,11 +306,8 @@ export default function BilagPage() {
     setEditingBilag(null);
   }, [queryClient]);
 
-  // Handle new bilag from upload
-  const handleNewBilag = useCallback((newBilag: Bilag) => {
-    queryClient.setQueryData<Bilag[]>(queryKeys.bilag.list(), (prev) =>
-      [newBilag, ...(prev ?? [])]
-    );
+  // Handle bilag uploaded — refetch from DB
+  const handleBilagUploaded = useCallback(() => {
     invalidateOnEvent(queryClient, "bilag:posted");
     setShowUploadDialog(false);
   }, [queryClient]);
@@ -513,6 +514,29 @@ export default function BilagPage() {
                         )}>
                           {bilag.ciriExplanation || bilag.ciriMessage || bilag.summary}
                         </p>
+                      </div>
+                    )}
+
+                    {/* Periodisering badge */}
+                    {bilag.periodiseringSuggestion?.is_candidate &&
+                     !bilag.periodiseringSuggestion.dismissed &&
+                     !bilag.periodiseringSuggestion.accepted && (
+                      <a
+                        href={`/dashboard/periodisering?highlight=${bilag.id}`}
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="mb-3 flex w-full items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/60 p-2.5 text-left transition-colors hover:bg-sky-100/60 dark:border-sky-800/40 dark:bg-sky-950/20 dark:hover:bg-sky-900/30"
+                      >
+                        <CalendarRangeIcon className="size-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                        <span className="text-xs text-sky-700 dark:text-sky-400 flex-1">Kan periodiseres over {bilag.periodiseringSuggestion.period_count} mnd</span>
+                        <Badge variant="outline" className="text-[12px] border-sky-300 bg-sky-100 text-sky-700 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-400 shrink-0">
+                          Se forslag
+                        </Badge>
+                      </a>
+                    )}
+                    {bilag.periodiseringSuggestion?.accepted && (
+                      <div className="mb-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5 dark:border-emerald-800/40 dark:bg-emerald-950/20">
+                        <CheckCircle2Icon className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="text-xs text-emerald-700 dark:text-emerald-400">Periodisert over {bilag.periodiseringSuggestion.period_count} mnd</span>
                       </div>
                     )}
 
@@ -724,8 +748,7 @@ export default function BilagPage() {
       <UploadBilagDialog
         open={showUploadDialog}
         onOpenChange={setShowUploadDialog}
-        onUpload={handleNewBilag}
-        nextBilagNumber={`2025-${(248 + bilagData.length).toString().padStart(4, "0")}`}
+        onUploaded={handleBilagUploaded}
       />
 
       {/* Edit/Complete Dialog */}
@@ -738,6 +761,19 @@ export default function BilagPage() {
         }}
         onSave={handleSaveEdit}
       />
+
+      {/* Periodisering Dialog */}
+      {periodiseringBilag?.periodiseringSuggestion && (
+        <PeriodiseringDialog
+          open={!!periodiseringBilag}
+          onOpenChange={(open) => { if (!open) setPeriodiseringBilag(null); }}
+          bilagId={periodiseringBilag.id}
+          bilagDescription={periodiseringBilag.beskrivelse}
+          suggestion={periodiseringBilag.periodiseringSuggestion}
+          onAccepted={() => queryClient.invalidateQueries({ queryKey: queryKeys.bilag.all })}
+          onDismissed={() => queryClient.invalidateQueries({ queryKey: queryKeys.bilag.all })}
+        />
+      )}
 
       <LearnMoreDocs sections={["bokforing", "teknisk-arkitektur"]} />
     </div>

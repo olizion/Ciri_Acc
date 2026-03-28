@@ -73,7 +73,7 @@ export function StatsCards() {
                 <p className="font-display text-2xl font-bold tracking-tight">
                   {stat.value.toLocaleString("nb-NO")}
                 </p>
-                <p className="text-[10px] text-muted-foreground/70">{stat.sub}</p>
+                <p className="text-[12px] text-muted-foreground/70">{stat.sub}</p>
               </div>
               <div
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"

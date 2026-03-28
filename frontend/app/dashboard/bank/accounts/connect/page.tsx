@@ -332,7 +332,7 @@ function SecurityBadge() {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Sikker banktilkobling</p>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border-0">
+          <Badge variant="secondary" className="text-[12px] px-1.5 py-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border-0">
             PSD2
           </Badge>
         </div>

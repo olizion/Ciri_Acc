@@ -41,3 +41,21 @@ export interface FeriepengerTimelineEvent {
   type: "completed" | "scheduled";
   icon: React.ElementType;
 }
+
+// ── Feriepenger configuration (from onboarding wizard) ──
+
+export interface FeriepengerConfig {
+  /** Company has tariffavtale with 5-week vacation */
+  hasTariffavtale: boolean;
+  /** Employee IDs marked as 60+ years old this year */
+  employeesOver60: string[];
+  /** Timestamp when config was saved */
+  configuredAt: string;
+}
+
+export interface ComputedEmployeeRate {
+  employeeId: string;
+  rate: number;       // 0.102 or 0.12
+  rateLabel: string;  // "10,2 %" or "12 %"
+  reason: string;     // Why this rate was assigned
+}

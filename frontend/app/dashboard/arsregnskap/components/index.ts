@@ -6,3 +6,4 @@ export { FinancialPreviewCard } from "./financial-preview-card";
 export { AccountLineRow } from "./account-line-row";
 export { AccountGroupSection } from "./account-group-section";
 export { ArsregnskapFullView } from "./arsregnskap-full-view";
+export { ManglendeBilagDialog } from "./manglende-bilag-dialog";

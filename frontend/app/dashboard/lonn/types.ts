@@ -14,6 +14,8 @@ export interface Employee {
   feriepenger: number;
   vacationDays: { used: number; total: number };
   bankAccount: string;
+  avatarUrl?: string | null;
+  createdAt?: string;
 }
 
 export interface PayslipRecord {

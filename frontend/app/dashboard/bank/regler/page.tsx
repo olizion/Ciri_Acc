@@ -478,22 +478,22 @@ export default function ReglerPage() {
             {/* Summary strip */}
             <div className="relative grid grid-cols-5 gap-px rounded-xl border bg-border overflow-hidden">
               <div className="bg-card px-4 py-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Aktive</p>
+                <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Aktive</p>
                 <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">{stats.active_rules}</p>
               </div>
               <div className="bg-card px-4 py-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Totalt anvendt</p>
+                <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Totalt anvendt</p>
                 <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">{stats.total_applied}</p>
               </div>
               <div className="bg-card px-4 py-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Laert av Ciri</p>
+                <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Laert av Ciri</p>
                 <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none text-[var(--primary)]">{stats.learned_rules}</p>
               </div>
               <div className="bg-card px-4 py-3">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold cursor-help border-b border-dashed border-muted-foreground/30 w-fit">Auto-behandlet</p>
+                      <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold cursor-help border-b border-dashed border-muted-foreground/30 w-fit">Auto-behandlet</p>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-[240px]">
                       <p className="text-xs leading-relaxed">Transaksjoner Ciri har bokfort helt uten brukerhandling -- auto-matchet eller ignorert via regler.</p>
@@ -502,14 +502,14 @@ export default function ReglerPage() {
                 </TooltipProvider>
                 <div className="flex items-baseline gap-1 mt-0.5">
                   <p className="text-lg font-display font-bold tabular-nums leading-none">{stats.auto_handled}</p>
-                  <span className="text-[10px] text-muted-foreground">/ {stats.total_transactions}</span>
+                  <span className="text-[12px] text-muted-foreground">/ {stats.total_transactions}</span>
                 </div>
               </div>
               <div className="bg-card px-4 py-3">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold cursor-help border-b border-dashed border-muted-foreground/30 w-fit">Autonomi</p>
+                      <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold cursor-help border-b border-dashed border-muted-foreground/30 w-fit">Autonomi</p>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-[260px]">
                       <p className="text-xs leading-relaxed">Andelen av alle transaksjoner som Ciri har behandlet autonomt. Godkjente forslag teller ikke -- kun transaksjoner Ciri bokforte pa egenhand.</p>
@@ -571,7 +571,7 @@ export default function ReglerPage() {
                   checked={showInactive}
                   onCheckedChange={setShowInactive}
                 />
-                <Label htmlFor="show-inactive" className="text-[11px] text-muted-foreground">
+                <Label htmlFor="show-inactive" className="text-[13px] text-muted-foreground">
                   Vis inaktive
                 </Label>
                 <div className="w-px h-5 bg-border ml-1" />
@@ -634,12 +634,12 @@ export default function ReglerPage() {
                         <Table>
                           <TableHeader>
                             <TableRow className="hover:bg-transparent">
-                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Navn</TableHead>
-                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[120px]">Type</TableHead>
-                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[90px]">Prioritet</TableHead>
-                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[70px]">Aktiv</TableHead>
-                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[80px] text-right">Brukt</TableHead>
-                              <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[100px]">Sist brukt</TableHead>
+                              <TableHead className="text-[13px] font-semibold uppercase tracking-wider">Navn</TableHead>
+                              <TableHead className="text-[13px] font-semibold uppercase tracking-wider w-[120px]">Type</TableHead>
+                              <TableHead className="text-[13px] font-semibold uppercase tracking-wider w-[90px]">Prioritet</TableHead>
+                              <TableHead className="text-[13px] font-semibold uppercase tracking-wider w-[70px]">Aktiv</TableHead>
+                              <TableHead className="text-[13px] font-semibold uppercase tracking-wider w-[80px] text-right">Brukt</TableHead>
+                              <TableHead className="text-[13px] font-semibold uppercase tracking-wider w-[100px]">Sist brukt</TableHead>
                               <TableHead className="w-[50px]" />
                             </TableRow>
                           </TableHeader>

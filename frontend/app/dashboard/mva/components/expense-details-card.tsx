@@ -43,6 +43,7 @@ import {
   CORRECTION_REASONS,
 } from "@/lib/ciri-postering-verification";
 import { addRevisionEntry, createCorrectionRevisionEntry } from "@/lib/bilag-store";
+import { API_BASE_URL } from "@/lib/api";
 import { toast } from "sonner";
 import { expenseData } from "../data/expense-data";
 import { expensesByCategory, categoryToAccount } from "../constants";
@@ -90,15 +91,35 @@ export function ExpenseDetailsCard() {
     setCorrectionDialogOpen(true);
   }, []);
 
-  const handleCorrectionComplete = useCallback((correction: CorrectionInput, preview: CorrectionPreview) => {
+  const handleCorrectionComplete = useCallback(async (correction: CorrectionInput, preview: CorrectionPreview) => {
     if (!postingToCorrect) return;
-
-    const auditEntry = generateAuditLogEntry(postingToCorrect, correction, preview);
-    console.log("Correction audit log:", auditEntry);
 
     const reason = CORRECTION_REASONS.find((r) => r.id === correction.reasonId);
     const reasonLabel = reason?.label || "Annen årsak";
 
+    // Persist correction to backend (creates reversering + new posteringer, updates bilag MVA)
+    const bilagId = postingToCorrect.id;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/bilag/${bilagId}/correct`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          new_amount: correction.newAmount + correction.newMva,
+          new_mva_amount: correction.newMva,
+          new_mva_code: null,
+          new_account_number: correction.newAccountCode,
+          reason: correction.reasonText || reasonLabel,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Ukjent feil" }));
+        console.warn("Backend correction failed:", err.detail);
+      }
+    } catch (e) {
+      console.warn("Could not persist correction to backend:", e);
+    }
+
+    // Also store locally for audit trail UI
     const revisionEntry = createCorrectionRevisionEntry(
       {
         bilagNo: postingToCorrect.bilagNo,

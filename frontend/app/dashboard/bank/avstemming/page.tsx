@@ -363,7 +363,7 @@ export default function AvstemmingPage() {
       >
         {/* Cell: Bank balance */}
         <div className="bg-card px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+          <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
             Banksaldo
           </p>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
@@ -373,7 +373,7 @@ export default function AvstemmingPage() {
 
         {/* Cell: Booked balance */}
         <div className="bg-card px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+          <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
             Bokført
           </p>
           <p className="text-lg font-display font-bold tabular-nums mt-0.5 leading-none">
@@ -383,7 +383,7 @@ export default function AvstemmingPage() {
 
         {/* Cell: Difference */}
         <div className="bg-card px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+          <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
             Differanse
           </p>
           <p
@@ -409,7 +409,7 @@ export default function AvstemmingPage() {
 
         {/* Cell: Match rate */}
         <div className="bg-card px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+          <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
             Avstemt
           </p>
           <div className="flex items-baseline gap-2 mt-0.5">
@@ -425,7 +425,7 @@ export default function AvstemmingPage() {
             >
               {matchRate}%
             </p>
-            <span className="text-[11px] text-muted-foreground tabular-nums">
+            <span className="text-[13px] text-muted-foreground tabular-nums">
               {matchedCount}/{totalCount}
             </span>
           </div>
@@ -433,7 +433,7 @@ export default function AvstemmingPage() {
 
         {/* Cell: Pending */}
         <div className="bg-card px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+          <p className="text-[12px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
             Venter
           </p>
           <div className="flex items-baseline gap-2 mt-0.5">
@@ -448,7 +448,7 @@ export default function AvstemmingPage() {
               {period.pending_suggestions}
             </p>
             {period.unmatched_transactions > 0 && (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 + {period.unmatched_transactions} uavstemte
               </span>
             )}
@@ -479,7 +479,7 @@ export default function AvstemmingPage() {
             <div className="flex items-center gap-2.5">
               <SparklesIcon className="size-4 text-teal-600 dark:text-teal-400" />
               <h2 className="text-sm font-semibold">Ciris forslag</h2>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {attentionItems.length} venter på godkjenning
               </span>
             </div>
@@ -487,7 +487,7 @@ export default function AvstemmingPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-[11px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
+                className="h-7 text-[13px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
                 onClick={handleConfirmAllHigh}
               >
                 <ZapIcon className="size-3 mr-1" />
@@ -592,16 +592,16 @@ export default function AvstemmingPage() {
           <div className="rounded-xl border bg-card overflow-hidden">
             <div className="grid grid-cols-[20px_60px_1fr_90px_100px] items-center gap-2 py-1.5 px-3 border-b bg-muted/30">
               <span />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Dato
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Beskrivelse
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 text-center">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60 text-center">
                 Status
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 text-right">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60 text-right">
                 Beløp
               </span>
             </div>
@@ -628,7 +628,7 @@ export default function AvstemmingPage() {
               )}
             </ScrollArea>
 
-            <div className="flex items-center justify-between px-3 py-1.5 border-t bg-muted/20 text-[10px] text-muted-foreground">
+            <div className="flex items-center justify-between px-3 py-1.5 border-t bg-muted/20 text-[12px] text-muted-foreground">
               <span>
                 {filteredTransactions.length} av {transactions.length}{" "}
                 transaksjoner

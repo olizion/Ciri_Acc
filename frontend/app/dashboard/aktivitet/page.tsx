@@ -159,7 +159,7 @@ function SummaryCell({ cell, index }: { cell: SummaryCell; index: number }) {
 
       <div className="flex items-center gap-1.5">
         <Icon className="size-3 text-muted-foreground/50" />
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+        <p className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
           {cell.label}
         </p>
       </div>
@@ -175,7 +175,7 @@ function SummaryCell({ cell, index }: { cell: SummaryCell; index: number }) {
         {cell.trend != null && (
           <span
             className={cn(
-              "text-[10px] font-semibold flex items-center gap-0.5",
+              "text-[12px] font-semibold flex items-center gap-0.5",
               cell.trend > 0 ? "text-emerald-600" : "text-amber-600"
             )}
           >
@@ -188,7 +188,7 @@ function SummaryCell({ cell, index }: { cell: SummaryCell; index: number }) {
           </span>
         )}
       </div>
-      <p className="text-[10px] text-muted-foreground/60 mt-0.5">{cell.sub}</p>
+      <p className="text-[12px] text-muted-foreground/60 mt-0.5">{cell.sub}</p>
     </motion.div>
   );
 }
@@ -286,7 +286,7 @@ export default function AktivitetPage() {
               </span>
             </p>
           </div>
-          <div className="flex items-center gap-5 shrink-0 text-[11px] tabular-nums text-muted-foreground">
+          <div className="flex items-center gap-5 shrink-0 text-[13px] tabular-nums text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <CheckCircle2Icon className="size-3 text-emerald-500" />
               <span>

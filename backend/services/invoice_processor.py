@@ -10,7 +10,7 @@ import logging
 import os
 import re
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel
@@ -80,6 +80,7 @@ class ProcessedInvoice(BaseModel):
     ciri_explanation: str | None = None
     confidence: float = 0.0
     error: str | None = None
+    periodisering: dict | None = None  # AI-detected periodisering suggestion
 
 
 class ProcessingResult(BaseModel):
@@ -135,8 +136,26 @@ Ekstraher følgende felter (bruk null for felter du ikke finner):
   "category": "en av: kontor, it, transport, mat, tjenester, varer, annet",
   "suggestedAccount": "foreslått kontokode (f.eks. 6540 for IT, 6300 for kontor)",
   "description": "kort beskrivelse på norsk (3-8 ord)",
-  "ciriExplanation": "enkel forklaring på norsk, 1-2 setninger"
+  "ciriExplanation": "enkel forklaring på norsk, 1-2 setninger",
+  "periodisering": {
+    "isCandidate": true/false,
+    "reason": "kort norsk forklaring på hvorfor kostnaden kan periodiseres, eller null",
+    "category": "forsikring|husleie|abonnement|lisens|vedlikehold|annet",
+    "periodMonths": tall (antall måneder kostnaden dekker, f.eks. 12),
+    "startMonth": "YYYY-MM (første måned kostnaden gjelder for)",
+    "balanceAccount": "1700"
+  }
 }
+
+PERIODISERINGS-REGLER:
+- Forsikring, husleie, vedlikeholdsavtaler som dekker flere måneder = isCandidate: true
+- Årlige abonnement eller lisenser over kr 5 000 netto = isCandidate: true
+- Driftsmidler over kr 15 000 eks. MVA med levetid over 3 år = isCandidate: true, category: "annet", reason bør nevne aktivering
+- Månedlige SaaS-kostnader under kr 5 000 = isCandidate: false
+- Engangskjøp, forbruksvarer, beløp under kr 15 000 = isCandidate: false
+- Hvis du er usikker, sett isCandidate til false
+- startMonth = første måned kostnaden faktisk gjelder for (kan være invoiceDate-måneden eller neste måned)
+- balanceAccount = "1700" for forskuddsbetalte kostnader (standard)
 
 MVA-KODE REGLER (for inngående fakturaer/kjøp):
 - "1": Inngående MVA 25% - standard sats for de fleste varer og tjenester fra norske leverandører
@@ -362,6 +381,7 @@ async def parse_attachment_with_claude(attachment: EmailAttachment) -> Processed
             suggested_account=data.get("suggestedAccount"),
             ciri_explanation=data.get("ciriExplanation"),
             confidence=95.0,  # Claude is generally high confidence
+            periodisering=data.get("periodisering"),
         )
 
     except anthropic.APIConnectionError:
@@ -533,8 +553,74 @@ async def create_bilag_from_processed_invoice(
         posted_at=posted_at,
     )
 
+    # Periodisering assessment using centralized service
+    # First: use OCR-extracted suggestion if available
+    # Then: run through centralized assessment for a second opinion if OCR missed it
+    from services.periodisering_service import (
+        assess_periodisering,
+        build_suggestion_from_assessment,
+        create_periodisering_notification,
+    )
+
+    ocr_detected = False
+    if processed.periodisering and processed.periodisering.get("isCandidate"):
+        p = processed.periodisering
+        net = float(net_amount)
+        months = int(p.get("periodMonths", 1))
+        if months > 1 and net > 0:
+            suggestion = build_suggestion_from_assessment(
+                assessment={
+                    "isCandidate": True,
+                    "confidence": processed.confidence / 100,
+                    "reason": p.get("reason", ""),
+                    "category": p.get("category", "annet"),
+                    "periodMonths": months,
+                    "startMonth": p.get("startMonth") or bilag.document_date.strftime("%Y-%m"),
+                    "balanceAccount": p.get("balanceAccount", "1700"),
+                    "expenseAccount": processed.suggested_account or "7700",
+                    "direction": "kostnad",
+                },
+                total_amount=net,
+                document_date=str(bilag.document_date),
+                expense_account=processed.suggested_account or "7700",
+            )
+            if suggestion:
+                bilag.periodisering_suggestion = suggestion
+                ocr_detected = True
+
+    # If OCR didn't detect a candidate, run centralized assessment as second opinion
+    if not ocr_detected:
+        try:
+            assessment = await assess_periodisering(
+                description=bilag.description,
+                amount=float(net_amount),
+                account_number=processed.suggested_account,
+                counterparty=processed.supplier_name,
+                document_date=str(bilag.document_date),
+                category=processed.category,
+            )
+            suggestion = build_suggestion_from_assessment(
+                assessment=assessment,
+                total_amount=float(net_amount),
+                document_date=str(bilag.document_date),
+                expense_account=processed.suggested_account,
+            ) if assessment else None
+            if suggestion:
+                bilag.periodisering_suggestion = suggestion
+        except Exception as e:
+            logger.warning(f"Periodisering second-opinion assessment failed: {e}")
+
+    bilag.periodisering_scanned_at = datetime.now(timezone.utc)
+
     db_session.add(bilag)
     await db_session.flush()  # Ensure bilag.id is generated
+
+    # Create notification after flush (bilag.id available)
+    if bilag.periodisering_suggestion and bilag.periodisering_suggestion.get("is_candidate"):
+        try:
+            create_periodisering_notification(db_session, bilag, bilag.periodisering_suggestion)
+        except Exception as e:
+            logger.warning(f"Failed to create periodisering notification: {e}")
 
     # Posteringer are created when a bank transaction match is confirmed,
     # not at ingest time. See reconciliation_matcher.auto_reconcile()
@@ -954,6 +1040,10 @@ async def post_bilag_with_entries(
         gross_amount=bilag.gross_amount,
         description=bilag.description,
     )
+
+    # Validate balance before committing (Bokforingsloven §6)
+    from services.journal_validation import validate_journal_balance
+    validate_journal_balance(posteringer)
 
     # Update bilag status
     bilag.status = BilagStatus.POSTED

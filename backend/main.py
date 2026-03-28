@@ -11,12 +11,15 @@ from fastapi.responses import JSONResponse
 from config.settings import settings
 from config.database import init_db
 from config.redis import init_redis, close_redis
-from api import auth, company, ciri, bilag, reports, ocr, employees, email_webhook, email_oauth, bank, invoices, notifications
+from api import auth, company, ciri, bilag, reports, ocr, employees, email_webhook, email_oauth, bank, invoices, notifications, amelding, mva, altinn
 from middleware.audit import AuditMiddleware
+from middleware.rate_limit import RateLimitMiddleware
 from tasks.email_monitor_task import start_email_monitor, stop_email_monitor
 from tasks.bank_sync import start_bank_sync_task, stop_bank_sync_task
 from tasks.batch_reconciliation_task import start_batch_reconciliation_task, stop_batch_reconciliation_task
 from tasks.weekly_summary_task import start_weekly_summary_task, stop_weekly_summary_task
+from tasks.retention_cleanup_task import start_retention_cleanup_task, stop_retention_cleanup_task
+from tasks.periodisering_scan_task import start_periodisering_scan_task, stop_periodisering_scan_task
 
 # Import all models so Base.metadata knows about them
 import models  # noqa: F401
@@ -66,6 +69,20 @@ async def lifespan(app: FastAPI):
     # start_weekly_summary_task()
     print("📊 Weekly summary disabled (enable in main.py when ready)")
 
+    # Retention cleanup: purges expired data daily at 02:00 (Bokforingsloven + GDPR)
+    if settings.retention_cleanup_enabled:
+        print("🗃️ Starting retention cleanup task...")
+        start_retention_cleanup_task()
+    else:
+        print("🗃️ Retention cleanup disabled (set RETENTION_CLEANUP_ENABLED=true)")
+
+    # Periodisering scan: weekly LLM assessment of manual bilags (Sunday 03:00)
+    if settings.anthropic_api_key:
+        print("📅 Starting weekly periodisering scan task...")
+        start_periodisering_scan_task()
+    else:
+        print("📅 Periodisering scan disabled (ANTHROPIC_API_KEY required)")
+
     yield
 
     # Shutdown
@@ -75,6 +92,8 @@ async def lifespan(app: FastAPI):
     stop_bank_sync_task()
     stop_batch_reconciliation_task()
     stop_weekly_summary_task()
+    stop_retention_cleanup_task()
+    stop_periodisering_scan_task()
 
 
 app = FastAPI(
@@ -95,6 +114,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate Limiting Middleware (outermost — runs first)
+app.add_middleware(RateLimitMiddleware)
+
 # Audit Logging Middleware
 app.add_middleware(AuditMiddleware)
 
@@ -111,12 +133,46 @@ app.include_router(email_oauth.router, prefix="/api/email/oauth", tags=["Email O
 app.include_router(bank.router, prefix="/api/bank", tags=["Bank & Reconciliation"])
 app.include_router(invoices.router, prefix="/api/invoices", tags=["Invoices"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
+app.include_router(amelding.router, prefix="/api/amelding", tags=["A-melding"])
+app.include_router(mva.router, prefix="/api/mva", tags=["MVA Reporting"])
+app.include_router(altinn.router, prefix="/api/altinn", tags=["Altinn System User"])
 
 
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "version": "0.1.0"}
+
+
+@app.get("/api/admin/retention/status")
+async def retention_status():
+    """Check retention cleanup configuration and last run status."""
+    from tasks.retention_cleanup_task import _cleanup_task
+    return {
+        "enabled": settings.retention_cleanup_enabled,
+        "scheduled_hour": settings.retention_cleanup_hour,
+        "task_running": _cleanup_task is not None and not _cleanup_task.done(),
+    }
+
+
+@app.post("/api/admin/retention/run")
+async def trigger_retention_purge(dry_run: bool = True):
+    """
+    Manually trigger a retention purge cycle.
+    Use dry_run=true (default) to preview what would be purged.
+    """
+    from config.database import async_session_maker
+    from services.retention_service import RetentionService
+
+    async with async_session_maker() as session:
+        service = RetentionService(session)
+        if dry_run:
+            summary = await service.preview_purge_cycle()
+            return {"mode": "dry_run", "would_purge": summary}
+        else:
+            summary = await service.run_purge_cycle()
+            await session.commit()
+            return {"mode": "live", "result": summary}
 
 
 @app.exception_handler(Exception)

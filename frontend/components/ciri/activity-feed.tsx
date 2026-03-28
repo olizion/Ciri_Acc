@@ -226,14 +226,14 @@ function ActivityItem({
           </p>
           <span className={cn(
             "shrink-0 text-muted-foreground",
-            compact ? "text-[10px]" : "text-xs"
+            compact ? "text-[12px]" : "text-xs"
           )}>
             {formatTimeAgo(activity.created_at)}
           </span>
         </div>
         <p className={cn(
           "text-muted-foreground truncate",
-          compact ? "text-[11px]" : "text-xs"
+          compact ? "text-[13px]" : "text-xs"
         )}>
           {activity.description}
         </p>

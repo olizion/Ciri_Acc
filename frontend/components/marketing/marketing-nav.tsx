@@ -266,7 +266,7 @@ export default function MarketingNav() {
                     <div className="grid w-[720px] grid-cols-5 gap-0 divide-x divide-[#d4dbd6]/60">
                       {/* Left: Features grid */}
                       <div className="col-span-3 p-5">
-                        <p className="mb-3 px-3 text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
+                        <p className="mb-3 px-3 text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
                           Funksjoner
                         </p>
                         <ul className="grid grid-cols-2 gap-1">
@@ -285,7 +285,7 @@ export default function MarketingNav() {
 
                       {/* Right: Highlights + CTA */}
                       <div className="col-span-2 flex flex-col p-5">
-                        <p className="mb-3 px-3 text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
+                        <p className="mb-3 px-3 text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
                           Hoyepunkter
                         </p>
                         <ul className="grid gap-1">
@@ -332,7 +332,7 @@ export default function MarketingNav() {
                     Losninger
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="p-5">
-                    <p className="mb-3 px-3 text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
+                    <p className="mb-3 px-3 text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
                       Hvem er du?
                     </p>
                     <ul className="grid w-[480px] grid-cols-2 gap-1">
@@ -356,7 +356,7 @@ export default function MarketingNav() {
                     Ressurser
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="p-5">
-                    <p className="mb-3 px-3 text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
+                    <p className="mb-3 px-3 text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">
                       Ressurser
                     </p>
                     <ul className="grid w-[480px] grid-cols-2 gap-1">
@@ -427,7 +427,7 @@ export default function MarketingNav() {
 
             <div className="overflow-y-auto px-6 pt-8 pb-20" style={{ maxHeight: "calc(100vh - 64px)" }}>
               {/* Produkt section */}
-              <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">Produkt</p>
+              <p className="text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">Produkt</p>
               <div className="mt-3 space-y-1">
                 {PRODUCT_FEATURES.map((item, i) => (
                   <motion.div
@@ -454,7 +454,7 @@ export default function MarketingNav() {
               </div>
 
               {/* Losninger section */}
-              <p className="mt-8 text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">Losninger</p>
+              <p className="mt-8 text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">Losninger</p>
               <div className="mt-3 space-y-1">
                 {SOLUTIONS.map((item, i) => (
                   <motion.div
@@ -481,7 +481,7 @@ export default function MarketingNav() {
               </div>
 
               {/* Quick links */}
-              <p className="mt-8 text-[10px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">Mer</p>
+              <p className="mt-8 text-[12px] font-bold tracking-[0.15em] uppercase text-[#3E715C]">Mer</p>
               <div className="mt-3 space-y-1">
                 {RESOURCES.map((r) => ({ label: r.title, href: r.href, icon: r.icon })).map((item, i) => (
                   <motion.div

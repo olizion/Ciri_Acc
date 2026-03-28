@@ -52,7 +52,7 @@ export const TransactionRow = memo(function TransactionRow({ tx, isRecent, onCli
       )}
     >
       <StatusDot status={tx.reconciliation_status} />
-      <span className="text-[11px] text-muted-foreground tabular-nums">
+      <span className="text-[13px] text-muted-foreground tabular-nums">
         {dateShort(tx.date)}
       </span>
       <div className="min-w-0 flex items-center gap-1">
@@ -61,7 +61,7 @@ export const TransactionRow = memo(function TransactionRow({ tx, isRecent, onCli
             {tx.merchant_name || tx.description}
           </span>
           {tx.merchant_name && tx.merchant_name !== tx.description && (
-            <span className="text-[10px] text-muted-foreground/70 truncate block">
+            <span className="text-[12px] text-muted-foreground/70 truncate block">
               {tx.description}
             </span>
           )}
@@ -72,7 +72,7 @@ export const TransactionRow = memo(function TransactionRow({ tx, isRecent, onCli
       </div>
       <span
         className={cn(
-          "text-[11px] px-1.5 py-0.5 rounded text-center font-medium",
+          "text-[13px] px-1.5 py-0.5 rounded text-center font-medium",
           getStatusClassName(tx.reconciliation_status)
         )}
       >

@@ -19,6 +19,7 @@ import {
   WalletIcon,
   TrendingUpIcon,
   CalendarIcon,
+  CalendarRangeIcon,
   BellIcon,
   ShieldCheckIcon,
   HelpCircleIcon,
@@ -86,7 +87,8 @@ export const navItems: NavGroup[] = [
       { title: "MVA", href: "/dashboard/mva", icon: ReceiptIcon },
       { title: "Hovedbok", href: "/dashboard/hovedbok", icon: BookOpenIcon },
       { title: "Resultat", href: "/dashboard/resultat", icon: TrendingUpIcon },
-      { title: "Balanse", href: "/dashboard/balanse", icon: ScaleIcon }
+      { title: "Balanse", href: "/dashboard/balanse", icon: ScaleIcon },
+      { title: "Periodisering", href: "/dashboard/periodisering", icon: CalendarRangeIcon }
     ]
   },
   {

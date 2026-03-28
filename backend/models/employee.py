@@ -22,6 +22,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from config.database import Base
+from models.mixins import RetentionMixin
 
 
 class EmploymentType(str, Enum):
@@ -39,7 +40,7 @@ class EmployeeStatus(str, Enum):
     TERMINATED = "terminated"
 
 
-class Employee(Base):
+class Employee(RetentionMixin, Base):
     """Employee model for payroll management."""
 
     __tablename__ = "employees"
@@ -74,6 +75,7 @@ class Employee(Base):
     # Salary information
     monthly_salary: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     hourly_rate: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))  # For hourly workers
+    pay_day: Mapped[int] = mapped_column(Integer, default=15)  # Day of month salary is paid (1-28)
 
     # Tax information (from Skatteetaten)
     tax_table: Mapped[str | None] = mapped_column(String(10))  # e.g., "7100"
@@ -81,7 +83,7 @@ class Employee(Base):
     tax_card_type: Mapped[str | None] = mapped_column(String(50))  # "tabelltrekk" or "prosenttrekk"
     tax_municipality: Mapped[str | None] = mapped_column(String(4))  # Municipality code
     frikort_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))  # Free card amount
-    tax_card_fetched_at: Mapped[datetime | None] = mapped_column(DateTime)
+    tax_card_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Bank account (encrypted in production)
     bank_account: Mapped[str | None] = mapped_column(String(11))  # Norwegian format
@@ -100,13 +102,16 @@ class Employee(Base):
     otp_provider: Mapped[str | None] = mapped_column(String(100))
 
     # Metadata
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
     )
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id")
     )
+
+    # Avatar
+    avatar_s3_key: Mapped[str | None] = mapped_column(String(500))  # S3 key for profile picture
 
     # Notes (internal)
     notes: Mapped[str | None] = mapped_column(Text)
@@ -137,7 +142,7 @@ class Employee(Base):
         return f"<Employee {self.full_name} ({self.personnummer[:6]}...)>"
 
 
-class Payslip(Base):
+class Payslip(RetentionMixin, Base):
     """Individual payslip record."""
 
     __tablename__ = "payslips"
@@ -168,14 +173,14 @@ class Payslip(Base):
     feriepenger_accrual: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
 
     # Status
-    paid_at: Mapped[datetime | None] = mapped_column(DateTime)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     payment_reference: Mapped[str | None] = mapped_column(String(50))
 
     # A-melding
     amelding_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
     amelding_reference: Mapped[str | None] = mapped_column(String(50))
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
     # Relationships
     employee: Mapped["Employee"] = relationship(backref="payslips")

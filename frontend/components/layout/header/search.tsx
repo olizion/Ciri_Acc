@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { CommandIcon, SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useRouter } from "next/navigation";
 
 import {
@@ -16,7 +15,6 @@ import {
   CommandSeparator
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { navItems } from "@/components/layout/sidebar/nav-main";
 
 export default function Search() {
@@ -55,11 +53,6 @@ export default function Search() {
         </Button>
       </div>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <VisuallyHidden>
-          <DialogHeader>
-            <DialogTitle></DialogTitle>
-          </DialogHeader>
-        </VisuallyHidden>
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>

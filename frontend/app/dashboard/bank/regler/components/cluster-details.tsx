@@ -109,7 +109,7 @@ export const ClusterTooltip = memo(function ClusterTooltip({
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[10px] font-bold tabular-nums" style={{ color: config.color }}>
+              <span className="text-[12px] font-bold tabular-nums" style={{ color: config.color }}>
                 {pct}
               </span>
             </div>
@@ -121,13 +121,13 @@ export const ClusterTooltip = memo(function ClusterTooltip({
                 {label}
               </h4>
               <span
-                className="text-[9px] font-bold uppercase tracking-[0.1em] px-1.5 py-[1px] rounded-full shrink-0"
+                className="text-[13px] font-bold uppercase tracking-[0.1em] px-1.5 py-[1px] rounded-full shrink-0"
                 style={{ backgroundColor: config.color + "20", color: config.color }}
               >
                 {config.label}
               </span>
             </div>
-            <p className="text-[11px] text-[var(--muted-foreground)] font-mono mt-0.5">
+            <p className="text-[13px] text-[var(--muted-foreground)] font-mono mt-0.5">
               {cluster.account_number}{cluster.account_name ? ` -- ${cluster.account_name}` : ""}
             </p>
           </div>
@@ -167,13 +167,13 @@ export const ClusterTooltip = memo(function ClusterTooltip({
 
         {/* Detail rows */}
         <div className="space-y-1.5 mb-3">
-          <div className="flex items-center gap-2 text-[11px]">
+          <div className="flex items-center gap-2 text-[13px]">
             <ArrowUpDownIcon className="size-3 text-[var(--muted-foreground)]" style={{ opacity: 0.5 }} />
             <span className="text-[var(--muted-foreground)]">
               {cluster.dominant_direction === "debit" ? "Utbetalinger" : "Innbetalinger"} · {cluster.amount_range}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[11px]">
+          <div className="flex items-center gap-2 text-[13px]">
             <TargetIcon className="size-3" style={{ color: config.color, opacity: 0.6 }} />
             <span style={{ color: config.color }}>
               {config.label} klynge · {orbitLabel}
@@ -187,7 +187,7 @@ export const ClusterTooltip = memo(function ClusterTooltip({
             {cluster.example_merchants.slice(0, 5).map((m, i) => (
               <span
                 key={i}
-                className="text-[10px] font-medium px-2 py-0.5 rounded-full text-[var(--popover-foreground)]"
+                className="text-[12px] font-medium px-2 py-0.5 rounded-full text-[var(--popover-foreground)]"
                 style={{ backgroundColor: config.color + "10", border: `1px solid ${config.color}18` }}
               >
                 {m}
@@ -272,7 +272,7 @@ export function ClusterDetailDialog({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } }}
           transition={{ duration: 0.35, ease: [0.22, 0.68, 0.36, 1] }}
-          className="relative w-full max-w-lg rounded-3xl border overflow-hidden"
+          className="relative w-full max-w-xl rounded-3xl border overflow-hidden"
           style={{
             background: "color-mix(in srgb, var(--card) 92%, transparent)",
             borderColor: config.color + "25",
@@ -299,7 +299,7 @@ export function ClusterDetailDialog({
             <XIcon className="size-4" />
           </button>
 
-          <div className="relative p-8 pt-10">
+          <div className="relative p-10 pt-12">
             {/* Header: Ring + Title */}
             <div className="flex items-center gap-6 mb-6">
               {/* Large animated strength ring */}
@@ -336,7 +336,7 @@ export function ClusterDetailDialog({
                     {label}
                   </h2>
                   <span
-                    className="text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-[3px] rounded-full shrink-0"
+                    className="text-[12px] font-bold uppercase tracking-[0.1em] px-2.5 py-[3px] rounded-full shrink-0"
                     style={{ backgroundColor: config.color + "18", color: config.color }}
                   >
                     {config.label}
@@ -355,7 +355,7 @@ export function ClusterDetailDialog({
             {/* Strength gauge */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40">
+                <span className="text-[13px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40">
                   Klyngestyrke
                 </span>
                 <span className="text-xs font-bold tabular-nums" style={{ color: config.color }}>
@@ -375,18 +375,18 @@ export function ClusterDetailDialog({
                 />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-muted-foreground/30">Svak</span>
-                <span className="text-[9px] text-muted-foreground/30">Vokser</span>
-                <span className="text-[9px] text-muted-foreground/30">Sterk</span>
+                <span className="text-[13px] text-muted-foreground/30">Svak</span>
+                <span className="text-[13px] text-muted-foreground/30">Vokser</span>
+                <span className="text-[13px] text-muted-foreground/30">Sterk</span>
               </div>
             </div>
 
             {/* Metrics grid */}
-            <div className="grid grid-cols-4 gap-2 mb-6">
+            <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { icon: ActivityIcon, val: cluster.total_points, lbl: "Datapunkter" },
-                { icon: StoreIcon, val: cluster.distinct_merchants, lbl: "Leverandorer" },
-                { icon: ShieldCheckIcon, val: `${reliability}%`, lbl: "Palitelighet" },
+                { icon: ActivityIcon, val: cluster.total_points, lbl: "Poster" },
+                { icon: StoreIcon, val: cluster.distinct_merchants, lbl: "Levrd." },
+                { icon: ShieldCheckIcon, val: `${reliability}%`, lbl: "Treffrate" },
                 { icon: ArrowUpDownIcon, val: cluster.overridden_count, lbl: "Overstyrt" },
               ].map((m) => (
                 <motion.div
@@ -394,12 +394,12 @@ export function ClusterDetailDialog({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.4 }}
-                  className="text-center py-3 rounded-xl"
+                  className="text-center py-3 px-2 rounded-xl"
                   style={{ backgroundColor: config.color + "06", border: `1px solid ${config.color}0A` }}
                 >
                   <m.icon className="size-3.5 mx-auto mb-1" style={{ color: config.color, opacity: 0.5 }} />
                   <p className="text-[15px] font-bold tabular-nums text-foreground">{m.val}</p>
-                  <p className="text-[9px] uppercase tracking-[0.1em] font-semibold mt-0.5" style={{ color: config.color, opacity: 0.5 }}>
+                  <p className="text-[9px] uppercase tracking-[0.08em] font-semibold mt-0.5" style={{ color: config.color, opacity: 0.5 }}>
                     {m.lbl}
                   </p>
                 </motion.div>
@@ -409,7 +409,7 @@ export function ClusterDetailDialog({
             {/* Direction + Range row */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               <div className="rounded-xl p-3" style={{ backgroundColor: config.color + "06", border: `1px solid ${config.color}0A` }}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: config.color, opacity: 0.5 }}>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: config.color, opacity: 0.5 }}>
                   Retning
                 </p>
                 <div className="flex items-center gap-2">
@@ -429,18 +429,18 @@ export function ClusterDetailDialog({
                     <p className="text-[13px] font-semibold text-foreground">
                       {cluster.dominant_direction === "debit" ? "Utbetalinger" : "Innbetalinger"}
                     </p>
-                    <p className="text-[11px] text-muted-foreground/50">Dominerende retning</p>
+                    <p className="text-[13px] text-muted-foreground/50">Dominerende retning</p>
                   </div>
                 </div>
               </div>
               <div className="rounded-xl p-3" style={{ backgroundColor: config.color + "06", border: `1px solid ${config.color}0A` }}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: config.color, opacity: 0.5 }}>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: config.color, opacity: 0.5 }}>
                   Belopsintervall
                 </p>
                 <p className="text-[13px] font-semibold text-foreground mt-1">
                   {cluster.amount_range || "Ikke tilgjengelig"}
                 </p>
-                <p className="text-[10px] text-muted-foreground/50 mt-0.5">Typisk transaksjonsbelop</p>
+                <p className="text-[12px] text-muted-foreground/50 mt-0.5">Typisk transaksjonsbelop</p>
               </div>
             </div>
 
@@ -448,7 +448,7 @@ export function ClusterDetailDialog({
             <div className="grid grid-cols-[1fr_auto] gap-5 items-end">
               {/* Merchants */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40 mb-2">
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40 mb-2">
                   Leverandorer i klyngen
                 </p>
                 {cluster.example_merchants.length > 0 ? (
@@ -634,7 +634,7 @@ export function ClusterDetailCard({
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span
-              className="text-[11px] font-bold tabular-nums"
+              className="text-[13px] font-bold tabular-nums"
               style={{ color: config.color }}
             >
               <AnimatedNumber value={pct} duration={0.8 + index * 0.1} />
@@ -649,7 +649,7 @@ export function ClusterDetailCard({
               {label}
             </h4>
             <span
-              className="text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-[2px] rounded-full shrink-0"
+              className="text-[13px] font-bold uppercase tracking-[0.1em] px-2 py-[2px] rounded-full shrink-0"
               style={{ backgroundColor: config.color + "15", color: config.color }}
             >
               {config.label}
@@ -685,7 +685,7 @@ export function ClusterDetailCard({
             <p className="text-[13px] font-bold tabular-nums text-foreground/80">
               {m.val}{m.suffix || ""}
             </p>
-            <p className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground/40 font-medium mt-0.5">
+            <p className="text-[13px] uppercase tracking-[0.1em] text-muted-foreground/40 font-medium mt-0.5">
               {m.label}
             </p>
           </div>
@@ -706,7 +706,7 @@ export function ClusterDetailCard({
                 stiffness: 400,
                 damping: 15,
               }}
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-card text-muted-foreground/60"
+              className="text-[12px] font-medium px-2 py-0.5 rounded-full border bg-card text-muted-foreground/60"
             >
               {m}
             </motion.span>

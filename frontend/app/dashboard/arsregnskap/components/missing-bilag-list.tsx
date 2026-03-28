@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircleIcon, ReceiptIcon, UploadIcon } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { MissingBilag } from "../types";
 
-export function MissingBilagList({ items }: { items: MissingBilag[] }) {
+export function MissingBilagList({ items, onResolveAll }: { items: MissingBilag[]; onResolveAll?: () => void }) {
   const [filter, setFilter] = useState<string>("all");
 
   const filteredItems = items.filter(item => {
@@ -92,6 +93,7 @@ export function MissingBilagList({ items }: { items: MissingBilag[] }) {
                 variant="ghost"
                 size="icon"
                 className="size-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                onClick={(e) => { e.stopPropagation(); onResolveAll?.(); }}
               >
                 <UploadIcon className="size-4" />
               </Button>
@@ -99,6 +101,17 @@ export function MissingBilagList({ items }: { items: MissingBilag[] }) {
           ))}
         </div>
       </ScrollArea>
+
+      {onResolveAll && (
+        <Button
+          size="sm"
+          className="w-full gap-2 mt-2"
+          onClick={onResolveAll}
+        >
+          <ReceiptIcon className="size-4" />
+          Løs manglende bilag ({items.filter(i => i.status !== "matched").length})
+        </Button>
+      )}
     </div>
   );
 }

@@ -76,6 +76,30 @@ export interface Bilag {
   ciriMessage?: string; // Ciri's explanation of what's needed
   summary?: string; // AI-generated short description of the invoice
   ciriExplanation?: string; // Ciri's friendly explanation for layman
+  periodiseringSuggestion?: PeriodiseringSuggestion;
+}
+
+export interface PeriodiseringSuggestion {
+  is_candidate: boolean;
+  confidence: number;
+  reason: string;
+  legal_basis: string;
+  category: string;
+  total_amount: number;
+  period_count: number;
+  start_period: string;
+  end_period: string;
+  monthly_amount: number;
+  remainder?: number;
+  expense_account: string;
+  balance_account: string;
+  direction?: "kostnad" | "inntekt";
+  dismissed: boolean;
+  accepted: boolean;
+  accepted_at?: string | null;
+  user_overrode?: boolean;
+  original_period_count?: number;
+  original_start_period?: string;
 }
 
 export interface RevisionEntry {

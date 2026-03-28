@@ -134,7 +134,7 @@ function AarsregnskapAssemblyAnimation() {
                     <p className="text-sm font-medium text-[#1a2e23]">
                       Resultatregnskap
                     </p>
-                    <p className="text-[10px] text-[#8a9a8e]">2025</p>
+                    <p className="text-[12px] text-[#8a9a8e]">2025</p>
                   </div>
                   <motion.div
                     animate={{ rotate: 360 }}
@@ -213,7 +213,7 @@ function AarsregnskapAssemblyAnimation() {
                     <p className="text-sm font-medium text-[#1a2e23]">
                       Balanse
                     </p>
-                    <p className="text-[10px] text-[#8a9a8e]">
+                    <p className="text-[12px] text-[#8a9a8e]">
                       Per 31.12.2025
                     </p>
                   </div>
@@ -232,10 +232,10 @@ function AarsregnskapAssemblyAnimation() {
 
                 {/* Two column labels */}
                 <div className="mb-2 grid grid-cols-2 gap-2 px-3">
-                  <span className="text-[10px] font-bold tracking-wider text-[#3E715C] uppercase">
+                  <span className="text-[12px] font-bold tracking-wider text-[#3E715C] uppercase">
                     Eiendeler
                   </span>
-                  <span className="text-right text-[10px] font-bold tracking-wider text-[#d97706] uppercase">
+                  <span className="text-right text-[12px] font-bold tracking-wider text-[#d97706] uppercase">
                     Gjeld + EK
                   </span>
                 </div>
@@ -331,7 +331,7 @@ function AarsregnskapAssemblyAnimation() {
                     ].map((doc) => (
                       <span
                         key={doc.label}
-                        className="rounded-full border px-3 py-1 text-[10px] font-medium"
+                        className="rounded-full border px-3 py-1 text-[12px] font-medium"
                         style={{
                           borderColor: `${doc.color}30`,
                           color: doc.color,
@@ -371,7 +371,7 @@ function AarsregnskapAssemblyAnimation() {
               <span
                 key={label}
                 className={cn(
-                  "rounded-full px-2.5 py-0.5 text-[9px] font-medium transition-colors",
+                  "rounded-full px-2.5 py-0.5 text-[13px] font-medium transition-colors",
                   frame === i
                     ? "bg-[#3E715C]/15 text-[#3E715C]"
                     : "text-[#8a9a8e]"
@@ -484,7 +484,7 @@ function BalanceEquationAnimation() {
       className="rounded-lg border px-3 py-2"
       style={{ borderColor: `${color}30`, backgroundColor: `${color}08` }}
     >
-      <p className="text-[10px] text-[#8a9a8e]">{block.label}</p>
+      <p className="text-[12px] text-[#8a9a8e]">{block.label}</p>
       <p
         className="font-mono text-xs font-medium tabular-nums"
         style={{ color }}
@@ -500,7 +500,7 @@ function BalanceEquationAnimation() {
         {/* Column headers */}
         <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-start gap-3">
           <div className="text-center">
-            <p className="text-[10px] font-bold tracking-wider text-[#3E715C] uppercase">
+            <p className="text-[12px] font-bold tracking-wider text-[#3E715C] uppercase">
               Eiendeler
             </p>
             <p className="mt-1 font-mono text-lg font-normal tabular-nums text-[#3E715C]">
@@ -531,7 +531,7 @@ function BalanceEquationAnimation() {
             </motion.span>
           </div>
           <div className="text-center">
-            <p className="text-[10px] font-bold tracking-wider text-[#4a5e52] uppercase">
+            <p className="text-[12px] font-bold tracking-wider text-[#4a5e52] uppercase">
               Gjeld + Egenkapital
             </p>
             <p className="mt-1 font-mono text-lg font-normal tabular-nums text-[#4a5e52]">
@@ -679,7 +679,7 @@ function CompletenessChecklistAnimation() {
         <div className="relative z-10">
           {/* Progress bar */}
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10px] font-bold tracking-wider text-[#3E715C] uppercase">
+            <p className="text-[12px] font-bold tracking-wider text-[#3E715C] uppercase">
               Fullstendighetskontroll
             </p>
             <span className="font-mono text-xs font-medium tabular-nums text-[#3E715C]">
@@ -784,7 +784,7 @@ function CompletenessChecklistAnimation() {
                         stiffness: 400,
                         damping: 15,
                       }}
-                      className="ml-auto text-[9px] tabular-nums text-[#5B906F]"
+                      className="ml-auto text-[13px] tabular-nums text-[#5B906F]"
                     >
                       OK
                     </motion.span>

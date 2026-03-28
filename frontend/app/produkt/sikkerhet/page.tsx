@@ -195,8 +195,8 @@ function SecurityLayersAnimation() {
                     {frame.visual === "transit" && (
                       <div className="flex items-center justify-center gap-3">
                         <div className="rounded-lg border border-[#d4dbd6] bg-white/80 px-3 py-2">
-                          <p className="text-[9px] text-[#8a9a8e]">Nettleser</p>
-                          <p className="text-[10px] font-medium text-[#1a2e23]">
+                          <p className="text-[13px] text-[#8a9a8e]">Nettleser</p>
+                          <p className="text-[12px] font-medium text-[#1a2e23]">
                             Faktura.pdf
                           </p>
                         </div>
@@ -223,8 +223,8 @@ function SecurityLayersAnimation() {
                           />
                         </div>
                         <div className="rounded-lg border border-[#3E715C]/20 bg-[#3E715C]/5 px-3 py-2">
-                          <p className="text-[9px] text-[#5B906F]">Ciri Server</p>
-                          <p className="font-mono text-[10px] text-[#3E715C]">
+                          <p className="text-[13px] text-[#5B906F]">Ciri Server</p>
+                          <p className="font-mono text-[12px] text-[#3E715C]">
                             TLS 1.3
                           </p>
                         </div>
@@ -267,7 +267,7 @@ function SecurityLayersAnimation() {
                             className="flex items-center gap-2 rounded-lg border border-[#3E715C]/15 bg-[#3E715C]/5 px-4 py-1.5"
                           >
                             <CheckCircleIcon className="h-3 w-3 text-[#3E715C]" />
-                            <span className="text-[10px] font-medium text-[#1a2e23]">
+                            <span className="text-[12px] font-medium text-[#1a2e23]">
                               {item.step}
                             </span>
                           </motion.div>
@@ -301,10 +301,10 @@ function SecurityLayersAnimation() {
                             transition={{ delay: 0.15 * i }}
                             className="flex items-center gap-3 rounded-lg bg-white/[0.06] px-3 py-1.5"
                           >
-                            <span className="font-mono text-[9px] tabular-nums text-[#8a9a8e]">
+                            <span className="font-mono text-[13px] tabular-nums text-[#8a9a8e]">
                               {entry.time}
                             </span>
-                            <span className="flex-1 text-[10px] text-[#4a5e52]">
+                            <span className="flex-1 text-[12px] text-[#4a5e52]">
                               {entry.action}
                             </span>
                             <span className="font-mono text-[8px] text-[#5B906F]">
@@ -365,7 +365,7 @@ function SecurityLayersAnimation() {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.1 * i }}
-                      className="flex items-center gap-1.5 rounded-full border border-[#3E715C]/20 bg-[#3E715C]/5 px-3 py-1 text-[10px] font-medium text-[#3E715C]"
+                      className="flex items-center gap-1.5 rounded-full border border-[#3E715C]/20 bg-[#3E715C]/5 px-3 py-1 text-[12px] font-medium text-[#3E715C]"
                     >
                       <CheckCircleIcon className="h-2.5 w-2.5" />
                       {f.title}

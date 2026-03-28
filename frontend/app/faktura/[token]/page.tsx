@@ -73,7 +73,7 @@ function CopyCard({
       <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[#3E715C]/[0.03] to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
       <div className="relative min-w-0">
-        <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#96AFA8]">
+        <p className="text-[12px] font-bold tracking-[0.18em] uppercase text-[#96AFA8]">
           {label}
         </p>
         <p
@@ -82,8 +82,8 @@ function CopyCard({
             mono
               ? "font-mono text-lg tracking-[0.08em] font-medium"
               : accent
-                ? "font-serif text-2xl tracking-tight"
-                : "font-serif text-lg"
+                ? "text-2xl font-semibold tracking-tight"
+                : "text-lg font-medium"
           )}
         >
           {value}
@@ -118,11 +118,11 @@ function CopyCard({
 // HELPERS
 // ============================================================================
 
-function formatAmount(n: number) {
-  return n.toLocaleString("nb-NO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+function formatAmount(n: number | string) {
+  const num = typeof n === "string" ? parseFloat(n) : n;
+  const [whole, dec] = num.toFixed(2).split(".");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${grouped},${dec}`;
 }
 
 function formatDate(iso: string) {
@@ -225,7 +225,7 @@ export default function PublicInvoicePage() {
             />
           </div>
           <div>
-            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/60">
+            <p className="text-[12px] font-bold tracking-[0.2em] uppercase text-white/60">
               Faktura
             </p>
             <p className="font-serif text-sm text-white/90">
@@ -251,11 +251,11 @@ export default function PublicInvoicePage() {
               Betalt
             </motion.div>
           )}
-          <p className="text-[11px] font-semibold tracking-[0.25em] uppercase text-white/40">
+          <p className="text-[13px] font-semibold tracking-[0.25em] uppercase text-white/40">
             {isPaid ? "Betalt beløp" : "Å betale"}
           </p>
           <h1
-            className="mt-2 font-serif text-5xl font-normal tracking-tight text-white sm:text-6xl"
+            className="mt-2 text-5xl font-semibold tracking-tight text-white sm:text-6xl"
             style={{ textShadow: "0 2px 20px rgba(0,0,0,0.15)" }}
           >
             kr {formatAmount(invoice.total_amount)}
@@ -311,7 +311,7 @@ export default function PublicInvoicePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.62 }}
-            className="mt-5 flex items-center justify-center gap-3 text-[11px] text-[#96AFA8]"
+            className="mt-5 flex items-center justify-center gap-3 text-[13px] text-[#96AFA8]"
           >
             <span>Eks. MVA: kr {formatAmount(invoice.amount)}</span>
             <span className="text-[#CFCEA1]">·</span>
@@ -355,7 +355,7 @@ export default function PublicInvoicePage() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-4 border-t border-[#eef1eb] pt-3 text-[11px] text-[#96AFA8]">
+            <div className="mt-4 flex items-center gap-4 border-t border-[#eef1eb] pt-3 text-[13px] text-[#96AFA8]">
               <span>{invoice.invoice_number}</span>
               <span className="text-[#CFCEA1]">·</span>
               <span>Til {invoice.customer_name}</span>

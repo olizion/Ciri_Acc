@@ -8,7 +8,8 @@ import {
   ClockIcon,
   ChevronDownIcon,
   RefreshCwIcon,
-  SparklesIcon
+  SparklesIcon,
+  ReceiptIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { ChecklistItem } from "../types";
 
-export function ChecklistItemRow({ item, index }: { item: ChecklistItem; index: number }) {
+export function ChecklistItemRow({ item, index, onAction }: { item: ChecklistItem; index: number; onAction?: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const statusConfig = {
@@ -82,7 +83,13 @@ export function ChecklistItemRow({ item, index }: { item: ChecklistItem; index: 
                     <span className={sub.complete ? "text-muted-foreground" : ""}>{sub.name}</span>
                   </div>
                 ))}
-                {item.canAutoFix && item.status !== "complete" && (
+                {onAction && item.status !== "complete" && (
+                  <Button size="sm" variant="default" className="mt-3 w-full gap-2" onClick={(e) => { e.stopPropagation(); onAction(); }}>
+                    <ReceiptIcon className="size-4" />
+                    Løs manglende bilag
+                  </Button>
+                )}
+                {item.canAutoFix && item.status !== "complete" && !onAction && (
                   <Button size="sm" variant="outline" className="mt-3 w-full">
                     <SparklesIcon className="mr-2 size-4" />
                     La Ciri fullføre

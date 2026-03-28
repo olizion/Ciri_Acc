@@ -3,7 +3,7 @@ Invoice API Routes
 Create, send, and manage outgoing invoices (fakturaer)
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, date
 from decimal import Decimal
@@ -14,10 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.database import get_db
 from config.settings import settings
+from dependencies.company import get_company_id
 from models.invoice import Invoice, InvoiceStatus
 from models.notification import Notification
 from services.email_sender import send_email
 from templates.invoice_email import render_invoice_email
+from services.audit_trail import log_domain_event
 
 router = APIRouter()
 
@@ -82,32 +84,6 @@ class InvoicePublicResponse(BaseModel):
     status: str
 
 
-# --- Helpers ---
-
-async def _resolve_company_id(db: AsyncSession, raw_id: str | None) -> uuid.UUID:
-    """Resolve company_id: use provided if valid, else fall back to first company."""
-    from models.company import Company
-
-    if raw_id:
-        # Try parsing the provided ID
-        try:
-            cid = uuid.UUID(raw_id)
-        except ValueError:
-            cid = None
-
-        if cid:
-            result = await db.execute(select(Company.id).where(Company.id == cid))
-            if result.scalar_one_or_none():
-                return cid
-
-    # Fallback: first company in DB
-    result = await db.execute(select(Company.id).limit(1))
-    company_id = result.scalar_one_or_none()
-    if not company_id:
-        raise HTTPException(status_code=400, detail="Ingen bedrift funnet")
-    return company_id
-
-
 async def _next_invoice_number(db: AsyncSession, company_id: uuid.UUID) -> str:
     """Generate next sequential invoice number (F-0001, F-0002, ...)."""
     result = await db.execute(
@@ -146,16 +122,16 @@ def _to_response(inv: Invoice) -> InvoiceResponse:
 @router.post("", response_model=InvoiceResponse)
 async def create_invoice(
     body: InvoiceCreate,
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new invoice."""
-    company_id = await _resolve_company_id(db, body.company_id)
     mva_amount = body.amount * body.mva_rate / 100
     total_amount = body.amount + mva_amount
 
     invoice = Invoice(
-        company_id=company_id,
-        invoice_number=await _next_invoice_number(db, company_id),
+        company_id=resolved_company_id,
+        invoice_number=await _next_invoice_number(db, resolved_company_id),
         customer_name=body.customer_name,
         customer_email=body.customer_email,
         description=body.description,
@@ -167,6 +143,7 @@ async def create_invoice(
         bank_account=body.bank_account,
         kid_number=body.kid_number,
     )
+    invoice.set_retention(fiscal_year=datetime.utcnow().year, category="regnskap")
     db.add(invoice)
     await db.flush()
     await db.refresh(invoice)
@@ -195,9 +172,9 @@ async def send_invoice(
         customer_name=invoice.customer_name,
         company_name=settings.smtp_from_name,
         description=invoice.description,
-        amount=f"{invoice.amount:,.2f}".replace(",", " "),
-        mva_amount=f"{invoice.mva_amount:,.2f}".replace(",", " "),
-        total_amount=f"{invoice.total_amount:,.2f}".replace(",", " "),
+        amount=f"{invoice.amount:,.2f}".replace(",", " ").replace(".", ","),
+        mva_amount=f"{invoice.mva_amount:,.2f}".replace(",", " ").replace(".", ","),
+        total_amount=f"{invoice.total_amount:,.2f}".replace(",", " ").replace(".", ","),
         due_date=invoice.due_date.strftime("%d.%m.%Y"),
         public_url=public_url,
         bank_account=invoice.bank_account or "",
@@ -214,6 +191,11 @@ async def send_invoice(
     # (email config may not be set up yet)
     invoice.status = InvoiceStatus.SENT
     invoice.sent_at = datetime.utcnow()
+    await log_domain_event(
+        db=db, action="invoice:sent", resource_type="invoice",
+        resource_id=str(invoice.id), company_id=invoice.company_id,
+        details={"invoice_number": invoice.invoice_number, "customer_email": invoice.customer_email},
+    )
     await db.flush()
     await db.refresh(invoice)
     return _to_response(invoice)
@@ -221,14 +203,13 @@ async def send_invoice(
 
 @router.get("", response_model=InvoiceListResponse)
 async def list_invoices(
-    company_id: str | None = Query(None),
     status: str | None = None,
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
     db: AsyncSession = Depends(get_db),
 ):
     """List invoices for a company."""
-    resolved_id = await _resolve_company_id(db, company_id)
     query = select(Invoice).where(
-        Invoice.company_id == resolved_id
+        Invoice.company_id == resolved_company_id
     ).order_by(Invoice.created_at.desc())
 
     if status:
@@ -236,7 +217,7 @@ async def list_invoices(
 
     # Count
     count_q = select(func.count()).select_from(Invoice).where(
-        Invoice.company_id == resolved_id
+        Invoice.company_id == resolved_company_id
     )
     if status:
         count_q = count_q.where(Invoice.status == InvoiceStatus(status))
@@ -339,12 +320,17 @@ async def mark_invoice_paid(
 
     invoice.status = InvoiceStatus.PAID
     invoice.paid_at = datetime.utcnow()
+    await log_domain_event(
+        db=db, action="invoice:paid", resource_type="invoice",
+        resource_id=str(invoice.id), company_id=invoice.company_id,
+        details={"invoice_number": invoice.invoice_number, "total_amount": str(invoice.total_amount)},
+    )
 
     # Create notification
     notification = Notification(
         company_id=invoice.company_id,
         title=f"Faktura {invoice.invoice_number} betalt",
-        message=f"{invoice.customer_name} har betalt kr {invoice.total_amount:,.2f}.",
+        message=f"{invoice.customer_name} har betalt kr {f'{invoice.total_amount:,.2f}'.replace(',', ' ').replace('.', ',')}.",
         type="invoice_paid",
         reference_id=str(invoice.id),
     )

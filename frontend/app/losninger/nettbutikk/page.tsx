@@ -426,14 +426,14 @@ function OrderPipelineAnimation() {
                 <p className="text-xs font-medium text-[#1a2e23]">
                   Ordre #4521
                 </p>
-                <p className="text-[10px] text-[#8a9a8e]">Ola Nordmann</p>
+                <p className="text-[12px] text-[#8a9a8e]">Ola Nordmann</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-sm font-medium tabular-nums text-[#1a2e23]">
                 kr 1 598
               </p>
-              <p className="text-[10px] text-[#8a9a8e]">
+              <p className="text-[12px] text-[#8a9a8e]">
                 2x Wireless Headset
               </p>
             </div>
@@ -490,7 +490,7 @@ function OrderPipelineAnimation() {
 
                 {/* Stage label */}
                 <span
-                  className="text-center text-[8px] font-medium tracking-wider uppercase sm:text-[9px]"
+                  className="text-center text-[8px] font-medium tracking-wider uppercase sm:text-[13px]"
                   style={{
                     color: isActive ? s.color : "#8a9a8e",
                   }}
@@ -511,7 +511,7 @@ function OrderPipelineAnimation() {
                     stiffness: 400,
                     damping: 15,
                   }}
-                  className="rounded-full px-2 py-0.5 text-[8px] font-bold text-white sm:text-[9px]"
+                  className="rounded-full px-2 py-0.5 text-[8px] font-bold text-white sm:text-[13px]"
                   style={{ backgroundColor: s.color }}
                 >
                   {s.detail}
@@ -721,10 +721,10 @@ function LiveCounterAnimation() {
             className="mt-8 overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-lg"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+              <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase">
                 Ordrevolum siste 30 dager
               </span>
-              <span className="text-[10px] tabular-nums text-[#5B906F]">
+              <span className="text-[12px] tabular-nums text-[#5B906F]">
                 +24%
               </span>
             </div>
@@ -847,7 +847,7 @@ function LiveCounterAnimation() {
                 }}
                 className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] p-3 text-center backdrop-blur-lg"
               >
-                <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+                <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase">
                   {stat.label}
                 </span>
                 <p className="mt-1 text-base font-medium text-[#1a2e23] sm:text-lg">
@@ -858,7 +858,7 @@ function LiveCounterAnimation() {
                     formatNumber
                   />
                 </p>
-                <span className="text-[9px] text-[#8a9a8e]">
+                <span className="text-[13px] text-[#8a9a8e]">
                   {stat.suffix.trim()}
                 </span>
               </motion.div>

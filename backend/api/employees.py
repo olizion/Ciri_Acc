@@ -4,11 +4,17 @@ Handles employee management and payroll operations
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from config.database import get_db
+from dependencies.company import get_company_id
+from models.employee import Employee, EmploymentType, EmployeeStatus
 from services.skatteetaten import (
     get_skatteetaten_service,
     TaxCard,
@@ -96,9 +102,14 @@ class EmployeeCreateRequest(BaseModel):
     start_date: str  # ISO format date
     bank_account: Optional[str] = None
 
-    # Tax info (from lookup)
+    pay_day: int = Field(default=15, ge=1, le=28)  # Day of month for salary payment
+
+    # Tax info (from Skatteetaten lookup)
+    tax_card_type: Optional[str] = None
     tax_table: Optional[str] = None
     tax_percentage: Optional[float] = None
+    tax_municipality: Optional[str] = None
+    frikort_amount: Optional[float] = None
 
 
 class EmployeeResponse(BaseModel):
@@ -114,13 +125,16 @@ class EmployeeResponse(BaseModel):
     employment_type: str
     status: str
     monthly_salary: float
+    pay_day: int
     tax_table: Optional[str]
     tax_percentage: Optional[float]
+    tax_card_type: Optional[str]
     net_salary_estimate: float
     employer_cost: float
     vacation_days_remaining: int
     feriepenger_accrued: float
     start_date: str
+    avatar_url: Optional[str]
     created_at: datetime
 
 
@@ -131,6 +145,40 @@ class ConfigurationStatusResponse(BaseModel):
     environment: str
     using_mock: bool
     details: dict
+
+
+# =============================================================================
+# HELPERS
+# =============================================================================
+
+def _employee_to_response(e: Employee) -> EmployeeResponse:
+    """Convert an Employee model to an EmployeeResponse."""
+    from services.avatar import get_avatar_url
+    salary = float(e.monthly_salary)
+    tax_rate = float(e.tax_percentage) if e.tax_percentage else 30.0
+    return EmployeeResponse(
+        id=str(e.id),
+        first_name=e.first_name,
+        last_name=e.last_name,
+        full_name=e.full_name,
+        position=e.position,
+        email=e.email,
+        phone=e.phone,
+        employment_type=e.employment_type.value,
+        status=e.status.value,
+        monthly_salary=salary,
+        pay_day=e.pay_day,
+        tax_table=e.tax_table,
+        tax_percentage=tax_rate,
+        tax_card_type=e.tax_card_type,
+        net_salary_estimate=salary * (1 - tax_rate / 100),
+        employer_cost=salary * 1.161,
+        vacation_days_remaining=e.vacation_days_remaining,
+        feriepenger_accrued=float(e.feriepenger_accrued),
+        start_date=e.start_date.isoformat(),
+        avatar_url=get_avatar_url(e.avatar_s3_key) if e.avatar_s3_key else None,
+        created_at=e.created_at,
+    )
 
 
 # =============================================================================
@@ -235,52 +283,54 @@ async def lookup_personnummer(request: PersonnummerLookupRequest):
 
 
 @router.post("/", response_model=EmployeeResponse)
-async def create_employee(request: EmployeeCreateRequest):
-    """
-    Create a new employee.
+async def create_employee(
+    request: EmployeeCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
+):
+    """Create a new employee and persist to database."""
 
-    The employee's tax information should be fetched first using
-    the `/lookup` endpoint to get the correct tax table/percentage.
+    # Check for duplicate personnummer
+    existing = await db.execute(
+        select(Employee).where(
+            Employee.personnummer == request.personnummer,
+            Employee.company_id == resolved_company_id,
+            Employee.status != EmployeeStatus.TERMINATED,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Ansatt med dette fødselsnummeret finnes allerede")
 
-    **Process:**
-    1. Validates the request
-    2. Creates employee record
-    3. Stores tax information
-    4. Returns the created employee
-
-    **Note:** In production, this would store to the database.
-    Currently returns a mock response.
-    """
-    # In production, this would:
-    # 1. Validate the company_id from the authenticated user
-    # 2. Create the employee in the database
-    # 3. Store encrypted personnummer and bank account
-    # 4. Return the created employee
-
-    # Mock response for now
-    salary = request.monthly_salary
-    tax_rate = request.tax_percentage or 30.0
-
-    return EmployeeResponse(
-        id=str(uuid.uuid4()),
+    employee = Employee(
+        company_id=resolved_company_id,
+        personnummer=request.personnummer,
         first_name=request.first_name,
         last_name=request.last_name,
-        full_name=f"{request.first_name} {request.last_name}",
-        position=request.position,
         email=request.email,
         phone=request.phone,
-        employment_type=request.employment_type,
-        status="active",
-        monthly_salary=salary,
+        position=request.position,
+        employment_type=EmploymentType(request.employment_type),
+        status=EmployeeStatus.ACTIVE,
+        start_date=date.fromisoformat(request.start_date),
+        monthly_salary=Decimal(str(request.monthly_salary)),
+        pay_day=request.pay_day,
+        bank_account=request.bank_account,
+        tax_card_type=request.tax_card_type,
         tax_table=request.tax_table,
-        tax_percentage=tax_rate,
-        net_salary_estimate=salary * (1 - tax_rate / 100),
-        employer_cost=salary * 1.161,  # +14.1% AGA + 2% OTP
-        vacation_days_remaining=25,
-        feriepenger_accrued=0,
-        start_date=request.start_date,
-        created_at=datetime.now(),
+        tax_percentage=Decimal(str(request.tax_percentage)) if request.tax_percentage else None,
+        tax_municipality=request.tax_municipality,
+        frikort_amount=Decimal(str(request.frikort_amount)) if request.frikort_amount else None,
+        tax_card_fetched_at=datetime.utcnow(),
     )
+
+    db.add(employee)
+    await db.flush()
+    await db.commit()
+    await db.refresh(employee)
+
+    # Only set retention for terminated employees (active ones don't expire)
+
+    return _employee_to_response(employee)
 
 
 @router.get("/")
@@ -288,17 +338,21 @@ async def list_employees(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, le=100),
     offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    resolved_company_id: uuid.UUID = Depends(get_company_id),
 ):
-    """
-    List all employees for the current company.
+    """List all employees for the current company."""
+    query = select(Employee).where(Employee.company_id == resolved_company_id)
+    if status:
+        query = query.where(Employee.status == EmployeeStatus(status))
+    query = query.order_by(Employee.created_at.desc()).limit(limit).offset(offset)
 
-    **Note:** In production, this would fetch from the database
-    based on the authenticated user's company.
-    """
-    # Mock response
+    result = await db.execute(query)
+    employees = result.scalars().all()
+
     return {
-        "employees": [],
-        "total": 0,
+        "employees": [_employee_to_response(e).model_dump() for e in employees],
+        "total": len(employees),
         "limit": limit,
         "offset": offset,
     }
@@ -312,12 +366,49 @@ async def get_employee(employee_id: uuid.UUID):
     raise HTTPException(status_code=404, detail="Ansatt ikke funnet")
 
 
-@router.put("/{employee_id}")
-async def update_employee(employee_id: uuid.UUID):
-    """
-    Update an employee's information.
-    """
-    raise HTTPException(status_code=404, detail="Ansatt ikke funnet")
+class EmployeeUpdateRequest(BaseModel):
+    """Request to update an employee."""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    position: Optional[str] = None
+    employment_type: Optional[str] = None
+    monthly_salary: Optional[float] = None
+    pay_day: Optional[int] = Field(default=None, ge=1, le=28)
+    bank_account: Optional[str] = None
+    status: Optional[str] = None
+
+
+@router.put("/{employee_id}", response_model=EmployeeResponse)
+async def update_employee(
+    employee_id: uuid.UUID,
+    request: EmployeeUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update an employee's information."""
+    result = await db.execute(
+        select(Employee).where(Employee.id == employee_id)
+    )
+    employee = result.scalar_one_or_none()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Ansatt ikke funnet")
+
+    update_data = request.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if field == "employment_type" and value is not None:
+            setattr(employee, field, EmploymentType(value))
+        elif field == "status" and value is not None:
+            setattr(employee, field, EmployeeStatus(value))
+        elif field == "monthly_salary" and value is not None:
+            setattr(employee, field, Decimal(str(value)))
+        else:
+            setattr(employee, field, value)
+
+    employee.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(employee)
+    return _employee_to_response(employee)
 
 
 @router.delete("/{employee_id}")
@@ -340,3 +431,43 @@ async def refresh_employee_tax_card(employee_id: uuid.UUID):
     an employee reports changes to their tax situation.
     """
     raise HTTPException(status_code=404, detail="Ansatt ikke funnet")
+
+
+from fastapi import UploadFile, File as FileParam
+
+
+@router.put("/{employee_id}/avatar", response_model=EmployeeResponse)
+async def update_employee_avatar(
+    employee_id: uuid.UUID,
+    file: UploadFile = FileParam(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload or replace a profile picture for an employee."""
+    from services.avatar import upload_avatar as do_upload, delete_avatar
+
+    result = await db.execute(
+        select(Employee).where(Employee.id == employee_id)
+    )
+    employee = result.scalar_one_or_none()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Ansatt ikke funnet")
+
+    # Validate file type
+    if file.content_type not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(status_code=400, detail="Kun JPEG, PNG eller WebP bilder er tillatt")
+
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:  # 5MB
+        raise HTTPException(status_code=400, detail="Bildet kan ikke være større enn 5MB")
+
+    # Delete old avatar if exists
+    if employee.avatar_s3_key:
+        await delete_avatar(employee.avatar_s3_key)
+
+    # Upload new
+    s3_key = await do_upload(str(employee.id), content, file.content_type or "image/jpeg")
+    employee.avatar_s3_key = s3_key
+    await db.commit()
+    await db.refresh(employee)
+
+    return _employee_to_response(employee)

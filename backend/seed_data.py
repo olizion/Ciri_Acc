@@ -16,7 +16,7 @@ from collections import defaultdict
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 
-from sqlalchemy import select, func, exists
+from sqlalchemy import select, func, exists, text
 
 from config.database import async_session_maker
 from models import (
@@ -25,12 +25,13 @@ from models import (
     BankTransaction, TransactionDirection, ReconciliationStatus, TransactionCategory,
     Bilag, BilagStatus,
     Postering,
-    ReconciliationRule,
+    ReconciliationRule, RuleType, RulePriority,
     ReconciliationMatch, MatchType, MatchConfidence, MatchStatus,
     ClusterDataPoint, DataPointSource,
     Employee, EmploymentType, EmployeeStatus, Payslip,
     Invoice, InvoiceStatus,
     Notification,
+    AuditLog,
 )
 
 # Deterministic company UUID matching frontend
@@ -39,6 +40,27 @@ COMPANY_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 # Deterministic bank account UUIDs
 DNB_ACCOUNT_ID = uuid.UUID("00000000-0000-0000-0000-000000000010")
 NORDEA_ACCOUNT_ID = uuid.UUID("00000000-0000-0000-0000-000000000011")
+
+
+async def force_reseed():
+    """Drop all data and reseed. Use for development only."""
+    from config.database import init_db
+    await init_db()
+    async with async_session_maker() as session:
+        print("🗑️  Truncating all tables...")
+        # init_db() already ran create_all, so tables exist
+        await session.execute(text(
+            "TRUNCATE TABLE "
+            "audit_logs, cluster_data_points, reconciliation_matches, "
+            "reconciliation_rules, notifications, payslips, invoices, "
+            "employees, posteringer, bilag, bank_transactions, "
+            "bank_accounts, kontoer "
+            "CASCADE"
+        ))
+        await session.commit()
+        print("✅ All tables truncated")
+
+    await seed_test_data()
 
 
 async def seed_test_data():
@@ -113,10 +135,22 @@ async def seed_test_data():
             print(f"  ✅ Invoices ({len(invoices)})")
 
             # ── 10. Notifications ──
-            notifications = _create_notifications(invoices)
+            notifications = _create_notifications(invoices, bilags)
             session.add_all(notifications)
             await session.flush()
             print(f"  ✅ Notifications ({len(notifications)})")
+
+            # ── 11. Reconciliation Rules ──
+            rules = _create_reconciliation_rules()
+            session.add_all(rules)
+            await session.flush()
+            print(f"  ✅ Reconciliation rules ({len(rules)})")
+
+            # ── 12. Audit Logs ──
+            audit_logs = _create_audit_logs(bilags, invoices, employees)
+            session.add_all(audit_logs)
+            await session.flush()
+            print(f"  ✅ Audit logs ({len(audit_logs)})")
 
             await session.commit()
             print("🎉 Test data seeded successfully!")
@@ -370,6 +404,105 @@ _TXN_DATA = [
     ("unmatched", "2025-02-28", 1310, "credit", "Renter sparekonto februar", "Nordea", "inntekt", 1),
     ("ignored",   "2025-01-02", 100000, "credit", "Innskudd fra eier", "Intern", "inntekt", 1),
     ("ignored",   "2025-02-01", -25000, "debit", "Overføring til driftskonto", "Intern", "bank", 1),
+
+    # ─── MARCH 2025 ───
+
+    # Income
+    ("unmatched", "2025-03-03", 110000, "credit", "Betaling Equinor mars", "Equinor ASA", "inntekt", 0),
+    ("unmatched", "2025-03-07", 72000, "credit", "Kongsberg Digital prosjekt", "Kongsberg Digital AS", "inntekt", 0),
+    ("unmatched", "2025-03-14", 48000, "credit", "Lyse Energi IT-rådgivning", "Lyse Energi AS", "inntekt", 0),
+    ("unmatched", "2025-03-21", 29000, "credit", "Nordic Edge samarbeid", "Nordic Edge AS", "inntekt", 0),
+
+    # Recurring IT
+    ("suggested", "2025-03-03", -699, "debit", "GitHub Team subscription", "GitHub", "kontor", 0),
+    ("suggested", "2025-03-03", -4200, "debit", "Microsoft Azure monthly", "Microsoft Azure", "kontor", 0),
+    ("unmatched", "2025-03-03", -599, "debit", "Slack Business+", "Slack Technologies", "kontor", 0),
+    ("ignored",   "2025-03-05", -149, "debit", "Spotify Premium bedrift", "Spotify", "privat", 0),
+
+    # Office & rent
+    ("suggested", "2025-03-01", -18500, "debit", "Husleie mars Forus kontorlokaler", "Eiendomspartner AS", "leie", 0),
+    ("unmatched", "2025-03-08", -3890, "debit", "Elkjøp docking station", "Elkjøp", "kontor", 0),
+    ("unmatched", "2025-03-12", -1250, "debit", "IKEA kontorstol", "IKEA", "kontor", 0),
+
+    # Telecom
+    ("suggested", "2025-03-07", -499, "debit", "Telenor bedrift mobil", "Telenor", "kontor", 0),
+    ("unmatched", "2025-03-07", -399, "debit", "Telia bedrift bredbånd", "Telia", "kontor", 0),
+
+    # Insurance
+    ("suggested", "2025-03-08", -3200, "debit", "Gjensidige næringsforsikring", "Gjensidige", "forsikring", 0),
+
+    # Travel
+    ("unmatched", "2025-03-10", -3200, "debit", "SAS flybillett SVG-TRD", "SAS", "reise", 0),
+    ("unmatched", "2025-03-10", -1690, "debit", "Scandic Bakklandet Trondheim", "Scandic Hotels", "reise", 0),
+    ("unmatched", "2025-03-11", -420, "debit", "Taxi Trondheim lufthavn", "Trøndertaxi", "reise", 0),
+
+    # Supplies
+    ("unmatched", "2025-03-06", -15800, "debit", "Komplett.no MacBook Pro tilbehør", "Komplett.no", "varekjop", 0),
+    ("unmatched", "2025-03-15", -2200, "debit", "Dustin AB lisenser", "Dustin AB", "varekjop", 0),
+
+    # Food (private)
+    ("ignored", "2025-03-09", -278, "debit", "Rema 1000 Forus", "Rema 1000", "privat", 0),
+    ("ignored", "2025-03-14", -345, "debit", "Meny Madla", "Meny", "privat", 0),
+
+    # Bank fees
+    ("unmatched", "2025-03-31", -150, "debit", "DNB gebyr mars", "DNB", "bank", 0),
+
+    # Salary
+    ("unmatched", "2025-03-25", -65000, "debit", "Lønn Henrik Berge mars", "Lønn", "lonn", 0),
+    ("unmatched", "2025-03-25", -58000, "debit", "Lønn Ingrid Nilsen mars", "Lønn", "lonn", 0),
+    ("unmatched", "2025-03-25", -42000, "debit", "Lønn Lars Pedersen mars", "Lønn", "lonn", 0),
+    ("unmatched", "2025-03-25", -35000, "debit", "Lønn Maria Hansen mars", "Lønn", "lonn", 0),
+    ("unmatched", "2025-03-25", -48000, "debit", "Lønn Erik Johansen mars", "Lønn", "lonn", 0),
+
+    # Tax / AGA
+    ("unmatched", "2025-03-20", -34200, "debit", "Skattetrekk mars", "Skatteetaten", "mva", 0),
+    ("unmatched", "2025-03-20", -35028, "debit", "Arbeidsgiveravgift mars", "NAV", "lonn", 0),
+
+    # Accounting
+    ("unmatched", "2025-03-31", -5900, "debit", "Regnskapsfører mars", "Stavanger Regnskap AS", "kontor", 0),
+
+    # Extra variety — March
+    ("unmatched", "2025-03-04", -2500, "debit", "Google Workspace mars", "Google", "kontor", 0),
+    ("unmatched", "2025-03-13", -890, "debit", "Canva Pro årlig", "Canva", "kontor", 0),
+    ("unmatched", "2025-03-18", -4500, "debit", "Vercel Pro hosting mars", "Vercel", "kontor", 0),
+    ("unmatched", "2025-03-19", -1800, "debit", "Linear Team plan", "Linear", "kontor", 0),
+    ("unmatched", "2025-03-22", -950, "debit", "1Password Business", "1Password", "kontor", 0),
+    ("unmatched", "2025-03-26", -1350, "debit", "Wolt teamlunsj", "Wolt", "kontor", 0),
+
+    # Nordea March
+    ("unmatched", "2025-03-31", 1380, "credit", "Renter sparekonto mars", "Nordea", "inntekt", 1),
+    ("ignored",   "2025-03-01", -30000, "debit", "Overføring til driftskonto", "Intern", "bank", 1),
+
+    # ─── APRIL 2025 (partial — current month) ───
+
+    # Income
+    ("unmatched", "2025-04-02", 115000, "credit", "Betaling Equinor april", "Equinor ASA", "inntekt", 0),
+    ("unmatched", "2025-04-08", 55000, "credit", "Stavanger Kommune digitalisering", "Stavanger Kommune", "inntekt", 0),
+
+    # Recurring IT
+    ("unmatched", "2025-04-03", -699, "debit", "GitHub Team subscription", "GitHub", "kontor", 0),
+    ("unmatched", "2025-04-03", -4200, "debit", "Microsoft Azure monthly", "Microsoft Azure", "kontor", 0),
+    ("unmatched", "2025-04-03", -599, "debit", "Slack Business+", "Slack Technologies", "kontor", 0),
+    ("ignored",   "2025-04-05", -149, "debit", "Spotify Premium bedrift", "Spotify", "privat", 0),
+
+    # Office & rent
+    ("unmatched", "2025-04-01", -18500, "debit", "Husleie april Forus kontorlokaler", "Eiendomspartner AS", "leie", 0),
+
+    # Telecom
+    ("unmatched", "2025-04-07", -499, "debit", "Telenor bedrift mobil", "Telenor", "kontor", 0),
+    ("unmatched", "2025-04-07", -399, "debit", "Telia bedrift bredbånd", "Telia", "kontor", 0),
+
+    # Insurance
+    ("unmatched", "2025-04-08", -3200, "debit", "Gjensidige næringsforsikring", "Gjensidige", "forsikring", 0),
+
+    # Early April extras
+    ("unmatched", "2025-04-04", -2500, "debit", "Google Workspace april", "Google", "kontor", 0),
+    ("unmatched", "2025-04-06", -12500, "debit", "Komplett.no ny skjerm 34\"", "Komplett.no", "varekjop", 0),
+    ("unmatched", "2025-04-09", -780, "debit", "Wolt teamlunsj", "Wolt", "kontor", 0),
+
+    # Food (private)
+    ("ignored", "2025-04-03", -195, "debit", "Kiwi Forus", "Kiwi", "privat", 0),
+    ("ignored", "2025-04-07", -410, "debit", "Oda.com dagligvarer", "Oda", "privat", 0),
 ]
 
 # Category → suggested NS 4102 account
@@ -466,6 +599,34 @@ def _create_bilags() -> list[Bilag]:
         ("2025-00023", "2025-02-28", "Bankgebyr februar", 150, 150, 0, "0", "DNB Bank ASA", "bank", "pending", "7770"),
         ("2025-00024", "2025-02-09", "SSD og RAM oppgradering", 8900, 7120, 1780, "1", "Komplett Services AS", "varekjop", "pending", "4005"),
         ("2025-00025", "2025-02-14", "Kabler og adaptere", 3400, 2720, 680, "1", "Kjell & Company AS", "varekjop", "pending", "4005"),
+
+        # ─── MARCH bilags ───
+        ("2025-00026", "2025-03-01", "Husleie mars kontorlokaler", 18500, 14800, 3700, "3", "Eiendomspartner AS", "leie", "approved", "6300"),
+        ("2025-00027", "2025-03-03", "GitHub Team abonnement mars", 699, 559.20, 139.80, "3", "GitHub Inc", "kontor", "approved", "6540"),
+        ("2025-00028", "2025-03-03", "Azure skyplattform mars", 4200, 3360, 840, "3", "Microsoft Ireland", "kontor", "approved", "6540"),
+        ("2025-00029", "2025-03-06", "MacBook Pro tilbehør", 15800, 12640, 3160, "1", "Komplett Services AS", "varekjop", "approved", "4005"),
+        ("2025-00030", "2025-03-07", "Mobilabonnement bedrift mars", 499, 399.20, 99.80, "3", "Telenor Norge AS", "kontor", "pending", "6540"),
+        ("2025-00031", "2025-03-08", "Næringsforsikring mars", 3200, 3200, 0, "6", "Gjensidige Forsikring ASA", "forsikring", "pending", "6340"),
+        ("2025-00032", "2025-03-08", "Docking station", 3890, 3112, 778, "1", "Elkjøp Norge AS", "kontor", "pending", "6540"),
+        ("2025-00033", "2025-03-10", "Flybillett Stavanger-Trondheim", 3200, 3200, 0, "5", "SAS AB", "reise", "pending", "7140"),
+        ("2025-00034", "2025-03-10", "Hotell Trondheim 1 natt", 1690, 1352, 338, "3", "Scandic Hotels", "reise", "pending", "7140"),
+        ("2025-00035", "2025-03-12", "Kontorstol IKEA", 1250, 1000, 250, "1", "IKEA Norge AS", "kontor", "pending", "6540"),
+        ("2025-00036", "2025-03-15", "Dustin programvarelisenser", 2200, 1760, 440, "1", "Dustin AB", "varekjop", "pending", "4005"),
+        ("2025-00037", "2025-03-25", "Lønn Henrik Berge mars", 65000, 65000, 0, "0", "Ansatt", "lonn", "pending", "5000"),
+        ("2025-00038", "2025-03-25", "Lønn Ingrid Nilsen mars", 58000, 58000, 0, "0", "Ansatt", "lonn", "pending", "5000"),
+        ("2025-00039", "2025-03-25", "Lønn Lars Pedersen mars", 42000, 42000, 0, "0", "Ansatt", "lonn", "pending", "5000"),
+        ("2025-00040", "2025-03-25", "Lønn Maria Hansen mars", 35000, 35000, 0, "0", "Ansatt", "lonn", "pending", "5000"),
+        ("2025-00041", "2025-03-25", "Lønn Erik Johansen mars", 48000, 48000, 0, "0", "Ansatt", "lonn", "pending", "5000"),
+        ("2025-00042", "2025-03-31", "Bankgebyr mars", 150, 150, 0, "0", "DNB Bank ASA", "bank", "pending", "7770"),
+        ("2025-00043", "2025-03-31", "Regnskapsfører mars", 5900, 4720, 1180, "3", "Stavanger Regnskap AS", "kontor", "pending", "6700"),
+
+        # ─── APRIL bilags (partial) ───
+        ("2025-00044", "2025-04-01", "Husleie april kontorlokaler", 18500, 14800, 3700, "3", "Eiendomspartner AS", "leie", "pending", "6300"),
+        ("2025-00045", "2025-04-03", "GitHub Team abonnement april", 699, 559.20, 139.80, "3", "GitHub Inc", "kontor", "pending", "6540"),
+        ("2025-00046", "2025-04-03", "Azure skyplattform april", 4200, 3360, 840, "3", "Microsoft Ireland", "kontor", "pending", "6540"),
+        ("2025-00047", "2025-04-06", "Ny skjerm 34\"", 12500, 10000, 2500, "1", "Komplett Services AS", "varekjop", "pending", "4005"),
+        ("2025-00048", "2025-04-07", "Mobilabonnement bedrift april", 499, 399.20, 99.80, "3", "Telenor Norge AS", "kontor", "pending", "6540"),
+        ("2025-00049", "2025-04-08", "Næringsforsikring april", 3200, 3200, 0, "6", "Gjensidige Forsikring ASA", "forsikring", "pending", "6340"),
     ]
 
     bilags = []
@@ -497,6 +658,103 @@ def _create_bilags() -> list[Bilag]:
             updated_at=now,
             posted_at=now if status == "posted" else None,
         ))
+
+    # ── Periodisering candidate: annual insurance ──
+    bilags.append(Bilag(
+        id=uuid.uuid4(),
+        company_id=COMPANY_ID,
+        bilag_number="2025-00050",
+        document_date=date(2025, 3, 25),
+        receipt_date=datetime(2025, 3, 25, 10, 0, 0, tzinfo=timezone.utc),
+        description="Tryg næringsforsikring — årspolise 2025",
+        gross_amount=Decimal("38400"),
+        net_amount=Decimal("38400"),
+        mva_amount=Decimal("0"),
+        mva_code="6",
+        counterparty_name="Tryg Forsikring AS",
+        category="forsikring",
+        suggested_account="6340",
+        file_path="/uploads/2025-00050.pdf",
+        file_hash_sha256="b" * 64,
+        original_filename="2025-00050_Tryg_Forsikring_AS.pdf",
+        mime_type="application/pdf",
+        ocr_confidence=0.96,
+        status=BilagStatus.POSTED,
+        created_by_ciri=True,
+        ciri_confidence=0.94,
+        ciri_reasoning="Årspolise fra Tryg — forsikringspremie for hele 2025. Ciri foreslår periodisering over 12 måneder.",
+        periodisering_suggestion={
+            "is_candidate": True,
+            "confidence": 0.94,
+            "reason": "Årlig næringsforsikring som dekker hele 2025. Premien bør fordeles over 12 måneder i henhold til sammenstillingsprinsippet.",
+            "legal_basis": "Regnskapsloven § 4-1 nr. 3 (sammenstillingsprinsippet)",
+            "category": "forsikring",
+            "total_amount": 38400.0,
+            "period_count": 12,
+            "start_period": "2025-01",
+            "end_period": "2025-12",
+            "monthly_amount": 3200.0,
+            "remainder": 0.0,
+            "expense_account": "6340",
+            "balance_account": "1700",
+            "direction": "kostnad",
+            "dismissed": False,
+            "accepted": False,
+        },
+        periodisering_scanned_at=now,
+        created_at=now,
+        updated_at=now,
+        posted_at=now,
+    ))
+
+    # ── Second periodisering candidate: annual software license ──
+    bilags.append(Bilag(
+        id=uuid.uuid4(),
+        company_id=COMPANY_ID,
+        bilag_number="2025-00051",
+        document_date=date(2025, 3, 20),
+        receipt_date=datetime(2025, 3, 20, 10, 0, 0, tzinfo=timezone.utc),
+        description="JetBrains All Products Pack — årslisens",
+        gross_amount=Decimal("7490"),
+        net_amount=Decimal("7490"),
+        mva_amount=Decimal("0"),
+        mva_code="86",
+        counterparty_name="JetBrains s.r.o.",
+        category="it",
+        suggested_account="6540",
+        file_path="/uploads/2025-00051.pdf",
+        file_hash_sha256="c" * 64,
+        original_filename="2025-00051_JetBrains.pdf",
+        mime_type="application/pdf",
+        ocr_confidence=0.97,
+        status=BilagStatus.POSTED,
+        created_by_ciri=True,
+        ciri_confidence=0.91,
+        ciri_reasoning="Årlig programvarelisens fra JetBrains. Dekker 12 måneder — kan periodiseres.",
+        periodisering_suggestion={
+            "is_candidate": True,
+            "confidence": 0.88,
+            "reason": "Årlig programvarelisens (All Products Pack) som dekker mars 2025 til februar 2026. Bør fordeles over 12 måneder.",
+            "legal_basis": "Regnskapsloven § 4-1 nr. 3 (sammenstillingsprinsippet)",
+            "category": "lisens",
+            "total_amount": 7490.0,
+            "period_count": 12,
+            "start_period": "2025-03",
+            "end_period": "2026-02",
+            "monthly_amount": 624.17,
+            "remainder": -0.04,
+            "expense_account": "6540",
+            "balance_account": "1700",
+            "direction": "kostnad",
+            "dismissed": False,
+            "accepted": False,
+        },
+        periodisering_scanned_at=now,
+        created_at=now,
+        updated_at=now,
+        posted_at=now,
+    ))
+
     return bilags
 
 
@@ -758,6 +1016,90 @@ def _create_employees() -> list[Employee]:
             feriepenger_rate=Decimal("12.0"),
             otp_percentage=Decimal("2.0"),
         ),
+        Employee(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            personnummer="45678901234",
+            first_name="Maria",
+            last_name="Hansen",
+            email="maria@minbedrift.no",
+            phone="90045678",
+            position="UX Designer",
+            employment_type=EmploymentType.FAST,
+            status=EmployeeStatus.ACTIVE,
+            start_date=date(2024, 3, 1),
+            monthly_salary=Decimal("35000"),
+            tax_table="7100",
+            tax_percentage=Decimal("26.0"),
+            tax_municipality="1103",
+            bank_account="56780023456",
+            feriepenger_rate=Decimal("12.0"),
+            otp_percentage=Decimal("2.0"),
+        ),
+        Employee(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            personnummer="56789012345",
+            first_name="Erik",
+            last_name="Johansen",
+            email="erik@minbedrift.no",
+            phone="90056789",
+            position="DevOps-ingeniør",
+            employment_type=EmploymentType.FAST,
+            status=EmployeeStatus.ACTIVE,
+            start_date=date(2024, 9, 1),
+            monthly_salary=Decimal("48000"),
+            tax_table="7100",
+            tax_percentage=Decimal("30.0"),
+            tax_municipality="1103",
+            bank_account="67890034567",
+            feriepenger_rate=Decimal("12.0"),
+            otp_percentage=Decimal("2.0"),
+        ),
+        Employee(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            personnummer="67890123456",
+            first_name="Kari",
+            last_name="Olsen",
+            email="kari@minbedrift.no",
+            phone="90067890",
+            position="Prosjektleder",
+            employment_type=EmploymentType.DELTID,
+            status=EmployeeStatus.PARENTAL_LEAVE,
+            start_date=date(2022, 1, 15),
+            monthly_salary=Decimal("52000"),
+            hourly_rate=Decimal("325"),
+            tax_table="7100",
+            tax_percentage=Decimal("31.0"),
+            tax_municipality="1103",
+            bank_account="78900045678",
+            feriepenger_rate=Decimal("12.0"),
+            otp_percentage=Decimal("2.0"),
+            notes="Foreldrepermisjon fra 01.02.2025",
+        ),
+        Employee(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            personnummer="78901234567",
+            first_name="Thomas",
+            last_name="Strand",
+            email="thomas@minbedrift.no",
+            phone="90078901",
+            position="Sommerpraktikant",
+            employment_type=EmploymentType.VIKAR,
+            status=EmployeeStatus.TERMINATED,
+            start_date=date(2024, 6, 1),
+            end_date=date(2024, 8, 31),
+            monthly_salary=Decimal("28000"),
+            tax_table="7100",
+            tax_percentage=Decimal("22.0"),
+            tax_municipality="1103",
+            bank_account="89010056789",
+            feriepenger_rate=Decimal("12.0"),
+            otp_percentage=Decimal("2.0"),
+            notes="Sommervikar 2024, kontrakt avsluttet",
+        ),
     ]
 
 
@@ -768,7 +1110,14 @@ def _create_employees() -> list[Employee]:
 def _create_payslips(employees: list[Employee]) -> list[Payslip]:
     payslips = []
     for emp in employees:
-        for month in [1, 2]:
+        # Skip terminated employees (they have no 2025 payslips)
+        if emp.status == EmployeeStatus.TERMINATED:
+            continue
+
+        # Parental leave employees only get January
+        months = [1] if emp.status == EmployeeStatus.PARENTAL_LEAVE else [1, 2, 3]
+
+        for month in months:
             gross = emp.monthly_salary
             tax_pct = emp.tax_percentage or Decimal("30.0")
             tax = (gross * tax_pct / 100).quantize(Decimal("1.00"))
@@ -792,8 +1141,8 @@ def _create_payslips(employees: list[Employee]) -> list[Payslip]:
                 feriepenger_accrual=feriepenger,
                 paid_at=datetime(2025, month, 25, 12, 0, 0),
                 payment_reference=f"LONN-2025-{month:02d}-{emp.last_name.upper()[:3]}",
-                amelding_submitted=month == 1,
-                amelding_reference=f"AM-2025-01-{emp.last_name[:3].upper()}" if month == 1 else None,
+                amelding_submitted=month <= 2,
+                amelding_reference=f"AM-2025-{month:02d}-{emp.last_name[:3].upper()}" if month <= 2 else None,
             ))
     return payslips
 
@@ -814,6 +1163,14 @@ def _create_invoices() -> list[Invoice]:
         ("F-0008", "Lyse Energi AS", "regnskap@lyse.no", "IT-konsulentbistand feb 2025", 38000, 25, "sent", "2025-02-22", "2025-03-22"),
         ("F-0009", "Stavanger Kommune", "faktura@stavanger.kommune.no", "Digitalisering pilot", 45000, 0, "draft", "2025-02-25", "2025-03-25"),
         ("F-0010", "Nordic Edge AS", "admin@nordicedge.org", "Smart City konferansebidrag", 15000, 25, "draft", "2025-02-28", "2025-03-28"),
+        # March invoices
+        ("F-0011", "Equinor ASA", "regnskap@equinor.com", "Konsulentbistand februar 2025", 110000, 25, "sent", "2025-03-03", "2025-04-02"),
+        ("F-0012", "Kongsberg Digital AS", "faktura@kongsberg.com", "Digital tvilling fase 2 ferdigstilt", 72000, 25, "sent", "2025-03-07", "2025-04-06"),
+        ("F-0013", "Lyse Energi AS", "regnskap@lyse.no", "IT-rådgivning mars 2025", 48000, 25, "viewed", "2025-03-14", "2025-04-13"),
+        ("F-0014", "Nordic Edge AS", "admin@nordicedge.org", "Workshop fasilitering Q1", 29000, 25, "sent", "2025-03-21", "2025-04-20"),
+        # April invoices
+        ("F-0015", "Equinor ASA", "regnskap@equinor.com", "Konsulentbistand mars 2025", 115000, 25, "draft", "2025-04-02", "2025-05-02"),
+        ("F-0016", "Stavanger Kommune", "faktura@stavanger.kommune.no", "Digitalisering fase 2", 55000, 0, "draft", "2025-04-08", "2025-05-08"),
     ]
 
     invoices = []
@@ -854,9 +1211,452 @@ def _create_invoices() -> list[Invoice]:
 # 10. Notifications
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _create_notifications(invoices: list[Invoice]) -> list[Notification]:
+def _create_reconciliation_rules() -> list[ReconciliationRule]:
+    """Create reconciliation rules — both user-created and AI-learned."""
     now = datetime.now(timezone.utc)
     return [
+        # User-created rules
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Spotify → privat",
+            description="Spotify-abonnement er personlig, ikke bedriftsrelatert",
+            rule_type=RuleType.IGNORE,
+            priority=RulePriority.HIGH,
+            criteria={
+                "description_contains": "Spotify",
+                "direction": "debit",
+                "amount_max": 200,
+            },
+            action={
+                "mark_private": True,
+                "reason": "Personlig abonnement",
+            },
+            counterparty_mapping={
+                "raw_patterns": ["SPOTIFY*", "SPOTIFY PREMIUM", "SPOTIFY AB"],
+                "normalized_name": "Spotify AB",
+            },
+            is_active=True,
+            learned_from_user=False,
+            times_applied=4,
+            last_applied_at=now - timedelta(days=5),
+            times_overridden=0,
+            created_at=now - timedelta(days=60),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Dagligvarer → privat",
+            description="Dagligvarehandel (Rema, Kiwi, Meny, Oda) er privat",
+            rule_type=RuleType.IGNORE,
+            priority=RulePriority.HIGH,
+            criteria={
+                "description_contains": "Rema 1000|Kiwi|Meny|Oda.com",
+                "direction": "debit",
+                "amount_max": 1000,
+            },
+            action={
+                "mark_private": True,
+                "reason": "Dagligvarehandel, privat utgift",
+            },
+            is_active=True,
+            learned_from_user=False,
+            times_applied=9,
+            last_applied_at=now - timedelta(days=3),
+            times_overridden=0,
+            created_at=now - timedelta(days=55),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Husleie → 6300",
+            description="Månedlig husleie kontorkontor kategoriseres automatisk",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.HIGH,
+            criteria={
+                "description_contains": "Husleie",
+                "merchant_name": "Eiendomspartner AS",
+                "direction": "debit",
+                "amount_exact": 18500,
+            },
+            action={
+                "category": "leie",
+                "account": "6300",
+                "mva_code": "3",
+            },
+            counterparty_mapping={
+                "raw_patterns": ["EIENDOMSPARTNER", "HUSLEIE FORUS"],
+                "normalized_name": "Eiendomspartner AS",
+            },
+            is_active=True,
+            learned_from_user=False,
+            times_applied=4,
+            last_applied_at=now - timedelta(days=1),
+            times_overridden=0,
+            created_at=now - timedelta(days=58),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="GitHub → 6540 Kontor IT",
+            description="GitHub Team-abonnement kategoriseres som kontorkostnad IT",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.MEDIUM,
+            criteria={
+                "description_contains": "GitHub",
+                "direction": "debit",
+                "amount_exact": 699,
+            },
+            action={
+                "category": "kontor",
+                "account": "6540",
+                "mva_code": "3",
+            },
+            is_active=True,
+            learned_from_user=True,
+            times_applied=4,
+            last_applied_at=now - timedelta(days=3),
+            times_overridden=0,
+            confidence_threshold=0.85,
+            created_at=now - timedelta(days=50),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Azure → 6540 Kontor IT",
+            description="Microsoft Azure månedskostnad",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.MEDIUM,
+            criteria={
+                "description_contains": "Azure",
+                "merchant_name": "Microsoft Azure",
+                "direction": "debit",
+            },
+            action={
+                "category": "kontor",
+                "account": "6540",
+                "mva_code": "3",
+            },
+            is_active=True,
+            learned_from_user=True,
+            times_applied=4,
+            last_applied_at=now - timedelta(days=3),
+            times_overridden=0,
+            confidence_threshold=0.90,
+            created_at=now - timedelta(days=50),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Telenor → 6540 Kontor",
+            description="Telenor bedriftsmobil kategoriseres som kontorkostnad",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.MEDIUM,
+            criteria={
+                "description_contains": "Telenor",
+                "direction": "debit",
+                "amount_max": 600,
+            },
+            action={
+                "category": "kontor",
+                "account": "6540",
+                "mva_code": "3",
+            },
+            is_active=True,
+            learned_from_user=True,
+            times_applied=3,
+            last_applied_at=now - timedelta(days=7),
+            times_overridden=0,
+            confidence_threshold=0.88,
+            created_at=now - timedelta(days=45),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Gjensidige → 6340 Forsikring",
+            description="Gjensidige næringsforsikring",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.MEDIUM,
+            criteria={
+                "description_contains": "Gjensidige",
+                "direction": "debit",
+                "amount_exact": 3200,
+            },
+            action={
+                "category": "forsikring",
+                "account": "6340",
+                "mva_code": "6",
+            },
+            is_active=True,
+            learned_from_user=True,
+            times_applied=3,
+            last_applied_at=now - timedelta(days=8),
+            times_overridden=0,
+            confidence_threshold=0.92,
+            created_at=now - timedelta(days=40),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="DNB gebyr → 7770 Bankgebyr",
+            description="DNB månedlig bankgebyr",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.LOW,
+            criteria={
+                "description_contains": "DNB gebyr",
+                "direction": "debit",
+                "amount_exact": 150,
+            },
+            action={
+                "category": "bank",
+                "account": "7770",
+                "mva_code": "0",
+            },
+            is_active=True,
+            learned_from_user=True,
+            times_applied=1,
+            last_applied_at=now - timedelta(days=30),
+            times_overridden=0,
+            confidence_threshold=0.95,
+            created_at=now - timedelta(days=30),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Interne overføringer → ignorer",
+            description="Overføringer mellom egne kontoer trenger ikke bilag",
+            rule_type=RuleType.IGNORE,
+            priority=RulePriority.HIGH,
+            criteria={
+                "description_contains": "Overføring til driftskonto|Innskudd fra eier",
+                "merchant_name": "Intern",
+            },
+            action={
+                "mark_private": False,
+                "reason": "Intern overføring mellom egne kontoer",
+            },
+            is_active=True,
+            learned_from_user=False,
+            times_applied=3,
+            last_applied_at=now - timedelta(days=10),
+            times_overridden=0,
+            created_at=now - timedelta(days=55),
+        ),
+        ReconciliationRule(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            name="Komplett.no → 4005 Varekjøp",
+            description="Komplett.no innkjøp kategoriseres som varekjøp",
+            rule_type=RuleType.AUTO_CATEGORY,
+            priority=RulePriority.MEDIUM,
+            criteria={
+                "description_contains": "Komplett",
+                "direction": "debit",
+            },
+            action={
+                "category": "varekjop",
+                "account": "4005",
+                "mva_code": "1",
+            },
+            is_active=True,
+            learned_from_user=True,
+            times_applied=3,
+            last_applied_at=now - timedelta(days=5),
+            times_overridden=1,
+            confidence_threshold=0.80,
+            created_at=now - timedelta(days=48),
+        ),
+    ]
+
+
+def _create_audit_logs(
+    bilags: list[Bilag],
+    invoices: list[Invoice],
+    employees: list[Employee],
+) -> list[AuditLog]:
+    """Create realistic audit log entries across the system's lifetime."""
+    now = datetime.now(timezone.utc)
+    user_id = uuid.UUID("00000000-0000-0000-0000-000000000002")  # test user
+    logs = []
+
+    # System startup / login events
+    for days_ago in [60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 7, 5, 3, 2, 1, 0]:
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=now - timedelta(days=days_ago, hours=8),
+            user_id=user_id,
+            company_id=COMPANY_ID,
+            action="login",
+            resource_type="session",
+            ip_address="192.168.1.100",
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/131",
+        ))
+
+    # Bilag creation events (Ciri auto-created from email)
+    for i, bilag in enumerate(bilags[:15]):
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=bilag.created_at + timedelta(seconds=i),
+            company_id=COMPANY_ID,
+            action="create",
+            resource_type="bilag",
+            resource_id=str(bilag.id),
+            details={
+                "bilag_number": bilag.bilag_number,
+                "description": bilag.description,
+                "amount": str(bilag.gross_amount),
+                "source": "email_pipeline",
+            },
+            created_by_ciri=True,
+        ))
+
+    # Bilag approval events
+    for bilag in bilags:
+        if bilag.status in (BilagStatus.POSTED, BilagStatus.APPROVED):
+            logs.append(AuditLog(
+                id=uuid.uuid4(),
+                timestamp=bilag.created_at + timedelta(hours=2),
+                user_id=user_id,
+                company_id=COMPANY_ID,
+                action="update",
+                resource_type="bilag",
+                resource_id=str(bilag.id),
+                details={
+                    "bilag_number": bilag.bilag_number,
+                    "before": {"status": "pending"},
+                    "after": {"status": bilag.status.value},
+                },
+                ip_address="192.168.1.100",
+            ))
+
+    # Invoice events
+    for inv in invoices:
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=inv.created_at,
+            user_id=user_id,
+            company_id=COMPANY_ID,
+            action="create",
+            resource_type="invoice",
+            resource_id=str(inv.id),
+            details={
+                "invoice_number": inv.invoice_number,
+                "customer": inv.customer_name,
+                "total": str(inv.total_amount),
+            },
+            ip_address="192.168.1.100",
+        ))
+        if inv.sent_at:
+            logs.append(AuditLog(
+                id=uuid.uuid4(),
+                timestamp=inv.sent_at,
+                user_id=user_id,
+                company_id=COMPANY_ID,
+                action="export",
+                resource_type="invoice",
+                resource_id=str(inv.id),
+                details={
+                    "invoice_number": inv.invoice_number,
+                    "sent_to": inv.customer_email,
+                    "action": "email_sent",
+                },
+                ip_address="192.168.1.100",
+            ))
+
+    # Employee events
+    for emp in employees:
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=now - timedelta(days=60),
+            user_id=user_id,
+            company_id=COMPANY_ID,
+            action="create",
+            resource_type="employee",
+            resource_id=str(emp.id),
+            details={
+                "name": f"{emp.first_name} {emp.last_name}",
+                "position": emp.position,
+                "type": emp.employment_type.value,
+            },
+            ip_address="192.168.1.100",
+        ))
+
+    # Bank sync events
+    for days_ago in [30, 25, 20, 15, 10, 5, 1]:
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=now - timedelta(days=days_ago, hours=6),
+            company_id=COMPANY_ID,
+            action="create",
+            resource_type="bank_sync",
+            resource_id=str(DNB_ACCOUNT_ID),
+            details={
+                "bank": "DNB",
+                "transactions_imported": 5 + (days_ago % 4),
+                "account": "Driftskonto",
+            },
+            created_by_ciri=True,
+        ))
+
+    # Reconciliation batch runs
+    for days_ago in [28, 21, 14, 7, 1]:
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=now - timedelta(days=days_ago, hours=3),
+            company_id=COMPANY_ID,
+            action="create",
+            resource_type="reconciliation_run",
+            details={
+                "matches_suggested": 8 + (days_ago % 5),
+                "auto_confirmed": 2,
+                "confidence_avg": 0.82,
+            },
+            created_by_ciri=True,
+        ))
+
+    # Report views
+    for days_ago in [14, 7, 3, 1]:
+        logs.append(AuditLog(
+            id=uuid.uuid4(),
+            timestamp=now - timedelta(days=days_ago, hours=10),
+            user_id=user_id,
+            company_id=COMPANY_ID,
+            action="view",
+            resource_type="report",
+            details={
+                "report_type": "resultatregnskap" if days_ago % 2 == 0 else "balanse",
+                "period": "2025-Q1",
+            },
+            ip_address="192.168.1.100",
+        ))
+
+    return logs
+
+
+def _create_notifications(invoices: list[Invoice], bilags: list[Bilag] | None = None) -> list[Notification]:
+    now = datetime.now(timezone.utc)
+
+    # Find periodisering candidate bilags for notifications
+    periodisering_notifications = []
+    if bilags:
+        for b in bilags:
+            if b.periodisering_suggestion and b.periodisering_suggestion.get("is_candidate") and not b.periodisering_suggestion.get("accepted") and not b.periodisering_suggestion.get("dismissed"):
+                s = b.periodisering_suggestion
+                cat = s.get("category", "kostnad")
+                total = s.get("total_amount", 0)
+                months = s.get("period_count", 0)
+                periodisering_notifications.append(Notification(
+                    id=uuid.uuid4(),
+                    company_id=COMPANY_ID,
+                    title=f"Periodiseringsforslag: {b.description[:50]}",
+                    message=f"Ciri foreslår å fordele kostnaden på kr {total:,.0f} over {months} måneder ({cat}). Klikk for å gjennomgå.",
+                    type="periodisering_suggestion",
+                    reference_id=str(b.id),
+                    is_read=False,
+                    created_at=now - timedelta(minutes=42),
+                ))
+
+    return periodisering_notifications + [
         Notification(
             id=uuid.uuid4(),
             company_id=COMPANY_ID,
@@ -937,4 +1737,87 @@ def _create_notifications(invoices: list[Invoice]) -> list[Notification]:
             is_read=False,
             created_at=now - timedelta(hours=12),
         ),
+        Notification(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            title="Faktura F-0013 åpnet",
+            message="Lyse Energi AS har åpnet faktura F-0013 på 60 000 kr",
+            type="invoice_viewed",
+            reference_id=str(invoices[12].id) if len(invoices) > 12 else None,
+            is_read=False,
+            created_at=now - timedelta(hours=1),
+        ),
+        Notification(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            title="Ny regel lært",
+            message="Ciri lærte en ny regel: «Komplett.no → 4005 Varekjøp» basert på dine valg",
+            type="rule_learned",
+            reference_id=None,
+            is_read=False,
+            created_at=now - timedelta(hours=6),
+        ),
+        Notification(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            title="Banksynkronisering fullført",
+            message="DNB driftskonto oppdatert — 8 nye transaksjoner importert for mars",
+            type="bank_sync",
+            reference_id=None,
+            is_read=False,
+            created_at=now - timedelta(hours=3),
+        ),
+        Notification(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            title="5 nye ansatte lagt til",
+            message="Maria Hansen og Erik Johansen er registrert som nye ansatte",
+            type="employee_added",
+            reference_id=None,
+            is_read=True,
+            created_at=now - timedelta(days=5),
+        ),
+        Notification(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            title="Kari Olsen — foreldrepermisjon",
+            message="Kari Olsen er satt som foreldrepermisjon fra 01.02.2025",
+            type="employee_status",
+            reference_id=None,
+            is_read=True,
+            created_at=now - timedelta(days=30),
+        ),
+        Notification(
+            id=uuid.uuid4(),
+            company_id=COMPANY_ID,
+            title="A-melding februar sendt",
+            message="A-melding for februar 2025 er sendt til Skatteetaten for 5 ansatte",
+            type="amelding_submitted",
+            reference_id=None,
+            is_read=True,
+            created_at=now - timedelta(days=5),
+        ),
     ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CLI runner — `python seed_data.py` or `python seed_data.py --force`
+# ═══════════════════════════════════════════════════════════════════════════
+
+if __name__ == "__main__":
+    import sys
+    import asyncio
+
+    async def main():
+        # Ensure all models are loaded so Base.metadata has all tables
+        import models  # noqa: F401
+
+        if "--force" in sys.argv:
+            print("⚠️  Force reseeding — all existing data will be wiped!")
+            await force_reseed()
+        else:
+            from config.database import init_db
+            await init_db()
+            await seed_test_data()
+
+    asyncio.run(main())

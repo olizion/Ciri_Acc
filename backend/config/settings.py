@@ -100,6 +100,10 @@ class Settings(BaseSettings):
     # System identifier (format: "{org_number}_{system_name}")
     altinn_system_id: str = ""
 
+    # External reference used when creating the system user request
+    # Must match exactly in token requests if set during creation
+    altinn_external_ref: str = ""
+
     # =======================================================================
     # SKATTEETATEN API CONFIGURATION
     # Apply for access: https://skatteetaten.github.io/api-dokumentasjon/
@@ -107,6 +111,12 @@ class Settings(BaseSettings):
 
     # Scopes to request
     skatteetaten_scopes: str = "skatteetaten:skattekorttilarbeidsgiver"
+
+    # A-melding innrapportering scope (applied for separately)
+    amelding_scope: str = "skatteetaten:innrapporteringamelding"
+
+    # MVA melding innsending scope
+    mva_scope: str = "skatteetaten:mvameldinginnsending"
 
     # =======================================================================
     # FOLKEREGISTERET (POPULATION REGISTRY) - Optional
@@ -116,12 +126,25 @@ class Settings(BaseSettings):
     folkeregister_enabled: bool = False
     folkeregister_scopes: str = "folkeregister:deling/offentligmedhjemmel"
 
+    # ── Retention & Compliance (Bokforingsloven + GDPR) ──
+    retention_cleanup_enabled: bool = False
+    retention_cleanup_hour: int = 2  # Run daily at 02:00
+
     # Encryption
     encryption_key: str = "change-me-32-byte-key-for-aes256"
 
     # Storage
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 50
+
+    # =======================================================================
+    # AWS S3 (Avatar storage)
+    # =======================================================================
+
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_region: str = "eu-north-1"
+    s3_bucket_name: str = "getciriinthebucket"
 
     # =======================================================================
     # EMAIL MONITORING CONFIGURATION
@@ -297,6 +320,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 @lru_cache

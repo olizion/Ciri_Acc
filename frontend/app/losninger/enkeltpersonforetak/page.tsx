@@ -285,10 +285,10 @@ function SoloDayAnimation() {
                   {/* Event content */}
                   <div className="flex-1 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 backdrop-blur-lg">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold tracking-wider text-[#3E715C] tabular-nums">
+                      <span className="text-[12px] font-bold tracking-wider text-[#3E715C] tabular-nums">
                         {event.time}
                       </span>
-                      <span className="text-[10px] text-[#8a9a8e]">—</span>
+                      <span className="text-[12px] text-[#8a9a8e]">—</span>
                       <span className="text-xs font-medium text-[#1a2e23]">
                         {event.label}
                       </span>
@@ -306,7 +306,7 @@ function SoloDayAnimation() {
                           transition={{ delay: 0.2 }}
                           className="rounded-md bg-[#3E715C]/10 px-2 py-0.5"
                         >
-                          <span className="text-[10px] font-medium text-[#3E715C]">
+                          <span className="text-[12px] font-medium text-[#3E715C]">
                             faktura.pdf
                           </span>
                         </motion.div>
@@ -327,7 +327,7 @@ function SoloDayAnimation() {
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.25 }}
-                          className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-white"
+                          className="rounded-md px-2 py-0.5 text-[12px] font-semibold text-white"
                           style={{ backgroundColor: event.tagColor ?? "#3E715C" }}
                         >
                           {event.tag}
@@ -503,11 +503,11 @@ function ExpenseCategorizerAnimation() {
               <span className="text-xs font-medium text-[#1a2e23]">
                 {currentExpense.label}
               </span>
-              <span className="ml-2 text-[11px] tabular-nums text-[#4a5e52]">
+              <span className="ml-2 text-[13px] tabular-nums text-[#4a5e52]">
                 {currentExpense.amount}
               </span>
               {currentExpense.percent && (
-                <span className="ml-1 text-[10px] text-[#d97706]">
+                <span className="ml-1 text-[12px] text-[#d97706]">
                   ({currentExpense.percent})
                 </span>
               )}
@@ -562,7 +562,7 @@ function ExpenseCategorizerAnimation() {
               <div key={pathKey} className="flex flex-col items-center">
                 {/* Path label */}
                 <div
-                  className="mb-3 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide uppercase"
+                  className="mb-3 rounded-full px-3 py-1 text-[12px] font-bold tracking-wide uppercase"
                   style={{
                     backgroundColor: `${color}15`,
                     color: color,
@@ -585,11 +585,11 @@ function ExpenseCategorizerAnimation() {
                         backgroundColor: `${color}08`,
                       }}
                     >
-                      <p className="text-[10px] font-medium text-[#1a2e23] leading-tight">
+                      <p className="text-[12px] font-medium text-[#1a2e23] leading-tight">
                         {exp.label}
                       </p>
                       <p
-                        className="text-[10px] font-semibold tabular-nums"
+                        className="text-[12px] font-semibold tabular-nums"
                         style={{ color }}
                       >
                         {exp.amount}
@@ -604,7 +604,7 @@ function ExpenseCategorizerAnimation() {
                   animate={total > 0 ? { opacity: 1 } : { opacity: 0 }}
                   className="mt-2 rounded-lg border border-[#d4dbd6] bg-[#f5f7f2] px-3 py-1.5 text-center"
                 >
-                  <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+                  <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase">
                     Totalt
                   </span>
                   <p
@@ -809,7 +809,7 @@ function EfficiencyComparisonAnimation() {
               <p className="mt-1 text-2xl font-semibold text-[#3E715C]">
                 11 timer/mnd
               </p>
-              <p className="mt-0.5 text-[11px] text-[#5B906F]">
+              <p className="mt-0.5 text-[13px] text-[#5B906F]">
                 og over kr 3 000 sammenlignet med regnskapsforer
               </p>
             </div>

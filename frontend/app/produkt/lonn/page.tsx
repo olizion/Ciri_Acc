@@ -150,14 +150,14 @@ function PayrollAutopilotAnimation() {
                   <p className="text-sm font-medium text-[#1a2e23]">
                     {currentEmployee.name}
                   </p>
-                  <p className="text-[10px] text-[#8a9a8e]">
+                  <p className="text-[12px] text-[#8a9a8e]">
                     {currentEmployee.role}
                   </p>
                 </div>
               </div>
               <div
                 className={cn(
-                  "rounded-full px-3 py-1 text-[10px] font-semibold transition-colors",
+                  "rounded-full px-3 py-1 text-[12px] font-semibold transition-colors",
                   allDone
                     ? "bg-[#3E715C]/15 text-[#3E715C]"
                     : "bg-[#f5f7f2] text-[#8a9a8e]"
@@ -265,7 +265,7 @@ function PayrollAutopilotAnimation() {
                 className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-[#3E715C]/8 px-4 py-2.5"
               >
                 <CoffeeIcon className="h-3.5 w-3.5 text-[#3E715C]" />
-                <span className="text-[10px] font-medium text-[#3E715C]">
+                <span className="text-[12px] font-medium text-[#3E715C]">
                   Neste ansatt behandles automatisk
                 </span>
               </motion.div>
@@ -360,7 +360,7 @@ function PayslipBreakdownAnimation() {
           transition={{ duration: 0.6, ease: MARKETING_EASING }}
           className="mb-6 text-center"
         >
-          <p className="text-[10px] font-bold tracking-wider text-[#8a9a8e] uppercase">
+          <p className="text-[12px] font-bold tracking-wider text-[#8a9a8e] uppercase">
             Bruttolønn
           </p>
           <p className="mt-1 text-3xl font-normal tabular-nums text-[#1a2e23]">
@@ -423,7 +423,7 @@ function PayslipBreakdownAnimation() {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="rounded-xl border border-emerald-200/60 bg-emerald-50/70 px-4 py-4 text-center"
               >
-                <p className="text-[10px] font-bold tracking-wider text-emerald-600 uppercase">
+                <p className="text-[12px] font-bold tracking-wider text-emerald-600 uppercase">
                   Netto til utbetaling
                 </p>
                 <motion.p
@@ -521,7 +521,7 @@ function AMeldingDeliveryAnimation() {
             </div>
             <div>
               <p className="text-sm font-medium text-[#1a2e23]">A-melding</p>
-              <p className="text-[10px] text-[#8a9a8e]">
+              <p className="text-[12px] text-[#8a9a8e]">
                 Månedlig rapportering til Skatteetaten
               </p>
             </div>

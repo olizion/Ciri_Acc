@@ -240,7 +240,7 @@ function AccountBar({
               </div>
               <div>
                 <p className="text-[13px] font-medium leading-none">{acc.name}</p>
-                <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{acc.accountNumber}</p>
+                <p className="mt-0.5 font-mono text-[13px] text-muted-foreground">{acc.accountNumber}</p>
               </div>
             </button>
           );
@@ -252,7 +252,7 @@ function AccountBar({
             {selected.balance.toLocaleString("nb-NO", { minimumFractionDigits: 2 })}
             <span className="ml-1 text-sm font-normal text-muted-foreground">NOK</span>
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {lastSyncAt
               ? `Sist oppdatert ${new Date(lastSyncAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`
               : "Open Banking"}
@@ -278,7 +278,7 @@ function SortableHeader({
       <button
         onClick={() => onSort(sortKey)}
         className={cn(
-          "inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+          "inline-flex items-center gap-1 text-[13px] font-semibold uppercase tracking-wider transition-colors",
           active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
         )}
       >
@@ -297,7 +297,7 @@ function DetailField({ label, value, mono }: { label: string; value: string | nu
   if (!value) return null;
   return (
     <div className="space-y-0.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={cn("text-[13px]", mono && "font-mono")}>{value}</p>
     </div>
   );
@@ -356,7 +356,7 @@ function TransactionRow({
               </TooltipProvider>
             )}
             {tx.isPrivate && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] shrink-0 border-slate-300 text-slate-500">PRIVAT</Badge>
+              <Badge variant="outline" className="h-4 px-1 text-[13px] shrink-0 border-slate-300 text-slate-500">PRIVAT</Badge>
             )}
           </div>
         </TableCell>
@@ -382,7 +382,7 @@ function TransactionRow({
           <Badge
             variant="outline"
             className={cn(
-              "h-5 px-1.5 text-[10px] font-mono font-semibold",
+              "h-5 px-1.5 text-[12px] font-mono font-semibold",
               isExpense
                 ? "border-red-200 text-red-600 dark:border-red-800 dark:text-red-400"
                 : "border-emerald-200 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400"
@@ -400,7 +400,7 @@ function TransactionRow({
           )}>
             {isExpense ? "−" : "+"}{fmtNOK(tx.amount)}
           </span>
-          <span className="ml-1 text-[11px] text-muted-foreground">{tx.currency}</span>
+          <span className="ml-1 text-[13px] text-muted-foreground">{tx.currency}</span>
         </TableCell>
       </TableRow>
 
@@ -427,7 +427,7 @@ function TransactionRow({
                   <DetailField label="Foreslått konto" value={tx.suggestedAccount || "Ikke foreslått"} mono />
                   {tx.ciriConfidence != null && (
                     <div className="space-y-0.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ciri-konfidens</p>
+                      <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Ciri-konfidens</p>
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-20 rounded-full bg-muted overflow-hidden">
                           <div
@@ -441,7 +441,7 @@ function TransactionRow({
                   )}
                   {tx.bilag && (
                     <div className="space-y-0.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bilag</p>
+                      <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Bilag</p>
                       <div className="flex items-center gap-1.5">
                         <FileTextIcon className="size-3.5 text-[var(--primary)]" />
                         <span className="text-[13px] font-medium">{tx.bilag.id}</span>
@@ -700,7 +700,7 @@ export default function BankPage() {
             <TabsTrigger value="transactions" className="gap-1.5 px-3 text-xs">
               <ReceiptIcon className="size-3.5" />
               Transaksjoner
-              <Badge variant="secondary" className="ml-1 h-4 min-w-[18px] px-1 text-[10px] font-semibold">
+              <Badge variant="secondary" className="ml-1 h-4 min-w-[18px] px-1 text-[12px] font-semibold">
                 {allTransactions.length}
               </Badge>
             </TabsTrigger>
@@ -708,7 +708,7 @@ export default function BankPage() {
               <AlertTriangleIcon className="size-3.5" />
               Mangler bilag
               {missingBilag.length > 0 && (
-                <Badge className="ml-1 h-4 min-w-[18px] px-1 text-[10px] font-semibold bg-red-500 text-white hover:bg-red-500">
+                <Badge className="ml-1 h-4 min-w-[18px] px-1 text-[12px] font-semibold bg-red-500 text-white hover:bg-red-500">
                   {missingBilag.length}
                 </Badge>
               )}
@@ -770,7 +770,7 @@ export default function BankPage() {
                 ))}
               </SelectContent>
             </Select>
-            <span className="ml-auto text-[11px] text-muted-foreground tabular-nums font-mono">
+            <span className="ml-auto text-[13px] text-muted-foreground tabular-nums font-mono">
               {filtered.length} / {allTransactions.length} transaksjoner
             </span>
           </div>
@@ -785,13 +785,13 @@ export default function BankPage() {
                   </TableHead>
                   <SortableHeader label="Dato" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[85px]" />
                   <TableHead className="w-[85px] border-x border-border/50 bg-muted/30 px-3">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Verdi</span>
+                    <span className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Verdi</span>
                   </TableHead>
                   <SortableHeader label="Beskrivelse" sortKey="description" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                   <SortableHeader label="Kategori" sortKey="category" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[130px]" />
                   <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[120px]" />
                   <TableHead className="w-[50px] border-x border-border/50 bg-muted/30 px-2 text-center">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
                       <ArrowRightLeftIcon className="size-3 mx-auto" />
                     </span>
                   </TableHead>
@@ -831,7 +831,7 @@ export default function BankPage() {
               <p className="text-[13px] font-medium text-red-800 dark:text-red-300">
                 {missingBilag.length} {missingBilag.length === 1 ? "transaksjon" : "transaksjoner"} mangler bilag
               </p>
-              <p className="text-[11px] text-red-600/70 dark:text-red-400/60">
+              <p className="text-[13px] text-red-600/70 dark:text-red-400/60">
                 Last opp kvitteringer for å fullføre bokføringen
               </p>
             </div>

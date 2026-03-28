@@ -101,7 +101,7 @@ function MockChart() {
               className="w-full rounded-t bg-[var(--primary)]/20 hover:bg-[var(--primary)]/40 transition-colors"
               style={{ height: `${h}%` }}
             />
-            <span className="text-[9px] text-muted-foreground">{months[i]}</span>
+            <span className="text-[13px] text-muted-foreground">{months[i]}</span>
           </div>
         ))}
       </div>

@@ -73,7 +73,7 @@ export function AccountFlowChart() {
             Kontofordeling
           </CardTitle>
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[12px] text-muted-foreground">
           Totalt bokført per konto (alle faser)
         </p>
       </CardHeader>

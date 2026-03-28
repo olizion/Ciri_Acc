@@ -96,7 +96,7 @@ function EmailPipelineAnimation() {
               >
                 <MailIcon className="h-6 w-6 text-[#3E715C] sm:h-7 sm:w-7" />
               </motion.div>
-              <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[10px]">
+              <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[12px]">
                 E-post
               </span>
             </div>
@@ -130,7 +130,7 @@ function EmailPipelineAnimation() {
               >
                 <FileTextIcon className="h-6 w-6 text-[#5B906F] sm:h-7 sm:w-7" />
               </motion.div>
-              <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[10px]">
+              <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[12px]">
                 Vedlegg
               </span>
             </div>
@@ -188,7 +188,7 @@ function EmailPipelineAnimation() {
                   OCR
                 </motion.span>
               </div>
-              <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[10px]">
+              <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[12px]">
                 OCR
               </span>
             </div>
@@ -236,7 +236,7 @@ function EmailPipelineAnimation() {
                   </motion.span>
                 ))}
               </motion.div>
-              <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[10px]">
+              <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase sm:text-[12px]">
                 Data
               </span>
             </div>
@@ -275,7 +275,7 @@ function EmailPipelineAnimation() {
                 animate={
                   phase >= 5 ? { opacity: 1 } : { opacity: 0 }
                 }
-                className="text-[9px] font-bold tracking-wider text-emerald-600 uppercase sm:text-[10px]"
+                className="text-[13px] font-bold tracking-wider text-emerald-600 uppercase sm:text-[12px]"
               >
                 Bokfort
               </motion.span>
@@ -348,7 +348,7 @@ function DuplicateDetectorAnimation() {
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <FileTextIcon className="h-3.5 w-3.5 text-[#8a9a8e]" />
-                <span className="text-[10px] font-medium text-[#4a5e52]">
+                <span className="text-[12px] font-medium text-[#4a5e52]">
                   {invoiceData.number}
                 </span>
               </div>
@@ -412,7 +412,7 @@ function DuplicateDetectorAnimation() {
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <CopyIcon className="h-3.5 w-3.5 text-[#8a9a8e]" />
-                <span className="text-[10px] font-medium text-[#4a5e52]">
+                <span className="text-[12px] font-medium text-[#4a5e52]">
                   {invoiceData.number}
                 </span>
               </div>
@@ -626,7 +626,7 @@ function ProcessingDashboardAnimation() {
               <p className="text-xs font-medium text-[#1a2e23]">
                 E-post behandling
               </p>
-              <p className="text-[10px] text-[#8a9a8e]">Siste 24 timer</p>
+              <p className="text-[12px] text-[#8a9a8e]">Siste 24 timer</p>
             </div>
           </div>
 
@@ -651,7 +651,7 @@ function ProcessingDashboardAnimation() {
               >
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <div className="text-[#5B906F]">{stat.icon}</div>
-                  <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+                  <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase">
                     {stat.label}
                   </span>
                 </div>
@@ -675,10 +675,10 @@ function ProcessingDashboardAnimation() {
             className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur-lg"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[9px] font-medium tracking-wider text-[#8a9a8e] uppercase">
+              <span className="text-[13px] font-medium tracking-wider text-[#8a9a8e] uppercase">
                 Siste 7 dager
               </span>
-              <span className="text-[10px] tabular-nums text-[#5B906F]">
+              <span className="text-[12px] tabular-nums text-[#5B906F]">
                 +18%
               </span>
             </div>

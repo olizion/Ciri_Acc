@@ -157,9 +157,9 @@ function PhaseBar({
   return (
     <div className="flex-1">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-[13px] text-muted-foreground">{label}</span>
         <span
-          className="text-[11px] font-medium font-display tabular-nums"
+          className="text-[13px] font-medium font-display tabular-nums"
           style={{ color }}
         >
           {Math.round(value * 100)}%
@@ -193,11 +193,11 @@ function MetaChip({
 }) {
   return (
     <div className="flex items-center gap-1.5 bg-card border border-border/50 rounded-lg px-3 py-1.5 shadow-sm">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+      <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
         {label}
       </span>
       <span
-        className="text-[11px] font-medium"
+        className="text-[13px] font-medium"
         style={color ? { color } : undefined}
       >
         {value}
@@ -211,19 +211,19 @@ function MetaChip({
 function ColumnHeaders() {
   return (
     <div className="grid grid-cols-[1fr_100px_120px_80px_80px_24px] items-center gap-2 px-5 py-2 border-b border-border/30">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+      <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
         Leverandor
       </span>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
+      <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
         Belop
       </span>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+      <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
         Konto
       </span>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
+      <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
         Konfidens
       </span>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
+      <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">
         Utfall
       </span>
       <span />
@@ -314,7 +314,7 @@ export function TabBeslutninger() {
             <FilterIcon className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-[13px] font-semibold">Beslutninger</span>
           </div>
-          <span className="rounded-full bg-muted/50 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+          <span className="rounded-full bg-muted/50 px-2.5 py-0.5 text-[13px] font-medium tabular-nums text-muted-foreground">
             {filtered.length}
           </span>
         </div>
@@ -377,7 +377,7 @@ export function TabBeslutninger() {
                       <p className="truncate text-[13px] font-medium">
                         {decision.merchantName}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="truncate text-[13px] text-muted-foreground">
                         {decision.description}
                       </p>
                     </div>
@@ -391,10 +391,10 @@ export function TabBeslutninger() {
 
                     {/* Col 3: Account */}
                     <div className="min-w-0">
-                      <p className="truncate text-[11px] font-medium">
+                      <p className="truncate text-[13px] font-medium">
                         {decision.account}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="truncate text-[13px] text-muted-foreground">
                         {decision.accountLabel}
                       </p>
                     </div>
@@ -410,7 +410,7 @@ export function TabBeslutninger() {
                     {/* Col 5: Outcome badge */}
                     <div className="flex justify-end">
                       <span
-                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold"
                         style={{
                           backgroundColor: `${config.color}12`,
                           color: config.color,
@@ -542,7 +542,7 @@ export function TabBeslutninger() {
 
       {/* ── Bottom summary: Inline stats bar ───────────── */}
       <div className="rounded-xl bg-muted/20 border border-border/40 px-4 py-2.5">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
           <span>
             Totalt:{" "}
             <span className="font-display font-medium tabular-nums">

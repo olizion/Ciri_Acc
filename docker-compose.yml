@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: ciri
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - backups:/backups
     ports:
       - "5432:5432"
     healthcheck:
@@ -60,3 +61,4 @@ volumes:
   postgres_data:
   redis_data:
   uploads:
+  backups:

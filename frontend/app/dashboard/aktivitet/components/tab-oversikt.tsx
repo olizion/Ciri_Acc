@@ -342,7 +342,7 @@ export function TabOversikt() {
                     style={{ color: gauge.color }}
                   />
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
+                <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
                   {gauge.label}
                 </span>
               </div>
@@ -366,7 +366,7 @@ export function TabOversikt() {
                       decimals={1}
                       className="text-2xl font-display font-bold tabular-nums"
                     />
-                    <span className="text-[11px] text-muted-foreground/60 mt-0.5">
+                    <span className="text-[13px] text-muted-foreground/60 mt-0.5">
                       {gauge.subtitle}
                     </span>
                   </div>
@@ -374,7 +374,7 @@ export function TabOversikt() {
 
                 {/* Detail line + mini progress */}
                 <div className="w-full mt-4 space-y-2">
-                  <p className="text-[11px] text-muted-foreground text-center">
+                  <p className="text-[13px] text-muted-foreground text-center">
                     {gauge.detail}
                   </p>
                   <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
@@ -394,16 +394,16 @@ export function TabOversikt() {
                     />
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[9px] text-muted-foreground/40 tabular-nums">
+                    <span className="text-[13px] text-muted-foreground/40 tabular-nums">
                       0%
                     </span>
                     <span
-                      className="text-[9px] font-semibold tabular-nums"
+                      className="text-[13px] font-semibold tabular-nums"
                       style={{ color: gauge.color }}
                     >
                       {gauge.value.toFixed(1)}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground/40 tabular-nums">
+                    <span className="text-[13px] text-muted-foreground/40 tabular-nums">
                       100%
                     </span>
                   </div>
@@ -432,7 +432,7 @@ export function TabOversikt() {
             />
           </div>
           <span className="text-sm font-semibold">Pipeline-gjennomstromning</span>
-          <span className="ml-auto text-[10px] text-muted-foreground/50 tabular-nums">
+          <span className="ml-auto text-[12px] text-muted-foreground/50 tabular-nums">
             {total.toLocaleString("nb-NO")} transaksjoner totalt
           </span>
         </div>
@@ -469,7 +469,7 @@ export function TabOversikt() {
                           style={{ color: PHASE_COLORS[i] }}
                         />
                       </div>
-                      <span className="text-[10px] text-muted-foreground/60 font-medium truncate">
+                      <span className="text-[12px] text-muted-foreground/60 font-medium truncate">
                         {phase.phase}
                       </span>
                     </div>
@@ -480,7 +480,7 @@ export function TabOversikt() {
                       </span>
                       {i > 0 && (
                         <span
-                          className="text-[10px] font-semibold tabular-nums"
+                          className="text-[12px] font-semibold tabular-nums"
                           style={{ color: PHASE_COLORS[i] }}
                         >
                           {convRate.toFixed(0)}%
@@ -538,7 +538,7 @@ export function TabOversikt() {
                     className="size-1.5 rounded-full"
                     style={{ backgroundColor: PHASE_COLORS[i + 1] }}
                   />
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[12px] text-muted-foreground">
                     {phase.phase.split(" ")[0]}{" "}
                     <span className="font-semibold tabular-nums">
                       {phaseRates[i + 1].toFixed(1)}%
@@ -549,7 +549,7 @@ export function TabOversikt() {
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2Icon className="size-3" style={{ color: CHART_COLORS.emerald }} />
-              <span className="text-[11px] font-medium">
+              <span className="text-[13px] font-medium">
                 <span className="font-display font-bold tabular-nums" style={{ color: CHART_COLORS.emerald }}>
                   {PIPELINE_STATS.autoPosted}
                 </span>
@@ -591,7 +591,7 @@ export function TabOversikt() {
                       style={{ color: card.color }}
                     />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold truncate">
+                  <span className="text-[12px] uppercase tracking-wider text-muted-foreground/50 font-semibold truncate">
                     {card.label}
                   </span>
                 </div>
@@ -600,7 +600,7 @@ export function TabOversikt() {
                 <p className="text-xl font-display font-bold tabular-nums leading-none mb-1">
                   {card.value}
                 </p>
-                <p className="text-[10px] text-muted-foreground/50 mb-2.5">
+                <p className="text-[12px] text-muted-foreground/50 mb-2.5">
                   {card.subtitle}
                 </p>
 
@@ -671,7 +671,7 @@ export function TabOversikt() {
               />
             </div>
             <span className="text-sm font-semibold">Siste hendelser</span>
-            <span className="ml-auto text-[10px] text-muted-foreground/40 tabular-nums">
+            <span className="ml-auto text-[12px] text-muted-foreground/40 tabular-nums">
               siste 7 dager
             </span>
           </div>
@@ -715,12 +715,12 @@ export function TabOversikt() {
                     <p className="text-[13px] font-medium leading-tight truncate group-hover:text-foreground transition-colors">
                       {event.title}
                     </p>
-                    <p className="text-[11px] text-muted-foreground/50 mt-0.5 truncate">
+                    <p className="text-[13px] text-muted-foreground/50 mt-0.5 truncate">
                       {event.description.length > 60
                         ? event.description.slice(0, 60) + "..."
                         : event.description}
                     </p>
-                    <p className="text-[10px] tabular-nums text-muted-foreground/40 mt-1">
+                    <p className="text-[12px] tabular-nums text-muted-foreground/40 mt-1">
                       {formatTimeAgo(event.timestamp)}
                     </p>
                   </div>
